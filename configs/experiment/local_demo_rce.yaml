@@ -1,0 +1,72 @@
+# Same attack as local_demo_attack.yaml, but defended with RCE
+# (TrimMean_f + MAD margin). Analogous in spirit to compact-pilot
+# condition C (PROJECT_REPORT.md §R2.2), on the synthetic environment.
+#
+# `[DECISION]` budget=5.0, NOT the paper's d=25 -- see local_demo_clean.yaml.
+run_id: local_demo_rce
+seed: 0
+
+env:
+  name: synthetic_constrained_marl
+  n_agents: 6
+  budget: 5.0
+  horizon: 64
+  obs_dim: 8
+  action_dim: 2
+
+topology:
+  name: ring
+  n_agents: 6
+
+sources:
+  sources:
+    - source_id: own_critic
+      source_type: own_critic
+      independence_class: ic_own
+    - source_id: peer_critic_1
+      source_type: peer_critic
+      independence_class: ic_peer1
+    - source_id: peer_critic_2
+      source_type: peer_critic
+      independence_class: ic_peer2
+    - source_id: peer_critic_3
+      source_type: peer_critic
+      independence_class: ic_peer3
+    - source_id: peer_critic_4
+      source_type: peer_critic
+      independence_class: ic_peer4
+    - source_id: monitor_1
+      source_type: monitor
+      independence_class: ic_mon1
+    - source_id: monitor_2
+      source_type: monitor
+      independence_class: ic_mon2
+
+attack:
+  name: primary
+  f: 1
+  budget_ratio: 0.5
+  direction: negative
+  support: persistent
+  adaptivity: static
+  consistency: consistent
+
+defense:
+  name: rce
+  f: 1
+  beta: 1.5
+  sigma_min: 0.001
+  min_retained: 3
+
+ppo:
+  epochs: 2
+  minibatches: 4
+  hidden_dim: 32
+
+dual:
+  eta_lambda: 0.035
+  lambda_max: 25.0
+
+total_steps: 4800   # ~75 rounds -- see the budget note above
+rollout_length: 64
+output_dir: results/runs

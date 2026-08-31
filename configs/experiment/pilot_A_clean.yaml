@@ -1,0 +1,73 @@
+# STAGE 2 -- Google Colab T4 GPU pilot. NOT executable on this repository's
+# local CPU build: env.name=manyagent_ant requires the Safe MAMuJoCo
+# adapter, which is intentionally NOT IMPLEMENTED here (see
+# safelie.envs.mamujoco's module docstring and
+# docs/paper_implementation_mapping.md). This file is the literal,
+# faithful encoding of PROJECT_REPORT.md §R2/§R8's compact-pilot
+# specification -- condition A (clean baseline) -- preserved as the
+# target configuration for whoever completes the MuJoCo adapter and runs
+# the Colab pilot. Running `safelie.experiment` against this config today
+# raises NotImplementedError with instructions.
+run_id: pilot_A_clean
+seed: 0  # [DECISION] one of [0, 1, 2] per §R2.3; run all three for the pilot
+
+env:
+  name: manyagent_ant  # [SPEC] main_iclr.tex §5.1
+  n_agents: 6           # [SPEC] N=6
+  budget: 25.0          # [SPEC] d=25 per agent
+
+topology:
+  name: ring            # [DECISION] §R2.1 -- slowest-mixing connected topology,
+                        # the least favourable case for the spreading claim
+  n_agents: 6
+
+sources:
+  # [SPEC] M=7 = own critic + 4 peer critics + 2 replicated monitors
+  sources:
+    - source_id: own_critic
+      source_type: own_critic
+      independence_class: ic_own
+    - source_id: peer_critic_1
+      source_type: peer_critic
+      independence_class: ic_peer1
+    - source_id: peer_critic_2
+      source_type: peer_critic
+      independence_class: ic_peer2
+    - source_id: peer_critic_3
+      source_type: peer_critic
+      independence_class: ic_peer3
+    - source_id: peer_critic_4
+      source_type: peer_critic
+      independence_class: ic_peer4
+    - source_id: monitor_1
+      source_type: monitor
+      independence_class: ic_mon1
+    - source_id: monitor_2
+      source_type: monitor
+      independence_class: ic_mon2
+
+attack:
+  name: none  # condition A: no attack
+
+defense:
+  name: mean  # condition A uses the undefended aggregator as reference
+  f: 0
+
+ppo:
+  # [SPEC] main_iclr.tex App. B hyperparameters
+  clip: 0.2
+  gae_lambda: 0.95
+  gamma: 0.99
+  lr: 0.0003
+  # [GAP] G10-G12, pinned per decision D14 -- not specified by the paper
+  epochs: 4
+  minibatches: 4
+  hidden_dim: 64
+
+dual:
+  eta_lambda: 0.035   # [SPEC]
+  lambda_max: 25.0    # [SPEC]
+
+total_steps: 500000    # [DECISION] §R2.4 -- pilot scale, 1/20 of the paper's 1e7
+rollout_length: 2000   # [INFERRED] G10 -- not specified by the paper
+output_dir: results/runs

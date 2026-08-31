@@ -1,0 +1,71 @@
+# STAGE 2 -- Google Colab T4 GPU pilot. See pilot_A_clean.yaml's header:
+# NOT executable locally (requires the unimplemented Safe MAMuJoCo
+# adapter, safelie.envs.mamujoco). Condition B: attacked, unprotected --
+# "the core claim" (PROJECT_REPORT.md §R2.2).
+run_id: pilot_B_attack
+seed: 0  # run all of [0, 1, 2] per §R2.3
+
+env:
+  name: manyagent_ant
+  n_agents: 6
+  budget: 25.0
+
+topology:
+  name: ring
+  n_agents: 6
+
+sources:
+  sources:
+    - source_id: own_critic
+      source_type: own_critic
+      independence_class: ic_own
+    - source_id: peer_critic_1
+      source_type: peer_critic
+      independence_class: ic_peer1
+    - source_id: peer_critic_2
+      source_type: peer_critic
+      independence_class: ic_peer2
+    - source_id: peer_critic_3
+      source_type: peer_critic
+      independence_class: ic_peer3
+    - source_id: peer_critic_4
+      source_type: peer_critic
+      independence_class: ic_peer4
+    - source_id: monitor_1
+      source_type: monitor
+      independence_class: ic_mon1
+    - source_id: monitor_2
+      source_type: monitor
+      independence_class: ic_mon2
+
+attack:
+  # [DECISION] §R2.1 -- persistent static under-reporting, f=1, B/d=0.5;
+  # one point from the [SPEC] sweep {0, 0.25, 0.5, 1.0}
+  name: primary
+  f: 1
+  budget_ratio: 0.5
+  direction: negative
+  support: persistent
+  adaptivity: static
+  consistency: consistent
+
+defense:
+  name: mean  # undefended -- this is the point of condition B
+  f: 1
+
+ppo:
+  clip: 0.2
+  gae_lambda: 0.95
+  gamma: 0.99
+  lr: 0.0003
+  epochs: 4
+  minibatches: 4
+  hidden_dim: 64
+
+dual:
+  eta_lambda: 0.035
+  lambda_max: 25.0
+
+total_steps: 500000
+rollout_length: 2000
+output_dir: results/runs

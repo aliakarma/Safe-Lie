@@ -1,0 +1,66 @@
+# The falsification control (PROJECT_REPORT.md §R2.2 condition D):
+# unbiased zero-mean noise of magnitude matched to the attack's budget,
+# replacing the adversary. On the synthetic environment, for local demo
+# purposes only.
+#
+# `[DECISION]` budget=5.0, NOT the paper's d=25 -- see local_demo_clean.yaml.
+run_id: local_demo_benign
+seed: 0
+
+env:
+  name: synthetic_constrained_marl
+  n_agents: 6
+  budget: 5.0
+  horizon: 64
+  obs_dim: 8
+  action_dim: 2
+
+topology:
+  name: ring
+  n_agents: 6
+
+sources:
+  sources:
+    - source_id: own_critic
+      source_type: own_critic
+      independence_class: ic_own
+    - source_id: peer_critic_1
+      source_type: peer_critic
+      independence_class: ic_peer1
+    - source_id: peer_critic_2
+      source_type: peer_critic
+      independence_class: ic_peer2
+    - source_id: peer_critic_3
+      source_type: peer_critic
+      independence_class: ic_peer3
+    - source_id: peer_critic_4
+      source_type: peer_critic
+      independence_class: ic_peer4
+    - source_id: monitor_1
+      source_type: monitor
+      independence_class: ic_mon1
+    - source_id: monitor_2
+      source_type: monitor
+      independence_class: ic_mon2
+
+attack:
+  name: benign_control
+  f: 1
+  budget_ratio: 0.5
+
+defense:
+  name: mean
+  f: 1
+
+ppo:
+  epochs: 2
+  minibatches: 4
+  hidden_dim: 32
+
+dual:
+  eta_lambda: 0.035
+  lambda_max: 25.0
+
+total_steps: 4800   # ~75 rounds -- see the budget note above
+rollout_length: 64
+output_dir: results/runs

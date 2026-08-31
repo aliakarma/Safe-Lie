@@ -1,0 +1,74 @@
+# STAGE 2 -- Google Colab T4 GPU pilot. See pilot_A_clean.yaml's header:
+# NOT executable locally. Condition C: attacked, defended -- "the defense
+# claim" (PROJECT_REPORT.md §R2.2). Same attack as pilot_B_attack.yaml,
+# RCE (f=1, beta=1.5) instead of mean.
+run_id: pilot_C_rce
+seed: 0  # run all of [0, 1, 2] per §R2.3
+
+env:
+  name: manyagent_ant
+  n_agents: 6
+  budget: 25.0
+
+topology:
+  name: ring
+  n_agents: 6
+
+sources:
+  sources:
+    - source_id: own_critic
+      source_type: own_critic
+      independence_class: ic_own
+    - source_id: peer_critic_1
+      source_type: peer_critic
+      independence_class: ic_peer1
+    - source_id: peer_critic_2
+      source_type: peer_critic
+      independence_class: ic_peer2
+    - source_id: peer_critic_3
+      source_type: peer_critic
+      independence_class: ic_peer3
+    - source_id: peer_critic_4
+      source_type: peer_critic
+      independence_class: ic_peer4
+    - source_id: monitor_1
+      source_type: monitor
+      independence_class: ic_mon1
+    - source_id: monitor_2
+      source_type: monitor
+      independence_class: ic_mon2
+
+attack:
+  name: primary
+  f: 1
+  budget_ratio: 0.5
+  direction: negative
+  support: persistent
+  adaptivity: static
+  consistency: consistent
+
+defense:
+  # [DECISION] §R10.2 -- M=7, f=1 gives |T|=5 retained, comfortably above
+  # min_retained=3; M <= 2f raises at config-validation time (D3)
+  name: rce
+  f: 1
+  beta: 1.5           # [SPEC]
+  sigma_min: 0.001     # [DECISION] floor for a degenerate retained set (not hit at f=1)
+  min_retained: 3
+
+ppo:
+  clip: 0.2
+  gae_lambda: 0.95
+  gamma: 0.99
+  lr: 0.0003
+  epochs: 4
+  minibatches: 4
+  hidden_dim: 64
+
+dual:
+  eta_lambda: 0.035
+  lambda_max: 25.0
+
+total_steps: 500000
+rollout_length: 2000
+output_dir: results/runs

@@ -1,0 +1,69 @@
+# STAGE 2 -- Google Colab T4 GPU pilot. See pilot_A_clean.yaml's header:
+# NOT executable locally. Condition E (recommended, PROJECT_REPORT.md
+# §R2.2): clean + RCE. Isolates RCE's benign conservatism cost from the
+# attack's effect -- without it, the return drop from A to C cannot be
+# attributed between "the defense is conservative" and "the attack hurt
+# us." First candidate to drop under the §R8.4 fallback ladder if compute
+# is tight (12 runs without E, 15 with).
+run_id: pilot_E_clean_rce
+seed: 0  # run all of [0, 1, 2] per §R2.3
+
+env:
+  name: manyagent_ant
+  n_agents: 6
+  budget: 25.0
+
+topology:
+  name: ring
+  n_agents: 6
+
+sources:
+  sources:
+    - source_id: own_critic
+      source_type: own_critic
+      independence_class: ic_own
+    - source_id: peer_critic_1
+      source_type: peer_critic
+      independence_class: ic_peer1
+    - source_id: peer_critic_2
+      source_type: peer_critic
+      independence_class: ic_peer2
+    - source_id: peer_critic_3
+      source_type: peer_critic
+      independence_class: ic_peer3
+    - source_id: peer_critic_4
+      source_type: peer_critic
+      independence_class: ic_peer4
+    - source_id: monitor_1
+      source_type: monitor
+      independence_class: ic_mon1
+    - source_id: monitor_2
+      source_type: monitor
+      independence_class: ic_mon2
+
+attack:
+  name: none
+
+defense:
+  name: rce
+  f: 1
+  beta: 1.5
+  sigma_min: 0.001
+  min_retained: 3
+
+ppo:
+  clip: 0.2
+  gae_lambda: 0.95
+  gamma: 0.99
+  lr: 0.0003
+  epochs: 4
+  minibatches: 4
+  hidden_dim: 64
+
+dual:
+  eta_lambda: 0.035
+  lambda_max: 25.0
+
+total_steps: 500000
+rollout_length: 2000
+output_dir: results/runs
