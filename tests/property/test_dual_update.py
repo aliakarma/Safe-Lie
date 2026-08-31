@@ -5,6 +5,7 @@ over-reporting (Proposition 3).
 from __future__ import annotations
 
 import numpy as np
+
 from safelie.consensus.topologies import build_topology
 from safelie.training.dual import dual_update
 

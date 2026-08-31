@@ -12,6 +12,7 @@ import ast
 from pathlib import Path
 
 import pytest
+
 from safelie.envs.guards import LearnerAccessError
 from safelie.envs.synthetic import SyntheticConstrainedMarlEnv
 

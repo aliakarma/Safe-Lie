@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 from pydantic import ValidationError
+
 from safelie.sources.registry import default_m7_sources
 from safelie.utils.config import ExperimentConfig, load_experiment_config
 

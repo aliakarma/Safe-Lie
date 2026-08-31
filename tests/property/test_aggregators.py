@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
+
 from safelie.defenses import aggregate
 from safelie.defenses.krum import krum_aggregator
 from safelie.defenses.mean import mean_aggregator

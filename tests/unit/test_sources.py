@@ -6,6 +6,7 @@ Report reference: PROJECT_REPORT.md §13.4 (W4), §R10.3 (D10).
 from __future__ import annotations
 
 import pytest
+
 from safelie.sources.registry import (
     SourceRegistry,
     default_m5_sources,

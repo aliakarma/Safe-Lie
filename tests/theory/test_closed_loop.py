@@ -8,6 +8,7 @@ finding about the paper's central theorem (W1), not a bug.
 from __future__ import annotations
 
 import numpy as np
+
 from safelie.consensus.topologies import build_topology
 from safelie.theory.closed_loop import run_closed_loop_diagnostic
 

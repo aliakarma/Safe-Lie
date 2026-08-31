@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
+
 from safelie.attacks import AttackLedger, apply_attack
 from safelie.utils.config import AttackConfig
 

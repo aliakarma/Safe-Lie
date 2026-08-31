@@ -13,6 +13,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+
 from safelie.utils.config import load_experiment_config
 
 CONFIG_DIR = Path(__file__).resolve().parents[2] / "configs" / "experiment"

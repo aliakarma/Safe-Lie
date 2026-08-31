@@ -12,6 +12,7 @@ instead of raising -- see SMOKE_TEST_REPORT.md's "fixes applied" section.
 from __future__ import annotations
 
 import pytest
+
 from safelie.envs.factory import build_env
 from safelie.envs.synthetic import SyntheticConstrainedMarlEnv
 from safelie.sources.registry import default_m7_sources

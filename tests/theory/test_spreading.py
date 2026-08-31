@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
+
 from safelie.consensus.topologies import build_topology
 from safelie.theory.spreading import verify_spreading
 

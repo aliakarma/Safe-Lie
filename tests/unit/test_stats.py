@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
+
 from safelie.analysis.stats import MIN_SEEDS_FOR_INFERENCE, holm_correction, welch_t_test
 
 
