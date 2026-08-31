@@ -1,0 +1,16 @@
+# Pinned to the versions this repository was built and tested against
+# (Python 3.11.9, CPU-only). For a fresh environment prefer:
+#   pip install -e ".[dev]"
+# which resolves compatible versions via pyproject.toml. This file exists
+# for users who want an exact, reproducible lock rather than a resolved
+# range -- see docs/setup.md.
+numpy==2.2.6
+scipy==1.13.0
+torch==2.12.1
+pydantic==2.13.4
+pyyaml==6.0.3
+networkx==3.6.1
+pandas==2.3.3
+statsmodels==0.14.1
+pytest==9.0.3
+pytest-cov==4.1.0
