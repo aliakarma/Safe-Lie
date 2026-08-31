@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "pip"
+
+      - name: Install package
+        run: pip install -e ".[dev]"
+
+      - name: Lint
+        run: ruff check src/ scripts/ tests/
+
+      - name: Unit tests
+        run: pytest tests/unit -v
+
+      - name: Property tests
+        run: pytest tests/property -v
+
+      - name: Theory tests (Theorem 1 / Proposition 1 / closed-loop diagnostic)
+        run: pytest tests/theory -v
+
+      - name: Smoke tests (S1-S28, end-to-end, determinism)
+        run: pytest tests/smoke -v
+
+      - name: Isolation tests (oracle boundary — must never be skipped)
+        run: pytest tests/isolation -v
+
+      - name: Integration tests
+        run: pytest tests/integration -v
+
+      - name: GREEN SIGNAL gate
+        run: python scripts/smoke_test.py
+
+      - name: Notebook lint (no def/class in orchestration notebooks, decision D13)
+        run: python scripts/lint_notebooks.py
