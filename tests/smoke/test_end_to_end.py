@@ -45,3 +45,45 @@ def test_tiny_end_to_end_run_produces_a_complete_artifact_directory(tiny_config_
             assert math.isfinite(c["task_return"])
             assert math.isfinite(c["reported_cost_return"])
             assert math.isfinite(c["lambda_after"])
+
+
+def test_end_to_end_resume_continues_bitwise_identically(tiny_config_factory, tmp_path):
+    total_rounds = 4
+    cfg_uninterrupted = tiny_config_factory(run_id="s15_uninterrupted", seed=42)
+    cfg_uninterrupted = cfg_uninterrupted.model_copy(
+        update={
+            "output_dir": str(tmp_path / "runs"),
+            "total_steps": total_rounds * cfg_uninterrupted.rollout_length,
+        }
+    )
+    out_dir_uninterrupted = run_experiment_with_oracle(cfg_uninterrupted, eval_every=1, checkpoint_every=1)
+    uninterrupted_rounds = read_jsonl(out_dir_uninterrupted / "rounds.jsonl")
+    uninterrupted_oracle = read_jsonl(out_dir_uninterrupted / "oracle.jsonl")
+
+    # Now simulate an interrupted run with same seed/config
+    cfg_resumed = tiny_config_factory(run_id="s15_resumed", seed=42)
+    cfg_resumed_half = cfg_resumed.model_copy(
+        update={
+            "output_dir": str(tmp_path / "runs"),
+            "total_steps": 2 * cfg_resumed.rollout_length,  # first 2 rounds
+        }
+    )
+    # Run first half (will checkpoint after round 2)
+    run_experiment_with_oracle(cfg_resumed_half, eval_every=1, checkpoint_every=1)
+
+    # Now run second half with total_steps = 4 rounds
+    cfg_resumed_full = cfg_resumed.model_copy(
+        update={
+            "output_dir": str(tmp_path / "runs"),
+            "total_steps": total_rounds * cfg_resumed.rollout_length,
+        }
+    )
+    out_dir_resumed = run_experiment_with_oracle(cfg_resumed_full, eval_every=1, checkpoint_every=1, auto_resume=True)
+    resumed_rounds = read_jsonl(out_dir_resumed / "rounds.jsonl")
+    resumed_oracle = read_jsonl(out_dir_resumed / "oracle.jsonl")
+
+    assert len(resumed_rounds) == total_rounds
+    assert len(resumed_oracle) == total_rounds
+    assert resumed_rounds == uninterrupted_rounds
+    assert resumed_oracle == uninterrupted_oracle
+

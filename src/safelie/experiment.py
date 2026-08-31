@@ -40,19 +40,47 @@ def _env_factory(cfg: ExperimentConfig):
     return factory
 
 
-def run_experiment_with_oracle(cfg: ExperimentConfig, eval_every: int = 1) -> Path:
+def run_experiment_with_oracle(
+    cfg: ExperimentConfig,
+    eval_every: int = 1,
+    checkpoint_every: int = 1,
+    auto_resume: bool = True,
+) -> Path:
     """Run the full pipeline: learner rounds, each optionally followed by
-    an independent oracle evaluation episode. Returns the run's output
-    directory (containing rounds.jsonl and oracle.jsonl)."""
-    run = ExperimentRun(cfg)
-    env_factory = _env_factory(cfg)
-    oracle_logger = JsonlLogger(run.output_dir / "oracle.jsonl")
-    eval_seed_rng = run.seed_bundle.rng("eval")
+    an independent oracle evaluation episode.
 
-    num_rounds = max(1, cfg.total_steps // cfg.rollout_length)
+    Supports automatic checkpointing and resuming:
+      - If auto_resume is True and a checkpoint exists in run.output_dir,
+        restores the state and resumes from the last completed round.
+      - Saves a checkpoint every `checkpoint_every` rounds and on completion.
+    """
+    run = ExperimentRun(cfg)
+    ckpt_path = run.output_dir / "checkpoint.pt"
+
+    eval_seed_rng = run.seed_bundle.rng("eval")
     episodes_by_agent: dict[str, list] = {aid: [] for aid in run.env.agent_ids}
 
-    for k in range(num_rounds):
+    start_k = 0
+    if auto_resume and ckpt_path.exists():
+        extra = run.restore(ckpt_path)
+        start_k = run.round_index
+        if "eval_rng" in extra:
+            eval_seed_rng.bit_generator.state = extra["eval_rng"]
+        else:
+            for _ in range(start_k):
+                eval_seed_rng.integers(0, 2**31 - 1)
+        if "episodes_by_agent" in extra:
+            episodes_by_agent = extra["episodes_by_agent"]
+        # Re-attach round logger in append mode
+        run.round_logger = JsonlLogger(run.output_dir / "rounds.jsonl")
+        print(f"Resumed {cfg.run_id} from round {start_k} via {ckpt_path}")
+
+    env_factory = _env_factory(cfg)
+    oracle_logger = JsonlLogger(run.output_dir / "oracle.jsonl")
+
+    num_rounds = max(1, cfg.total_steps // cfg.rollout_length)
+
+    for k in range(start_k, num_rounds):
         learner_record = run.run_round()
 
         if k % eval_every == 0:
@@ -81,5 +109,24 @@ def run_experiment_with_oracle(cfg: ExperimentConfig, eval_every: int = 1) -> Pa
                 }
             oracle_logger.write(oracle_record)
 
+        if checkpoint_every > 0 and (k + 1) % checkpoint_every == 0:
+            run.checkpoint(
+                ckpt_path,
+                extra={
+                    "eval_rng": eval_seed_rng.bit_generator.state,
+                    "episodes_by_agent": episodes_by_agent,
+                },
+            )
+
+    if checkpoint_every > 0:
+        run.checkpoint(
+            ckpt_path,
+            extra={
+                "eval_rng": eval_seed_rng.bit_generator.state,
+                "episodes_by_agent": episodes_by_agent,
+            },
+        )
+
+    run.round_logger.close()
     oracle_logger.close()
     return run.output_dir

@@ -227,7 +227,7 @@ class ExperimentRun:
         self.round_logger.close()
         return self.output_dir
 
-    def checkpoint(self, path: Path) -> None:
+    def checkpoint(self, path: Path, extra: dict | None = None) -> None:
         """Smoke test S14: a restored run must continue bitwise-identically
         to an uninterrupted one. That requires every source of randomness
         touched between rounds to be captured, not just the model weights:
@@ -251,10 +251,11 @@ class ExperimentRun:
                 "torch_global": torch.get_rng_state(),
                 "numpy_global": np.random.get_state(),
             },
+            "extra": extra or {},
         }
         torch.save(state, path)
 
-    def restore(self, path: Path) -> None:
+    def restore(self, path: Path) -> dict[str, Any]:
         state = torch.load(path, weights_only=False)
         for aid, sd in state["agents"].items():
             self.agents[aid].load_state_dict(sd)
@@ -269,6 +270,7 @@ class ExperimentRun:
             self.replicas[sid].rng.bit_generator.state = rng_state
         torch.set_rng_state(state["rng_state"]["torch_global"])
         np.random.set_state(state["rng_state"]["numpy_global"])
+        return state.get("extra", {})
 
 
 def run_experiment(cfg: ExperimentConfig) -> Path:
