@@ -171,7 +171,36 @@ def run_experiment_with_oracle(
                 mechanism_reported = constraint["mechanism_reported_cost_return"]
                 gap_vs_own_critic = detection_gap(oracle_result.true_cost_return[aid], own_critic_reported)
                 gap_vs_aggregate = detection_gap(oracle_result.true_cost_return[aid], mechanism_reported)
+                # G1 (docs/g1_gates.md): the head-to-head estimator
+                # comparison, written HERE rather than by the learner
+                # because it needs the oracle's truth and the learner is
+                # never allowed to see it. The learner logged both
+                # estimators from the same rollout; this block pairs each
+                # against the same oracle episode, so `bias_gae` and
+                # `bias_mc` differ ONLY in the estimator and share every
+                # other source of error (the two rollouts' own sampling
+                # noise, and the fact that the oracle measures theta_{k+1}
+                # while the learner's rollout was drawn under theta_k).
+                # That shared-error property is what makes the DIFFERENCE
+                # of the two biases interpretable even though neither
+                # bias in isolation is pure estimator error.
+                estimators = constraint.get("constraint_estimators", {})
+                true_i = oracle_result.true_cost_return[aid]
+                estimator_block = {
+                    "active": estimators.get("active"),
+                    "gae_lambda": estimators.get("gae_lambda"),
+                    "mc_window": estimators.get("mc_window"),
+                    "mc_episodic": estimators.get("mc_episodic"),
+                    "mc_window_task_return": estimators.get("mc_window_task_return"),
+                    "mc_n_complete_episodes": estimators.get("mc_n_complete_episodes"),
+                }
+                for key in ("gae_lambda", "mc_window", "mc_episodic"):
+                    v = estimators.get(key)
+                    estimator_block[f"bias_{key}"] = (
+                        float(v) - float(true_i) if v is not None else None
+                    )
                 oracle_record["agents"][aid] = {
+                    "constraint_estimators": estimator_block,
                     "true_cost_return": oracle_result.true_cost_return[aid],
                     "episodic_task_return": oracle_result.episodic_task_return,
                     "episodic_reported_cost_return": oracle_result.episodic_reported_cost_return[aid],

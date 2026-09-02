@@ -22,6 +22,12 @@ from dataclasses import dataclass, field
 
 import numpy as np
 
+from safelie.training.constraint_return import (
+    complete_target_count,
+    discounted_cost_to_go,
+    discounted_window_return,
+    episodic_mc_returns,
+)
 from safelie.training.gae import compute_gae
 
 
@@ -87,6 +93,20 @@ class AgentRollout:
             truncation_bootstrap_values=trunc_cv,
         )
 
+        # The dual update's constraint-objective estimator, computed
+        # INDEPENDENTLY of GAE and of both critics: a plain discounted
+        # Monte-Carlo sum over this round's own sampled reported cost.
+        # `ret_c` above stays exactly as it was and keeps driving the cost
+        # critic's regression and the cost advantage; the two quantities
+        # are deliberately not the same object. See
+        # `safelie.training.constraint_return` for why `ret_c[0]` is a
+        # valid value target but an invalid estimator of J_C.
+        mc_cost_to_go = discounted_cost_to_go(costs, gamma)
+        mc_cost_return = discounted_window_return(costs, gamma)
+        mc_task_return = discounted_window_return(rewards, gamma)
+        mc_episodic = episodic_mc_returns(costs, terminated, truncated, gamma)
+        n_mc_targets = complete_target_count(len(costs), gamma) if len(costs) else 0
+
         return {
             "obs": np.stack(self.obs),
             "raw_actions": np.stack(self.raw_actions),
@@ -96,6 +116,32 @@ class AgentRollout:
             "adv_c": adv_c,
             "ret_c": ret_c,
             "cost_return_estimate": float(ret_c[0]) if len(ret_c) else 0.0,
+            # --- Constraint-objective estimators (return scale, raw) ---
+            # `mc_cost_return` is what the dual update consumes when
+            # `ExperimentConfig.constraint_estimator == "mc_window"`; it
+            # uses ONE global discount clock over the whole round window,
+            # matching `safelie.eval.oracle.OracleEvaluator` exactly, so
+            # "bias against the oracle" compares two measurements of the
+            # same functional. `mc_cost_return_episodic` is the textbook
+            # per-episode estimator, logged as a diagnostic so the size of
+            # the definitional difference is measured rather than assumed.
+            "mc_cost_return": mc_cost_return,
+            "mc_cost_to_go": mc_cost_to_go,
+            "mc_cost_return_episodic": mc_episodic.mean_return,
+            "mc_n_complete_episodes": mc_episodic.n_complete,
+            "mc_episode_lengths": list(mc_episodic.episode_lengths),
+            "mc_censored_length": mc_episodic.censored_length,
+            "mc_episodic_fell_back": mc_episodic.fell_back,
+            # Task-return counterpart on the same clock, so the round's
+            # own rollout carries a quantity directly comparable with the
+            # oracle's `episodic_task_return`. Diagnostic only -- nothing
+            # in training or in the dual reads it.
+            "mc_task_return": mc_task_return,
+            # How many leading rows of `mc_cost_to_go` are complete to
+            # within 1% of their own discounted mass; the rest are
+            # censored by the window edge and are masked out of the
+            # replica/monitor regression fit.
+            "n_mc_targets": n_mc_targets,
             # Raw per-step critic predictions (the network's own V(s_t)
             # forward pass, *not* the GAE-lambda value target `ret_c`/
             # `ret_r`). Kept distinct so callers can log "critic

@@ -5,6 +5,84 @@ follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### G1: the dual update's constraint-objective estimator (post-G0)
+
+G0 was a CONDITIONAL PASS. The learner learns, the dual responds, true
+cost moves toward the budget, three seeds reproduce. One finding blocked
+a full pass, and this batch repairs it. Nothing here runs or reinterprets
+an attack experiment.
+
+**The defect.** The value the dual update compared against the budget `d`
+was `ret_c[0]`, the GAE(lambda) bootstrap target at a round's first step.
+That is a valid cost-critic regression target and a valid input to
+advantage estimation. It is not a valid direct estimator of
+`J_C^i(theta) = E[sum_t gamma^t C_t^i]`: a lambda-return is a geometric
+blend of n-step returns whose weight on genuine sampled cost decays as
+`(gamma*lambda)^n`, so at gamma=0.99, lambda=0.95 it keeps only about
+`1/(1 - gamma*lambda) = 16.8` steps of real Monte-Carlo evidence and
+hands the rest of the roughly 100 steps of discounted mass to the cost
+critic's bootstrap, inheriting whatever bias the critic carries. The
+three G0 clean runs measured exactly that: whole-run own-critic bias of
+-6.91 / -8.75 / -8.53 against the withheld oracle's true discounted cost
+return, and `corr(estimate, true)` of only 0.50 / 0.48 / 0.43 while an
+undiscounted per-step cost rate from the learner's own rollout already
+reached 0.84 / 0.86 / 0.82 against the identical oracle series.
+
+**The repair** is a separation of concerns, not a replacement of GAE:
+
+- New `safelie.training.constraint_return`. `discounted_window_return`
+  computes `sum_t gamma^t C_t` over the round's window on one global
+  discount clock -- the same functional
+  `safelie.eval.oracle.OracleEvaluator` accumulates, including the
+  requirement that the clock does not reset at an internal auto-reset
+  boundary. No critic anywhere in the path. A unit test asserts the two
+  accumulations agree to `rel_tol=1e-12`, which is what makes "bias
+  against the oracle" a measurement of estimator error rather than of a
+  definitional mismatch.
+- `discounted_cost_to_go` supplies proper Monte-Carlo regression targets
+  for the `ensemble_replica` / `monitor` sources, replacing `ret_c`, and
+  `complete_target_count` masks the trailing rows whose target is
+  censored by the window edge by more than 1% of its own discounted mass
+  (459 rows of 2000 at gamma=0.99). Without that mask a head fit on
+  systematically shrunk tail targets predicts low at the query point,
+  reintroducing the same downward bias through the regression.
+- `episodic_mc_returns` computes the textbook per-episode own-clock
+  estimator as a logged **diagnostic**, so the size of the definitional
+  difference between the two readings of `sum_t gamma^t C_t` is measured
+  rather than assumed. It is not the dual signal: complete-episode
+  averaging censors episodes still running at the window edge, and
+  excluding them biases the mean toward short episodes.
+- `ExperimentConfig.constraint_estimator` selects `mc_window` (the
+  default) or `gae_lambda` (the pre-G1 behaviour, retained only so the G0
+  artifacts stay reproducible and the two can be compared head to head).
+  It is recorded in every run's `run_metadata.json` config snapshot, so
+  no artifact is ambiguous about which estimator produced it.
+
+**Explicitly unchanged.** GAE keeps gamma=0.99 and lambda=0.95 for policy
+optimisation; `adv_r`, `adv_c` and both critics' regression targets still
+come from `safelie.training.gae`, and `safelie.training.ppo` is untouched.
+The four `peer_critic` sources remain learned-value-function estimators,
+because the cost critic's own target is GAE(lambda). The threat model,
+RCE, attack magnitude, the budget d=25 and the statistical methodology
+are untouched: the attacker still corrupts the communicated source
+residual after estimation and before consensus, and the oracle remains
+withheld. `tests/unit/test_dual_estimator_wiring.py` asserts both halves
+of that -- the honest pre-attack reports are unchanged when the attack is
+enabled, and the value the dual consumes is not.
+
+**Logging.** Both estimators are written every round from the same
+rollout, whichever is active (`rounds.jsonl:
+constraints.*.constraint_estimators`), and paired against the same oracle
+episode with their biases (`oracle.jsonl:
+agents.*.constraint_estimators`), so the head-to-head comparison comes
+from one run's own logs rather than from two campaigns that also differ
+in their trajectories.
+
+`docs/g1_gates.md` pre-declares the G1 acceptance gates, with every
+numeric bar justified against a G0 measurement that already existed on
+disk at declaration time. `scripts/analyze_g1.py` applies them.
+
+
 ### P0 implementation repair (pre-G0)
 
 Independent audit found the learner/source layer was not yet operating in

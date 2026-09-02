@@ -171,6 +171,29 @@ class ExperimentConfig(BaseModel):
     total_steps: int = Field(gt=0)
     rollout_length: int = Field(default=200, gt=0)
     output_dir: str = "results/runs"
+    # Which quantity the constraint sources report -- i.e. what the dual
+    # update actually estimates J_C^i(theta) with. This is a scientific
+    # setting, not a tuning knob, and it is recorded in every run's
+    # `run_metadata.json` config snapshot so no artifact is ambiguous
+    # about which estimator produced it.
+    #
+    #   "mc_window"  (default) -- an explicit discounted Monte-Carlo sum
+    #       over the round's own sampled reported cost, on one global
+    #       clock, computed by `safelie.training.constraint_return`. No
+    #       critic and no GAE in the path. Scale-matched by construction
+    #       to `safelie.eval.oracle.OracleEvaluator`.
+    #   "gae_lambda" -- the pre-G1 behaviour: `ret_c[0]`, the GAE(lambda)
+    #       bootstrap target at the round's first step. Retained ONLY so
+    #       the G0 artifacts remain reproducible and so the two estimators
+    #       can be compared head to head. It is a documented defect as a
+    #       constraint-objective estimator (see
+    #       `safelie.training.constraint_return`'s docstring) and must not
+    #       be selected for new science.
+    #
+    # `mc_window` is the default because the alternative is the defect;
+    # a default that preserved the defect would silently propagate it into
+    # every config that does not mention this field.
+    constraint_estimator: Literal["mc_window", "gae_lambda"] = "mc_window"
 
     @model_validator(mode="after")
     def _cross_field_checks(self) -> ExperimentConfig:

@@ -172,8 +172,56 @@ class ExperimentRun:
             )
         return peer_id
 
+    def _cost_to_go_targets(self, owner_finalized: dict) -> tuple[np.ndarray, np.ndarray]:
+        """The (obs, cost-to-go) regression pairs a replica/monitor source
+        fits each round, under the configured constraint estimator.
+
+        Under `mc_window` these are proper discounted Monte-Carlo
+        cost-to-go targets, masked to the leading rows whose target is
+        complete to within 1% of its own discounted mass -- rows near the
+        window edge carry systematically shrunk targets (at gamma=0.99 the
+        target at t = T-10 is missing 90% of its mass) and fitting on them
+        would reintroduce the downward bias through the regression head.
+        Under `gae_lambda` they are the pre-G1 `ret_c` targets, unmasked.
+        """
+        if self.cfg.constraint_estimator == "mc_window":
+            n = int(owner_finalized["n_mc_targets"])
+            return owner_finalized["obs"][:n], owner_finalized["mc_cost_to_go"][:n]
+        return owner_finalized["obs"], owner_finalized["ret_c"]
+
     def _collect_source_value(self, spec: SourceSpec, owner_id: AgentID, owner_finalized: dict) -> float:
+        """One source's return-scale estimate of the owner's J_C^i.
+
+        The constraint estimator selected by
+        `ExperimentConfig.constraint_estimator` changes WHAT the
+        critic-free sources estimate, not the mechanism: every source
+        still produces one return-scale scalar, those scalars are still
+        the only thing that leaves this method, and
+        `safelie.attacks.apply_attack` still corrupts them downstream in
+        `run_round` before aggregation. Nothing here reads true cost.
+
+          own_critic      -- under `mc_window`, the owner's own discounted
+                             Monte-Carlo constraint return over this
+                             round's rollout (the direct empirical
+                             estimate of J_C^i); under `gae_lambda`, the
+                             pre-G1 `ret_c[0]` bootstrap target.
+          peer_critic     -- UNCHANGED by this repair: a peer's cost-value
+                             network evaluated at the owner's initial
+                             observation. It stays a learned-value-function
+                             estimator because the cost critic's own
+                             regression target is GAE(lambda), which this
+                             repair holds fixed. Its behaviour is logged
+                             per source so the ensemble's remaining critic
+                             dependence stays visible rather than assumed
+                             away.
+          replica/monitor -- a small independently-initialized head refit
+                             each round on (obs, cost-to-go); the targets
+                             follow the selected estimator, see
+                             `_cost_to_go_targets`.
+        """
         if spec.source_type == "own_critic":
+            if self.cfg.constraint_estimator == "mc_window":
+                return float(owner_finalized["mc_cost_return"])
             return owner_finalized["cost_return_estimate"]
         if spec.source_type == "peer_critic":
             peer_id = self._peer_agent_id(spec.source_id, owner_id)
@@ -183,9 +231,8 @@ class ExperimentRun:
                 return float(peer_agent.cost_value(obs0).item())
         # ensemble_replica / monitor
         replica = self.replicas[spec.source_id]
-        return replica.refit_and_predict(
-            owner_finalized["obs"], owner_finalized["ret_c"], owner_finalized["obs"][0]
-        )
+        fit_obs, fit_targets = self._cost_to_go_targets(owner_finalized)
+        return replica.refit_and_predict(fit_obs, fit_targets, owner_finalized["obs"][0])
 
     def run_round(self) -> dict:
         cfg = self.cfg
@@ -342,6 +389,39 @@ class ExperimentRun:
                 "constraint_residual": float(residual_i),
                 "reported_cost_return": finalized[aid]["cost_return_estimate"],
                 "task_return": float(finalized[aid]["ret_r"][0]) if len(finalized[aid]["ret_r"]) else 0.0,
+                # G1 (docs/g1_gates.md). BOTH constraint-objective
+                # estimators, every round, computed from the SAME rollout,
+                # whichever one is active -- so "did replacing the
+                # estimator remove the systematic under-read?" is
+                # answerable from one run's own logs rather than by
+                # comparing two campaigns that also differ in their
+                # trajectories. All values are raw return scale. None of
+                # them is an evaluation metric: the oracle's
+                # `true_cost_return` is truth, and it lives in
+                # oracle.jsonl, written by a separate process.
+                "constraint_estimators": {
+                    # ret_c[0], the pre-G1 dual input: a GAE(lambda)
+                    # bootstrap target, NOT an estimator of J_C.
+                    "gae_lambda": finalized[aid]["cost_return_estimate"],
+                    # sum_t gamma^t C_t over the round window on one global
+                    # clock -- the same functional the oracle measures.
+                    "mc_window": float(finalized[aid]["mc_cost_return"]),
+                    # per-episode own-clock mean over COMPLETE episodes;
+                    # diagnostic only (short-episode censoring bias, see
+                    # safelie.training.constraint_return).
+                    "mc_episodic": float(finalized[aid]["mc_cost_return_episodic"]),
+                    "mc_n_complete_episodes": int(finalized[aid]["mc_n_complete_episodes"]),
+                    "mc_censored_length": int(finalized[aid]["mc_censored_length"]),
+                    "mc_episode_lengths": list(finalized[aid]["mc_episode_lengths"]),
+                    "n_mc_targets": int(finalized[aid]["n_mc_targets"]),
+                    # Discounted task return on the same window clock, so
+                    # the learner's rollout carries a quantity directly
+                    # comparable with the oracle's `episodic_task_return`.
+                    "mc_window_task_return": float(finalized[aid]["mc_task_return"]),
+                    # Which of the two actually fed `own_critic` and the
+                    # replica/monitor regression targets this round.
+                    "active": cfg.constraint_estimator,
+                },
                 "training_diagnostics": {
                     "train_reward_mean": finalized[aid]["reward_mean"],
                     "train_cost_rate_mean": finalized[aid]["cost_rate_mean"],
