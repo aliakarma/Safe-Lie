@@ -82,3 +82,108 @@ between this output and the paper's tables is not a claim about
 2's precondition, not a proof that it holds — the paper's own analysis
 (§13.3, weakness W3) explains why the true precondition cannot be checked
 without ground truth the deployment lacks by construction.
+
+## Averaging window: use the whole run, not a trailing slice
+
+**This is not a stylistic preference. A trailing window nearly produced a
+wrong scientific conclusion in this repository, and the mistake is easy to
+repeat.**
+
+The dual variable oscillates. `lambda` rises until the policy complies,
+the true cost falls below the budget, `lambda` relaxes, the policy drifts
+back, and the cycle repeats — the documented behaviour of a primal-dual
+Lagrangian method without a PID controller. Measured here the period is
+roughly 100 rounds, so a 250-round pilot contains only about two cycles.
+
+A trailing-100-round average therefore does not measure a steady state. It
+samples a near-random *phase* of that oscillation, and which phase a run
+ends on varies by seed. Concretely, summarizing the same completed runs
+over different windows gave:
+
+| `lambda`, condition vs clean | whole run | last 200 | last 150 | last 100 |
+|---|---|---|---|---|
+| attacked (B) | −0.13 | −0.17 | −0.19 | −0.36 |
+| benign control (D) | **+0.12** | **+0.15** | **+0.09** | **−0.35** |
+
+On the trailing-100 window both the attacked and the benign arm appeared
+to suppress `lambda` by ~2.6 standard deviations of the clean condition's
+seed spread — a striking result, and a spurious one. It reverses sign for
+the benign arm on every longer window. Read from the whole run the
+ordering is monotone and interpretable instead: `lambda` D > A > B, with
+true cost in exactly the inverse order, which is what the corruption
+mechanism predicts.
+
+Two consequences:
+
+1. `scripts/analyze_matrix.py` defaults to the whole run (`--window 0`)
+   and always prints a **window-sensitivity table**. A contrast whose sign
+   changes across windows is an artifact of the oscillation, not an
+   effect, and must not be reported as one.
+2. Seeds, not rounds, are the independent samples. Rounds within a run are
+   strongly autocorrelated at the oscillation's timescale, so a run's ~250
+   rounds are worth roughly two independent observations — which is why
+   `safelie.analysis.stats.MIN_SEEDS_FOR_INFERENCE` is enforced against
+   the seed count and never against the round count.
+
+## Which "reported cost" the detection gap is measured against
+
+`Delta = J_true_C - J_reported_C` is the paper's headline metric, and the
+answer to "which reported cost?" decides whether the metric can see the
+attack at all.
+
+`safelie.training.loop` logs `reported_cost_return` as the agent's **own
+cost-critic estimate** (`ret_c[0]` from GAE over its own cost stream), and
+`safelie.experiment` computes the logged `detection_gap` against that. But
+the attack does not touch the agent's own critic. Corruption is applied to
+the *source reports* (`safelie.attacks.apply_attack`), and lands in
+`aggregate.point_estimate` — which is the quantity the dual update
+consumes and therefore the quantity the safety mechanism actually
+believes.
+
+Measured on the same completed runs, one attacked seed against the
+3-seed clean baseline:
+
+| detection gap measured against | attacked (B) | benign control (D) |
+|---|---|---|
+| the agent's own cost critic (as logged) | +0.17 sd | −1.88 sd |
+| **the aggregate (what the dual consumes)** | **+3.16 sd** | −1.75 sd |
+
+The attack's effect on the paper's headline metric is roughly 18x larger
+under the second definition. The first is not meaningless — it measures
+cost-critic estimation error — but it is not the corruption channel, and
+reporting it as "the detection gap" understates the attack to the point of
+looking like a null result.
+
+`scripts/analyze_matrix.py` therefore reports
+`detection_gap_vs_aggregate` as the primary metric, recomputed from
+`aggregate.point_estimate`, which is already present in every run's
+`rounds.jsonl` — so this required no re-running.
+
+**Reconstructing the RCE estimate.** For the RCE conditions the dual
+consumes `pessimistic_estimate` (`= point_estimate + applied_margin`,
+Algorithm 1 line 7), and neither that nor `applied_margin` is logged
+directly. They are nonetheless recoverable exactly: `applied_margin =
+beta * spread`, `spread` **is** logged, and the logged value is the
+post-flooring one actually used for the margin
+(`safelie.defenses.rce`). So
+
+    effective_estimate = point_estimate + beta * spread
+
+with `beta` read from the condition's own config, and an RCE run
+identified by `guarantee_in_force` being non-null (which
+`safelie.training.loop` sets only for RCE).
+`detection_gap_vs_aggregate` is therefore **exact for every condition**,
+computed from existing logs with no re-running.
+
+That reconstruction also makes RCE's mechanism directly visible. On one
+attacked seed:
+
+| | aggregate fed to the dual | agent's own cost critic |
+|---|---|---|
+| B — attacked, mean aggregation | 19.85 | 24.56 |
+| C — attacked, RCE | 21.32 | 21.49 |
+
+The attack pulls the undefended aggregate 4.7 below the agent's own
+estimate; under RCE the effective estimate lands within 0.17 of it. The
+defense is recovering the corrupted aggregate, not merely adding
+conservatism on top of it.

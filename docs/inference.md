@@ -54,8 +54,13 @@ print(result.true_cost_return, result.violated)
 
 ## On a real environment (Safe MAMuJoCo)
 
-Once `safelie/envs/mamujoco.py` is completed (see that module's docstring
-and [reproducibility.md](reproducibility.md)), the same `evaluate_true_cost`
-function works unchanged — it is written against the `DualCostEnvWrapper`
+`safelie/envs/mamujoco.py` implements the adapter, so the same
+`evaluate_true_cost` function works unchanged on `manyagent_ant` and the
+other MuJoCo configs — it is written against the `DualCostEnvWrapper`
 protocol, not against the synthetic environment specifically. Only the
-`env_factory` needs to change.
+`env_factory` differs, and `safelie.envs.factory.build_env` handles that
+from the config.
+
+Install a backend first (`pip install "safelie[mujoco]"`), and read that
+module's docstring before interpreting the numbers: three deviations
+forced by the reference implementation bound what they can support.

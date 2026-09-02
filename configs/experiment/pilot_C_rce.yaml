@@ -1,14 +1,44 @@
-# STAGE 2 -- Google Colab T4 GPU pilot. See pilot_A_clean.yaml's header:
-# NOT executable locally. Condition C: attacked, defended -- "the defense
+# STAGE 2 -- compact pilot condition C: attacked, defended -- "the defense
 # claim" (PROJECT_REPORT.md §R2.2). Same attack as pilot_B_attack.yaml,
-# RCE (f=1, beta=1.5) instead of mean.
+# RCE (f=1, beta=1.5) instead of mean. RUNNABLE; see pilot_A_clean.yaml's
+# header and safelie/envs/mamujoco.py's docstring.
 run_id: pilot_C_rce
 seed: 0  # run all of [0, 1, 2] per §R2.3
 
 env:
-  name: manyagent_ant
-  n_agents: 6
-  budget: 25.0
+  name: manyagent_ant  # [SPEC] main_iclr.tex §5.1
+  n_agents: 6           # [SPEC] N=6
+  budget: 25.0          # [SPEC] d=25 per agent
+  # `[DECISION]` obs_dim/action_dim are deliberately absent: the MuJoCo
+  # factorization determines them (63 and 4 here) and the learner sizes its
+  # networks from the constructed environment, not from this file.
+  #
+  # `[DECISION]` velocity_threshold=0.75, NOT Safe MAMuJoCo's nearest table
+  # entry (Ant 4x2 = 2.418). §5.1 specifies no ManyAgent Ant threshold --
+  # the reference implementation has no such environment -- so the
+  # threshold, not the paper's [SPEC] d=25 or eta_lambda=0.035, is the free
+  # parameter here. At 2.418 a fresh policy incurs cost on 0.75% of steps
+  # (J_C ~ 0.75 vs d=25): lambda never leaves zero and all five conditions
+  # coincide for reasons unrelated to the hypothesis -- the §R6.1
+  # precondition failure.
+  #
+  # 0.75 rather than 1.0 because a completed 250-round condition-A run at
+  # 1.0 showed the initial-calibration bar is necessary but NOT sufficient:
+  # the true cost bound from round 0, yet the learner's own estimate (what
+  # the dual update actually compares against d) did not cross 25 until
+  # round ~159 of 250. lambda was positive in only 14% of (round, agent)
+  # cells, peaked at 1.67 of lambda_max=25, and was still rising at cutoff
+  # -- leaving ~86% of the run structurally unable to distinguish condition
+  # A from B/C/D. The cost critic needs ~150 rounds to converge, which is
+  # 60% of a 5e5-step pilot but 3% of the paper's 1e7-step scale.
+  #
+  # Measured (`python scripts/calibrate_cost.py --config <this file>`):
+  #   thr 2.418 -> true 0.04x budget, estimate 0.02x  NON-BINDING
+  #   thr 1.00  -> true 0.80x budget, estimate 0.23x  binding too late
+  #   thr 0.75  -> true 1.66x budget, estimate 0.42x  BINDING
+  #   thr 0.60  -> true 2.35x budget, estimate 0.49x  binding, nearer saturation
+  velocity_threshold: 0.75
+  cost_mode: per_agent_velocity  # `[DECISION]` resolves [GAP] G4; see mamujoco.py
 
 topology:
   name: ring

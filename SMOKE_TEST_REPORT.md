@@ -3,6 +3,16 @@
 Every result below was actually executed during this repository's build.
 Nothing here is inferred or assumed. Commands are copy-pasteable.
 
+> **Superseded in part (2026-08-31).** This report records the state of
+> the build *before* `safelie.envs.mamujoco` was implemented, and is kept
+> as a dated record rather than rewritten. Statements below that the Safe
+> MAMuJoCo adapter is unimplemented and that `pilot_*` configs do not run
+> were true when written and are no longer. See
+> [CHANGELOG.md](CHANGELOG.md) and
+> [docs/reproducibility.md](docs/reproducibility.md) for the current
+> state. Everything else here — the synthetic-environment demo runs, the
+> determinism and isolation results — is unaffected.
+
 ## Environment
 
 | | |

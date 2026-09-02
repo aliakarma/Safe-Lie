@@ -39,11 +39,12 @@ implementation, not measured results, and not to be read as evidence."*
 2. Provides a CPU-only synthetic environment and demonstrates the attack
    → dual-bias → policy pathway moves through the code correctly (see
    below).
-3. **Does not** run the paper's actual environments (Safe MAMuJoCo,
-   Safety-Gymnasium), because that requires the MuJoCo physics engine and
-   multi-agent wrapper packages this build does not have, and which
-   `PROJECT_REPORT.md` itself assigns to a Google Colab GPU stage, not to
-   repository construction.
+3. **Runs** the paper's environments as far as they exist. Safe MAMuJoCo
+   is implemented (`safelie.envs.mamujoco`) and the `pilot_*` configs
+   execute. What it does **not** do is treat the resulting numbers as a
+   reproduction: the pilot is 1/20 of the paper's step budget, and three
+   deviations forced by the reference implementation (below) mean the
+   headline environment is not the paper's environment.
 
 **No number produced by this repository should be compared to
 `main_iclr.tex`'s Table 3 or Table 4, or presented as evidence for or
@@ -76,32 +77,58 @@ wired correctly, not evidence about the paper's hypothesis.**
 
 Full numbers: [SMOKE_TEST_REPORT.md](../SMOKE_TEST_REPORT.md).
 
-## Completing Stage 2 (the Colab pilot)
+## Stage 2 (the compact pilot): what running it establishes
 
 `configs/experiment/pilot_A_clean.yaml` through `pilot_E_clean_rce.yaml`
 are the literal encoding of `PROJECT_REPORT.md` §R8's compact pilot
 matrix (M=7, f=1, β=1.5, η_λ=0.035, λ_max=25, ring topology, 5×10⁵ steps,
-seeds [0,1,2]). They **validate** against the config schema today, but
-**do not run**: `env.name: manyagent_ant` requires `safelie.envs.mamujoco`,
-which raises `NotImplementedError` with instructions. To complete this:
+seeds [0,1,2]). They run:
 
-1. On a Colab T4 High-RAM runtime, `pip install mujoco safety-gymnasium`
-   plus a Multi-Agent MuJoCo factorization package.
-2. Implement the adapter in `safelie/envs/mamujoco.py` against the
-   `DualCostEnvWrapper` contract — its docstring lists exactly what is
-   needed (three method implementations, following
-   `safelie.envs.synthetic`'s isolation pattern).
-3. Run the full local smoke suite against the new adapter (`pytest
-   tests/`, then `python scripts/smoke_test.py`) — the **GREEN SIGNAL**
-   gate — before spending any GPU time.
-4. Run `notebooks/colab_full_experiment.ipynb`, whose 12-cell structure
-   already matches `PROJECT_REPORT.md` §R7.3 and which currently reports
-   exactly where it is blocked (cell 8, training).
+```bash
+pip install "safelie[mujoco]"
+python scripts/calibrate_cost.py --config configs/experiment/pilot_A_clean.yaml
+python scripts/train.py --config configs/experiment/pilot_A_clean.yaml
+```
+
+**This is not a GPU workload.** Nothing in `safelie` moves a tensor to
+CUDA; the networks are small MLPs stepped one observation at a time in a
+Python loop. Measured throughput is ~130 env-steps/s, so a single pilot
+run takes roughly two hours on CPU and a T4 does not help. Prefer a
+high-CPU runtime; use the checkpoint/resume path across sessions.
+
+### Three deviations that bound what the pilot may claim
+
+Implementing the adapter surfaced three facts about the reference
+implementation that no amount of compute resolves. They are recorded in
+full in `safelie/envs/mamujoco.py`'s docstring and
+`docs/assumptions.md`; in summary:
+
+1. **ManyAgent Ant is not a Safe MAMuJoCo environment.** The reference
+   implementation's threshold table has no entry for it and its
+   constructor asserts on the name. The paper's primary environment does
+   not exist in the implementation the paper cites. It runs here only on
+   the `gymnasium_robotics` backend, with a cost function this repository
+   supplies. `halfcheetah_6x1` is the one genuinely N=6 configuration the
+   reference implementation does support.
+2. **Safe MAMuJoCo's cost is shared, not per-agent** — one global speed
+   indicator, copied to every agent. The paper's per-agent `C^i` collapses
+   to a single shared constraint under it, and `[GAP]` G4 becomes vacuous.
+   `cost_mode` selects between the reference behaviour and a per-agent
+   variant.
+3. **The reference thresholds do not bind at this scale.** They are
+   calibrated to a converged agent; the pilot trains for 5×10⁵ steps. At
+   Ant's 2.418 the constraint sits ~30x from binding, which would make all
+   five conditions coincide for reasons unrelated to the hypothesis. The
+   threshold is calibrated by measurement instead — see
+   `scripts/calibrate_cost.py`.
 
 No part of this repository's attack, defense, source-accounting, or
-oracle-isolation logic needs to change to support a real environment —
-everything downstream of `DualCostEnvWrapper` is environment-agnostic by
-construction.
+oracle-isolation logic changed to support a real environment — everything
+downstream of `DualCostEnvWrapper` is environment-agnostic by
+construction, as designed. What did change: the learner now sizes its
+networks from the constructed environment rather than from
+`EnvConfig.obs_dim`/`action_dim`, which defaulted to 8/2 and would have
+silently built 8-dim policies for 63-dim observations.
 
 ## What would be needed for the paper's Stage 3
 

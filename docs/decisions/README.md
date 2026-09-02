@@ -10,7 +10,7 @@ that log, cross-referenced to the report's own D1-D14 numbering
 
 | ID | Decision | Enforced by |
 |---|---|---|
-| D1 | Environment `ManyAgent Ant`, N=6, d=25; victim MAPPO-Lagrangian only | `configs/experiment/pilot_*.yaml` (Stage-2 spec; not runnable — see `safelie/envs/mamujoco.py`) |
+| D1 | Environment `ManyAgent Ant`, N=6, d=25; victim MAPPO-Lagrangian only | `configs/experiment/pilot_*.yaml`, `safelie/envs/mamujoco.py` (runnable; the velocity threshold is calibrated, not specified — see `docs/assumptions.md`) |
 | D2 | Aggregators: `mean` and `rce` only, for the compact study | `configs/experiment/pilot_*.yaml`; `safelie.defenses` implements all 5 for Stage-3 ablations |
 | D3 | `M <= 2f` raises at config-validation time; `|T| < 3` floors the margin, warns, and sets `guarantee_in_force=False` | `safelie.utils.config.ExperimentConfig._cross_field_checks`; `safelie.defenses.rce.rce_aggregate` |
 | D4 | Topology fixed to `ring` for the whole compact matrix; sigma_2(W) available via `safelie.consensus.mixing.second_largest_singular_value` | `configs/experiment/pilot_*.yaml` |

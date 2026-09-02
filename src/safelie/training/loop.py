@@ -45,7 +45,7 @@ from safelie.consensus.topologies import build_topology
 from safelie.defenses import aggregate
 from safelie.envs.dual_cost import AgentID
 from safelie.envs.factory import build_env
-from safelie.eval.margin import calibrate_epsilon_offline, compute_guarantee_in_force
+from safelie.eval.margin import compute_guarantee_in_force
 from safelie.sources.estimators import DiversifiedReplica
 from safelie.sources.registry import SourceRegistry
 from safelie.training.buffer import AgentRollout
@@ -71,13 +71,40 @@ def select_corrupted_sources(specs: list[SourceSpec], f: int) -> set[str]:
 class ExperimentRun:
     """Owns all mutable state for one (config, seed) experiment."""
 
-    def __init__(self, cfg: ExperimentConfig):
+    def __init__(self, cfg: ExperimentConfig, _skip_calibration: bool = False):
         self.cfg = cfg
+
+        # P0 #8 fix: `guarantee_in_force` must be calibrated from a
+        # dedicated clean (attack-disabled) reference distribution that
+        # exists independently of this run, never from this run's own
+        # online history (which is empty for a run's entire length
+        # whenever attack.name != "none" -- see safelie.eval.calibration's
+        # docstring for the vacuous-guarantee bug this replaces). Run
+        # BEFORE `seed_everything(cfg.seed)` below so the calibration
+        # phase's own RNG usage cannot perturb this run's determinism:
+        # `seed_everything` unconditionally resets global numpy/torch
+        # state afterward.
+        self.calibration = None
+        if cfg.defense.name == "rce" and not _skip_calibration:
+            from safelie.eval.calibration import run_clean_calibration
+
+            self.calibration = run_clean_calibration(cfg)
+
         self.seed_bundle = seed_everything(cfg.seed)
 
         self.env = build_env(cfg.env, rollout_length=cfg.rollout_length)
+        # Network shapes come from the *constructed* environment, never
+        # from the config. A real MuJoCo factorization determines its own
+        # dimensions (ManySegmentAnt 6x1: 63-dim observations, 4-dim
+        # actions), while `EnvConfig.obs_dim`/`action_dim` default to 8/2
+        # and the pilot configs never set them -- reading them here built
+        # 8-dim policies and fed them 63-dim observations.
+        self.obs_dim = int(self.env.obs_dim)
+        self.action_dim = int(self.env.action_dim)
         self.agents: dict[AgentID, AgentBundle] = {
-            aid: AgentBundle(cfg.env.obs_dim, cfg.env.action_dim, cfg.ppo.hidden_dim, cfg.ppo.lr)
+            aid: AgentBundle(
+                self.obs_dim, self.action_dim, cfg.ppo.hidden_dim, cfg.ppo.lr, critic_lr=cfg.ppo.critic_lr
+            )
             for aid in self.env.agent_ids
         }
         self.lam = np.zeros(cfg.env.n_agents)
@@ -95,7 +122,7 @@ class ExperimentRun:
         for i, spec in enumerate(cfg.sources.sources):
             if spec.source_type in ("ensemble_replica", "monitor"):
                 self.replicas[spec.source_id] = DiversifiedReplica(
-                    obs_dim=cfg.env.obs_dim, seed=cfg.seed * 1000 + i
+                    obs_dim=self.obs_dim, seed=cfg.seed * 1000 + i
                 )
 
         self.output_dir = Path(cfg.output_dir) / cfg.run_id
@@ -104,12 +131,53 @@ class ExperimentRun:
         self.clean_run_disagreements: list[float] = []
         self.round_index = 0
 
+        if self.calibration is not None:
+            from safelie.eval.calibration import write_calibration_report
+
+            write_calibration_report(self.calibration, self.output_dir)
+
+    def _peer_agent_id(self, source_id: str, owner_id: AgentID) -> AgentID:
+        """Map a `peer_critic_<k>` source to a peer **relative to the
+        owner**: agent (owner_index + k) mod N.
+
+        Bug fixed here (P0 #7): the previous mapping was
+        `peer_critic_k -> literal agent_k`, the same physical agent for
+        every owner. Under the pilot's own M=7 config (`peer_critic_1..4`
+        on N=6 agents), that made `peer_critic_i`'s target literally equal
+        the owner for every owner in {agent_1, agent_2, agent_3, agent_4}
+        -- 4 of 6 agents (67%) received their own critic, on their own
+        observation, relabeled as an independent "peer" source. Since `k`
+        ranges over 1..N-1 and is never a multiple of N for any owner
+        offset, `(owner_index + k) mod N == owner_index` is impossible,
+        which is asserted below rather than merely hoped for.
+        """
+        offset_str = source_id.rsplit("_", 1)[-1]
+        if not offset_str.isdigit():
+            raise ValueError(
+                f"peer_critic source_id {source_id!r} must end in an integer offset "
+                f"(e.g. 'peer_critic_1'); got a non-numeric suffix {offset_str!r}."
+            )
+        offset = int(offset_str)
+        agent_ids = self.env.agent_ids
+        n = len(agent_ids)
+        owner_idx = agent_ids.index(owner_id)
+        peer_idx = (owner_idx + offset) % n
+        peer_id = agent_ids[peer_idx]
+        if peer_id == owner_id:
+            raise ValueError(
+                f"peer_critic source_id {source_id!r} (offset={offset}) resolved to "
+                f"owner {owner_id!r} itself for N={n} agents -- a source config whose "
+                f"offset is a multiple of N self-collides for every owner and must not "
+                f"be used as a peer source (P0 #7). Fix the source spec's offset."
+            )
+        return peer_id
+
     def _collect_source_value(self, spec: SourceSpec, owner_id: AgentID, owner_finalized: dict) -> float:
         if spec.source_type == "own_critic":
             return owner_finalized["cost_return_estimate"]
         if spec.source_type == "peer_critic":
-            peer_id = spec.source_id.replace("peer_critic_", "agent_")
-            peer_agent = self.agents.get(peer_id, next(iter(self.agents.values())))
+            peer_id = self._peer_agent_id(spec.source_id, owner_id)
+            peer_agent = self.agents[peer_id]
             obs0 = torch.as_tensor(owner_finalized["obs"][0], dtype=torch.float32).unsqueeze(0)
             with torch.no_grad():
                 return float(peer_agent.cost_value(obs0).item())
@@ -134,7 +202,13 @@ class ExperimentRun:
             for aid in self.env.agent_ids:
                 obs_t = torch.as_tensor(step.obs[aid], dtype=torch.float32).unsqueeze(0)
                 with torch.no_grad():
-                    dist = self.agents[aid].policy.distribution(obs_t)
+                    # P0 #2: the policy is trained on normalized
+                    # observations (safelie.training.ppo), so it must
+                    # also act on them; `.value`/`.cost_value` already
+                    # normalize internally (safelie.algos.networks) and
+                    # denormalize their return-scale output.
+                    obs_n = self.agents[aid].normalize_obs_tensor(obs_t)
+                    dist = self.agents[aid].policy.distribution(obs_n)
                     raw_action = dist.sample()
                     logprob = dist.log_prob(raw_action).sum(-1)
                     action = torch.tanh(raw_action)
@@ -149,11 +223,30 @@ class ExperimentRun:
             prev_obs = step.obs
             step = self.env.step(actions_taken)
 
+            # A truncation (not a genuine termination) must bootstrap
+            # from the value AT THE TRUE FINAL OBSERVATION of the episode
+            # that just ended, not from 0 -- see
+            # safelie.training.gae.compute_gae's docstring. Environments
+            # that auto-reset internally on truncation (safelie.envs.
+            # mamujoco) expose that observation via
+            # `info["final_observation"]`; environments that don't
+            # auto-reset (safelie.envs.synthetic) never need this, since
+            # their own truncation always falls on the buffer's last
+            # index, where compute_gae's `last_value`/`last_cost_value`
+            # argument already covers it.
+            final_obs = step.info.get("final_observation")
             for aid in self.env.agent_ids:
-                done = bool(step.terminated[aid] or step.truncated[aid])
+                trunc_v = trunc_cv = 0.0
+                if final_obs is not None and bool(step.truncated[aid]) and not bool(step.terminated[aid]):
+                    fobs_t = torch.as_tensor(final_obs[aid], dtype=torch.float32).unsqueeze(0)
+                    with torch.no_grad():
+                        trunc_v = float(self.agents[aid].value(fobs_t).item())
+                        trunc_cv = float(self.agents[aid].cost_value(fobs_t).item())
                 rollouts[aid].add(
                     prev_obs[aid], raw_actions[aid], logprobs[aid], step.reward,
-                    step.reported_cost[aid], values[aid], cost_values[aid], done,
+                    step.reported_cost[aid], values[aid], cost_values[aid],
+                    terminated=bool(step.terminated[aid]), truncated=bool(step.truncated[aid]),
+                    truncation_value_bootstrap=trunc_v, truncation_cost_value_bootstrap=trunc_cv,
                 )
 
         finalized = {}
@@ -187,14 +280,42 @@ class ExperimentRun:
             residual_i = point_estimate - cfg.env.budget
 
             if cfg.attack.name == "none":
+                # Retained as a diagnostic (this run's own observed
+                # disagreement over time -- useful to compare against the
+                # calibration phase's reference distribution and to
+                # detect drift) but P0 #8: no longer the source of
+                # `epsilon_offline` below, which must come from a
+                # dedicated clean calibration phase computed once, before
+                # round 0, independent of this run's own history (see
+                # safelie.eval.calibration).
                 self.clean_run_disagreements.append(agg.spread)
-            epsilon_offline = calibrate_epsilon_offline(self.clean_run_disagreements) if self.clean_run_disagreements else 0.0
-            guarantee_in_force = compute_guarantee_in_force(
-                getattr(agg, "applied_margin", 0.0), epsilon_offline
-            ) if cfg.defense.name == "rce" else None
+
+            if cfg.defense.name == "rce" and self.calibration is not None:
+                epsilon_offline = self.calibration.epsilon_offline
+                guarantee_in_force = compute_guarantee_in_force(
+                    getattr(agg, "applied_margin", 0.0), epsilon_offline
+                )
+            else:
+                epsilon_offline = None
+                guarantee_in_force = None
 
             new_lam[i] = residual_i  # temporarily store per-agent residual; mixed below
 
+            # P0 #6 (return reporting). Everything in this record is a
+            # LEARNER TRAINING quantity computed from this round's own
+            # on-policy rollout under the pre-update policy theta_k:
+            # `reported_cost_return`/`task_return` are GAE(lambda) value
+            # TARGETS (ret_c[0]/ret_r[0]), not oracle-style episodic
+            # Monte-Carlo returns, and `mechanism_reported_cost_return` is
+            # the post-attack, post-aggregation return-scale estimate that
+            # actually drove this round's dual update (`point_estimate`
+            # above). None of these are the paper's reported task/cost
+            # return for evaluation purposes -- those are the oracle's
+            # fresh-rollout `episodic_*` quantities in oracle.jsonl,
+            # computed by safelie.eval.harness/safelie.experiment. Do not
+            # read this block as an evaluation metric.
+            cost_values_arr = finalized[aid]["cost_values"]
+            values_arr_r = finalized[aid]["values"]
             round_record["constraints"][aid] = {
                 "reports": [{"source_id": r.source_id, "value": r.value} for r in reports],
                 "corrupted_source_ids": sorted(corrupted_here),
@@ -203,18 +324,60 @@ class ExperimentRun:
                     "spread": agg.spread,
                     "retained_n": agg.retained_n,
                     "degenerate": agg.degenerate,
+                    "applied_margin": float(getattr(agg, "applied_margin", 0.0)),
+                    "pessimistic_estimate": float(getattr(agg, "pessimistic_estimate", agg.point_estimate)),
                 },
                 "guarantee_in_force": guarantee_in_force,
+                "epsilon_offline": epsilon_offline,
+                # The return-scale estimate that actually fed the dual
+                # update this round (== point_estimate above): mean or
+                # pessimistic_estimate, whichever cfg.defense.name uses.
+                "mechanism_reported_cost_return": float(point_estimate),
+                # The constraint residual the dual update consumes for
+                # this agent BEFORE consensus mixing by W: point_estimate
+                # - d. Logged because it is the middle link of the causal
+                # chain G0 checks (critic -> residual -> lambda -> policy
+                # -> true cost) and was previously only inferable by
+                # re-deriving it from two other fields.
+                "constraint_residual": float(residual_i),
                 "reported_cost_return": finalized[aid]["cost_return_estimate"],
                 "task_return": float(finalized[aid]["ret_r"][0]) if len(finalized[aid]["ret_r"]) else 0.0,
+                "training_diagnostics": {
+                    "train_reward_mean": finalized[aid]["reward_mean"],
+                    "train_cost_rate_mean": finalized[aid]["cost_rate_mean"],
+                    "n_terminated": finalized[aid]["n_terminated"],
+                    "n_truncated": finalized[aid]["n_truncated"],
+                    "cost_critic_prediction_t0": float(cost_values_arr[0]) if len(cost_values_arr) else 0.0,
+                    "cost_critic_prediction_mean": float(np.mean(cost_values_arr)) if len(cost_values_arr) else 0.0,
+                    "cost_value_target_t0": finalized[aid]["cost_return_estimate"],
+                    "cost_value_target_mean": float(np.mean(finalized[aid]["ret_c"])) if len(finalized[aid]["ret_c"]) else 0.0,
+                    "cost_advantage_mean": float(np.mean(finalized[aid]["adv_c"])) if len(finalized[aid]["adv_c"]) else 0.0,
+                    "task_critic_prediction_t0": float(values_arr_r[0]) if len(values_arr_r) else 0.0,
+                    "task_value_target_t0": float(finalized[aid]["ret_r"][0]) if len(finalized[aid]["ret_r"]) else 0.0,
+                    "task_advantage_mean": float(np.mean(finalized[aid]["adv_r"])) if len(finalized[aid]["adv_r"]) else 0.0,
+                },
             }
 
         residual_vec = new_lam
         self.lam = dual_update(self.lam, self.W, cfg.dual.eta_lambda, residual_vec, cfg.dual.lambda_max)
 
         for i, aid in enumerate(self.env.agent_ids):
-            ppo_lagrangian_update(self.agents[aid], finalized[aid], float(self.lam[i]), cfg.ppo)
+            # `ppo_lagrangian_update` has always returned PPOUpdateStats;
+            # the return value was simply dropped here, so policy loss /
+            # value loss / entropy / approx-KL -- the four quantities that
+            # say whether the optimizer itself is healthy -- were computed
+            # every round and never recorded. Capturing them changes no
+            # numerical result (the same call, the same order); it only
+            # writes down what was already being produced.
+            ppo_stats = ppo_lagrangian_update(self.agents[aid], finalized[aid], float(self.lam[i]), cfg.ppo)
             round_record["constraints"][aid]["lambda_after"] = float(self.lam[i])
+            round_record["constraints"][aid]["ppo"] = {
+                "policy_loss": ppo_stats.policy_loss,
+                "value_loss": ppo_stats.value_loss,
+                "cost_value_loss": ppo_stats.cost_value_loss,
+                "entropy": ppo_stats.entropy,
+                "approx_kl": ppo_stats.approx_kl,
+            }
 
         self.round_logger.write(round_record)
         self.round_index += 1

@@ -1,9 +1,16 @@
-# CPU-only research image for the Stage-1 pipeline (theory validation,
-# smoke tests, the synthetic-environment demos). This image intentionally
-# does NOT install MuJoCo / Safe MAMuJoCo -- that stack belongs on the
-# Colab GPU runtime described in docs/reproducibility.md and is not part
-# of what this repository can execute locally (see
-# safelie/envs/mamujoco.py).
+# CPU-only research image for the dependency-free pipeline (theory
+# validation, smoke tests, the synthetic-environment demos). This image
+# deliberately does NOT install a Safe MAMuJoCo backend: the two available
+# backends pin mutually incompatible stacks, so which one belongs here is
+# a choice the user has to make rather than one this image should bake in
+# (see safelie/envs/mamujoco.py's docstring).
+#
+# To run the pilot configs, extend this image with ONE of:
+#   RUN pip install -e ".[mujoco]"          # portable; no native cost signal
+#   RUN pip install safety-gymnasium==1.0.0 # the reference implementation
+#
+# Note that the pilot is CPU-bound -- nothing in safelie uses CUDA -- so a
+# GPU base image buys nothing here.
 FROM python:3.11-slim
 
 WORKDIR /app

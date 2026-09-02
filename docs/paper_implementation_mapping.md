@@ -73,7 +73,9 @@ needed to close it).
 
 | Environment | Repository | Status |
 |---|---|---|
-| `ManyAgent Ant` (N=6) | `safelie.envs.mamujoco` | **Not implemented** — requires MuJoCo + a Multi-Agent MuJoCo factorization package, assigned by the report to the Colab GPU stage. See that module's docstring for the completion checklist |
+| `ManyAgent Ant` (N=6) | `safelie.envs.mamujoco` | **Implemented, with a deviation.** Runs only on the `gymnasium_robotics` backend with this repository's own per-agent velocity cost: the reference Safe MAMuJoCo has no ManyAgent Ant environment (`TASK_VELCITY_THRESHOLD` has no entry; its constructor asserts on the name), so there is no [SPEC] cost function to be faithful to. Threshold calibrated by measurement, not inherited — see that module's docstring, Deviations 1 and 3 |
+| `HalfCheetah` 2x3 (N=2), `HalfCheetah` 6x1 (N=6), `Ant` 4x2 (N=4) | `safelie.envs.mamujoco` | **Implemented.** [SPEC]-faithful on the `safety_gymnasium` backend, which supplies the reference velocity thresholds and cost function. `halfcheetah_6x1` is the only genuinely N=6 configuration the reference implementation supports |
+| Safety-Gymnasium multi-agent navigation | — | **Not implemented.** Goal-conditioned tasks with a different agent/observation structure, not a MuJoCo factorization; the adapter does not cover them and `build_env` says so |
 | `HalfCheetah` 2×3 (N=2) | — | **Not implemented**, same reason |
 | Safety-Gymnasium multi-agent navigation | — | **Not implemented**, same reason |
 | Synthetic CPU stand-in | `safelie.envs.synthetic.SyntheticConstrainedMarlEnv` | **Full** — not a paper environment; a `[DECISION]`-classified approximation used solely for local verification, clearly labeled throughout |

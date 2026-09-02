@@ -73,7 +73,32 @@ class OracleEvaluator:
 
 @dataclass(frozen=True)
 class OracleEpisodeResult:
+    """P0 #6: this is the complete set of **evaluation** quantities, all
+    computed as proper episodic discounted Monte-Carlo sums over one
+    fresh, independent, privileged-free-of-training-noise oracle rollout
+    -- never a GAE(lambda) training target and never a quantity carried
+    over from the learner's own on-policy rollout. `episode_length` fixes
+    what "episode" means here: exactly `rollout_length` consecutive steps
+    from one `env.reset()` call, matching the training loop's own
+    definition of a round -- even on backends (Safe MAMuJoCo) that
+    auto-reset internally on termination mid-window, so "episode" always
+    denotes this fixed window, never a termination-to-termination segment.
+
+    `true_cost_return` is privileged (computed via
+    `env._oracle_handle_privileged()`, `OracleEvaluator` only).
+    `episodic_task_return` and `episodic_reported_cost_return` are not --
+    they are populated by `safelie.eval.harness.evaluate_true_cost` from
+    the same rollout's ordinary, learner-visible `DualCostStep.reward` /
+    `.reported_cost`, using the identical discounting convention. They
+    default to 0.0/{} here because `OracleEvaluator` (privileged-path-only
+    by design, see this module's docstring) does not compute them; a
+    result missing them is a bug in the caller, not a valid partial
+    result -- `evaluate_true_cost` always fills them in before returning.
+    """
+
     true_cost_return: dict[AgentID, float]  # J_true_C per agent, this episode
     peak_true_cost: dict[AgentID, float]  # max per-step true cost, this episode
     violated: dict[AgentID, bool]  # J_true_C > d, per agent
     episode_length: int
+    episodic_task_return: float = 0.0  # sum_t gamma^t * reward_t (shared across agents, Definition 1)
+    episodic_reported_cost_return: dict[AgentID, float] = field(default_factory=dict)

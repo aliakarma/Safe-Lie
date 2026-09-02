@@ -95,7 +95,7 @@ sequenceDiagram
     PPO->>Ag: policy / critic gradient step on J_R - lambda * J_C
 ```
 
-## Why the environment is synthetic, not Safe MAMuJoCo
+## Why a synthetic environment exists alongside Safe MAMuJoCo
 
 `safelie.envs.synthetic.SyntheticConstrainedMarlEnv` implements the exact
 `DualCostEnvWrapper` contract a real MuJoCo adapter would, on a small
@@ -103,10 +103,16 @@ hand-built control problem (each agent drives a scalar state toward zero
 under a shared reward, with per-agent cost equal to squared action norm).
 It exists solely so every other component — sources, attacks, defenses,
 the dual update, the oracle — can be exercised end to end on a laptop
-CPU, per `PROJECT_REPORT.md`'s own Stage 1 (local, CPU-only) vs. Stage 2
-(Colab GPU) split. See `safelie/envs/mamujoco.py` for what a real adapter
-needs, and `docs/paper_implementation_mapping.md` for this component's
-status.
+CPU with no optional dependencies, per `PROJECT_REPORT.md`'s own Stage 1
+(local) vs. Stage 2 split, and it remains the environment the test suite
+runs against so CI needs no MuJoCo.
+
+The real environments are implemented in `safelie/envs/mamujoco.py`
+(Safe MAMuJoCo via either `safety_gymnasium` or `gymnasium_robotics`) and
+selected by `env.name` through `safelie.envs.factory.build_env`. Nothing
+between the two shares code beyond the `DualCostEnvWrapper` contract, and
+the factory raises rather than substituting one for the other. See
+`docs/paper_implementation_mapping.md` for this component's status.
 
 ## Configuration
 

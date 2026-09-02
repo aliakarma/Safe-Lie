@@ -37,24 +37,56 @@ def load_run_summary(run_dir: Path, last_n_rounds: int = 5) -> dict[str, RunMetr
     if not rounds or not oracle_records:
         raise ValueError(f"{run_dir}'s logs are empty")
 
+    # Match rounds.jsonl and oracle.jsonl by round_k rather than assuming
+    # equal length / matching order: a run sampled mid-round (learner
+    # writes first, orchestrator appends the oracle record after) can
+    # have rounds.jsonl one record ahead, and either log can be truncated
+    # independently by `last_n_rounds`.
+    rounds_by_k = {rec["round_k"]: rec for rec in rounds}
+    oracle_by_k = {rec["round_k"]: rec for rec in oracle_records}
+    common_ks = sorted(set(rounds_by_k) & set(oracle_by_k))
+    if not common_ks:
+        raise ValueError(f"{run_dir}: no round_k present in both rounds.jsonl and oracle.jsonl")
+
     agent_ids = list(rounds[-1]["constraints"].keys())
     summaries = {}
     for aid in agent_ids:
-        returns = [r["constraints"][aid]["task_return"] for r in rounds]
-        reported = [r["constraints"][aid]["reported_cost_return"] for r in rounds]
-        oracle_for_agent = [rec["agents"][aid] for rec in oracle_records if aid in rec.get("agents", {})]
+        oracle_for_agent = [oracle_by_k[k]["agents"][aid] for k in common_ks if aid in oracle_by_k[k].get("agents", {})]
+        if not oracle_for_agent:
+            raise ValueError(
+                f"{run_dir}'s oracle.jsonl has no records for {aid} in the last "
+                f"{last_n_rounds} rounds; cannot summarize evaluation quantities."
+            )
+        # P0 #6: evaluation quantities come from the oracle's own episodic
+        # Monte-Carlo rollout (safelie.eval.harness), never from the
+        # learner's GAE(lambda) training targets in rounds.jsonl --
+        # `task_return`/`reported_cost_return` there are training
+        # diagnostics on a different policy snapshot and a different
+        # return definition (see safelie.training.loop's docstring on
+        # `round_record["constraints"]`). `reported_cost_mean` uses the
+        # SAME mechanism-based quantity as `detection_gap` below
+        # (`mechanism_reported_cost_return`, from rounds.jsonl -- the
+        # only one of the two logs that has it, since it is what drove
+        # that round's dual update, not an oracle-episode quantity), so
+        # the two columns stay consistent with each other in the printed
+        # table.
+        returns = [o["episodic_task_return"] for o in oracle_for_agent]
+        reported = [rounds_by_k[k]["constraints"][aid]["mechanism_reported_cost_return"] for k in common_ks]
         true_costs = [o["true_cost_return"] for o in oracle_for_agent]
-        gaps = [o["detection_gap"] for o in oracle_for_agent]
-        violation_rate = oracle_for_agent[-1]["violation_rate_so_far"] if oracle_for_agent else float("nan")
-        peak = oracle_for_agent[-1]["peak_violation_so_far"] if oracle_for_agent else float("nan")
+        # The mechanism-based gap (what the aggregate/dual actually saw),
+        # not the agent's-own-critic gap: see docs/evaluation.md and
+        # safelie.experiment's per-round computation of both.
+        gaps = [o["detection_gap_vs_aggregate"] for o in oracle_for_agent]
+        violation_rate = oracle_for_agent[-1]["violation_rate_so_far"]
+        peak = oracle_for_agent[-1]["peak_violation_so_far"]
 
         summaries[aid] = RunMetrics(
             return_mean=float(np.mean(returns)),
             reported_cost_mean=float(np.mean(reported)),
-            true_cost_mean=float(np.mean(true_costs)) if true_costs else float("nan"),
+            true_cost_mean=float(np.mean(true_costs)),
             violation_rate=violation_rate,
             peak_violation=peak,
-            detection_gap=float(np.mean(gaps)) if gaps else float("nan"),
+            detection_gap=float(np.mean(gaps)),
         )
     return summaries
 

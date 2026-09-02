@@ -61,12 +61,30 @@ class TopologyConfig(BaseModel):
 
 
 class EnvConfig(BaseModel):
-    name: Literal["synthetic_constrained_marl", "manyagent_ant", "halfcheetah_2x3", "safety_gym_nav"]
+    name: Literal[
+        "synthetic_constrained_marl",
+        "manyagent_ant",
+        "halfcheetah_2x3",
+        "halfcheetah_6x1",
+        "ant_4x2",
+        "safety_gym_nav",
+    ]
     n_agents: int = Field(gt=0)
     budget: float = Field(gt=0)
     horizon: int = Field(default=200, gt=0)
+
+    # Synthetic environment only. A real MuJoCo factorization determines
+    # its own dimensions, and `safelie.training.loop` sizes networks from
+    # the constructed environment (`env.obs_dim` / `env.action_dim`), not
+    # from these fields -- setting them for a `manyagent_ant` config used
+    # to silently build 8-dim policies for a 63-dim observation.
     obs_dim: int = Field(default=8, gt=0)
     action_dim: int = Field(default=2, gt=0)
+
+    # Safe MAMuJoCo only -- see safelie.envs.mamujoco's docstring.
+    agent_obsk: int = Field(default=1, ge=0)
+    cost_mode: Literal["auto", "safe_mamujoco_shared", "per_agent_velocity"] = "auto"
+    velocity_threshold: float | None = Field(default=None, gt=0)
 
 
 class AttackConfig(BaseModel):
@@ -89,6 +107,16 @@ class DefenseConfig(BaseModel):
     min_retained: int = Field(default=3, ge=1)  # |T| < this floors + warns, §R10.2
     use_reliability_weights: bool = False  # [GAP] G1, shipped OFF by decision D12
 
+    # P0 #8 fix. `guarantee_in_force` must be calibrated from a dedicated
+    # clean (attack-disabled) rollout, never from the run's own history:
+    # an attacked run's `attack.name != "none"` for its entire length, so
+    # self-referential calibration collected zero samples and
+    # `epsilon_offline` silently defaulted to 0.0, making
+    # `applied_margin >= epsilon_offline` trivially true every round. See
+    # `safelie.eval.calibration.run_clean_calibration`.
+    calibration_rounds: int = Field(default=20, ge=1)
+    calibration_alpha: float = Field(default=0.05, gt=0.0, lt=1.0)
+
 
 class PPOConfig(BaseModel):
     clip: float = 0.2  # [SPEC]
@@ -97,10 +125,32 @@ class PPOConfig(BaseModel):
     lr: float = 3e-4  # [SPEC]
     epochs: int = 4  # [GAP] G10, pinned per D14
     minibatches: int = 4  # [GAP] G10, pinned per D14
-    entropy_coef: float = 0.0  # [GAP] G11, pinned per D14
+    # P0 #4 methodological correction (not [SPEC], still [GAP] G11 --
+    # revising a D14-pinned default the paper never specifies, not
+    # overriding a specified value): was 0.0. A diagonal-Gaussian policy
+    # with no entropy bonus has no pressure to maintain log_std once the
+    # reward/cost gradient starts pulling it down, and D14's own
+    # single-optimizer, unnormalized-target design (P0 #1/#2/#3/#5, fixed
+    # alongside this) made that pull unusually strong early in training.
+    # 0.001 is a small, standard continuous-control PPO value (e.g. the
+    # CleanRL/SB3 default range for MuJoCo tasks is 0.0-0.01); it is a
+    # generic exploration safeguard, not tuned against this repository's
+    # own results.
+    entropy_coef: float = 0.001  # [GAP] G11, revised per P0 #4
     value_coef: float = 0.5  # [GAP] G11, pinned per D14
+    # Per-network now (P0 #5: safelie.training.ppo clips each of the
+    # policy/value/cost-value optimizers separately), not a joint clip
+    # over all three networks' concatenated parameters.
     grad_clip: float = 0.5  # [GAP] G11, pinned per D14
     hidden_dim: int = 64  # [GAP] G12, pinned per D14
+    # P0 #5: None means "use `lr` for the critics too" (the pre-fix
+    # behaviour, now via three separate optimizer objects instead of one
+    # shared one -- see safelie.algos.networks.AgentBundle). Exposed so a
+    # different critic learning rate can be configured without code
+    # changes; not set to a nonzero-different value by default, since the
+    # paper's [SPEC] `lr` says nothing about actor/critic separation and
+    # this repository does not invent a second [SPEC] number.
+    critic_lr: float | None = None
 
 
 class DualConfig(BaseModel):
@@ -147,6 +197,33 @@ class ExperimentConfig(BaseModel):
                 f"attack.f ({self.attack.f}) cannot exceed the number of "
                 f"sources M ({self.sources.M})"
             )
+
+        # P0 #7: `peer_critic_<k>` is resolved owner-relatively as agent
+        # (owner_index + k) mod N (safelie.training.loop._peer_agent_id).
+        # An offset that is a multiple of N would resolve to the owner
+        # itself for every owner -- a self-peer for the whole config, not
+        # an edge case for one agent -- so reject it here rather than
+        # letting it surface as a per-round ValueError once training has
+        # already started.
+        n = self.env.n_agents
+        for spec in self.sources.sources:
+            if spec.source_type != "peer_critic":
+                continue
+            suffix = spec.source_id.rsplit("_", 1)[-1]
+            if not suffix.isdigit():
+                raise ValueError(
+                    f"peer_critic source_id {spec.source_id!r} must end in an integer "
+                    f"offset (e.g. 'peer_critic_1'); got {suffix!r}."
+                )
+            offset = int(suffix)
+            if offset % n == 0:
+                raise ValueError(
+                    f"peer_critic source_id {spec.source_id!r} has offset {offset}, a "
+                    f"multiple of env.n_agents ({n}); safelie.training.loop resolves "
+                    f"peer_critic_<k> as agent (owner_index + k) mod N, so this offset "
+                    f"would make every owner its own peer (P0 #7). Use an offset in "
+                    f"1..{n - 1} not divisible by {n}."
+                )
         return self
 
 

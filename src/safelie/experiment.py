@@ -22,6 +22,11 @@ block must be written by the evaluator process, never by the learner."
 
 from __future__ import annotations
 
+import json
+import platform
+import subprocess
+import sys
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -31,6 +36,56 @@ from safelie.eval.metrics import detection_gap, peak_violation, violation_rate
 from safelie.training.loop import ExperimentRun
 from safelie.utils.config import ExperimentConfig
 from safelie.utils.logging import JsonlLogger
+
+
+def _git_sha() -> dict[str, Any]:
+    """The commit this run's code came from, plus whether the tree was
+    dirty at launch. A dirty tree is recorded, never silently tolerated:
+    the SHA alone does not identify the code that ran if there are
+    uncommitted edits, so both facts are needed to reproduce a run."""
+    def _run(args: list[str]) -> str | None:
+        try:
+            out = subprocess.run(
+                args, cwd=Path(__file__).resolve().parents[2],
+                capture_output=True, text=True, timeout=30, check=False,
+            )
+            return out.stdout.strip() if out.returncode == 0 else None
+        except (OSError, subprocess.SubprocessError):
+            return None
+
+    sha = _run(["git", "rev-parse", "HEAD"])
+    dirty = _run(["git", "status", "--porcelain"])
+    return {
+        "sha": sha,
+        "dirty": bool(dirty) if dirty is not None else None,
+        "dirty_paths": sorted(line[3:] for line in dirty.splitlines()) if dirty else [],
+    }
+
+
+def _write_run_metadata(out_dir: Path, cfg: ExperimentConfig, status: str, **extra: Any) -> None:
+    """Everything needed to identify and rerun this run, in one file.
+
+    Written twice: once as `status="running"` before round 0, once as
+    `status="complete"` after the final checkpoint. A run interrupted
+    mid-way therefore leaves `status="running"` on disk, which is what
+    distinguishes a genuinely finished run from a killed one during
+    aggregation -- rather than inferring completion from a line count.
+    """
+    record = {
+        "run_id": cfg.run_id,
+        "seed": cfg.seed,
+        "status": status,
+        "written_at": datetime.now(timezone.utc).isoformat(),
+        "git": _git_sha(),
+        "python": sys.version,
+        "platform": platform.platform(),
+        "num_rounds_planned": max(1, cfg.total_steps // cfg.rollout_length),
+        "config_snapshot": json.loads(cfg.model_dump_json()),
+        **extra,
+    }
+    (out_dir / "run_metadata.json").write_text(
+        json.dumps(record, indent=2, sort_keys=False), encoding="utf-8"
+    )
 
 
 def _env_factory(cfg: ExperimentConfig):
@@ -79,6 +134,7 @@ def run_experiment_with_oracle(
     oracle_logger = JsonlLogger(run.output_dir / "oracle.jsonl")
 
     num_rounds = max(1, cfg.total_steps // cfg.rollout_length)
+    _write_run_metadata(run.output_dir, cfg, "running", resumed_from_round=start_k)
 
     for k in range(start_k, num_rounds):
         learner_record = run.run_round()
@@ -96,12 +152,33 @@ def run_experiment_with_oracle(
             oracle_record: dict[str, Any] = {"round_k": k, "agents": {}}
             for aid in run.env.agent_ids:
                 episodes_by_agent[aid].append(oracle_result)
-                reported = learner_record["constraints"][aid]["reported_cost_return"]
-                gap = detection_gap(oracle_result.true_cost_return[aid], reported)
+                constraint = learner_record["constraints"][aid]
+                # P0 #6: two DIFFERENT, both legitimate, "reported cost"
+                # baselines for Delta = J_true_C - J_reported_C, and they
+                # answer different questions. `reported_cost_return` is
+                # the agent's own cost-critic GAE estimate -- the attack
+                # never touches it (corruption lands in the source
+                # reports and the aggregate), so a gap here measures
+                # critic estimation error, not the attack.
+                # `mechanism_reported_cost_return` is the post-attack,
+                # post-aggregation return-scale estimate that actually
+                # drove this round's dual update -- the channel the paper
+                # studies, and the metric analyze_matrix.py already
+                # treated as primary (`detection_gap_vs_aggregate`,
+                # docs/evaluation.md). Both are logged; neither is
+                # silently preferred by only reporting one.
+                own_critic_reported = constraint["reported_cost_return"]
+                mechanism_reported = constraint["mechanism_reported_cost_return"]
+                gap_vs_own_critic = detection_gap(oracle_result.true_cost_return[aid], own_critic_reported)
+                gap_vs_aggregate = detection_gap(oracle_result.true_cost_return[aid], mechanism_reported)
                 oracle_record["agents"][aid] = {
                     "true_cost_return": oracle_result.true_cost_return[aid],
-                    "reported_cost_return": reported,
-                    "detection_gap": gap,
+                    "episodic_task_return": oracle_result.episodic_task_return,
+                    "episodic_reported_cost_return": oracle_result.episodic_reported_cost_return[aid],
+                    "reported_cost_return": own_critic_reported,
+                    "mechanism_reported_cost_return": mechanism_reported,
+                    "detection_gap": gap_vs_own_critic,
+                    "detection_gap_vs_aggregate": gap_vs_aggregate,
                     "peak_true_cost": oracle_result.peak_true_cost[aid],
                     "violated": oracle_result.violated[aid],
                     "violation_rate_so_far": violation_rate(episodes_by_agent[aid], aid),
@@ -129,4 +206,10 @@ def run_experiment_with_oracle(
 
     run.round_logger.close()
     oracle_logger.close()
+    _write_run_metadata(
+        run.output_dir, cfg, "complete",
+        rounds_completed=run.round_index,
+        checkpoint=str(ckpt_path.name) if ckpt_path.exists() else None,
+        eval_every=eval_every,
+    )
     return run.output_dir

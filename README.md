@@ -524,20 +524,23 @@ print(f"  Violations       : {result.violated}")
 
 ---
 
-## Stage-2 Safe MAMuJoCo Extension Guide
+## Stage-2 Safe MAMuJoCo Guide
 
-To transition from the local CPU synthetic environment to high-dimensional multi-agent robotics benchmarks (Safe MAMuJoCo / Safety-Gymnasium):
+The Safe MAMuJoCo adapter is implemented ([`src/safelie/envs/mamujoco.py`](src/safelie/envs/mamujoco.py)) and the `pilot_*` configs run.
 
-1. **Hardware Environment**: Use a Google Colab T4 High-RAM runtime or equivalent GPU cluster.
-2. **Install Physics Dependencies**:
+1. **Hardware**: a **high-CPU** machine, not a GPU one. Nothing in `safelie` moves a tensor to CUDA — the networks are small MLPs stepped one observation at a time in a Python loop, so a T4 does not accelerate this workload. Measured: ~130 env-steps/s, ~2 h per 5×10⁵-step run.
+2. **Install a backend** (the two cannot coexist — `safety-gymnasium` pins `gymnasium==0.28.1`, `mujoco==2.3.3`):
    ```bash
-   pip install mujoco safety-gymnasium
+   pip install "safelie[mujoco]"        # portable: mujoco + gymnasium-robotics
+   pip install safety-gymnasium==1.0.0  # the reference implementation, Linux only
    ```
-3. **Implement Adapter**: Complete the 3 required wrapper methods in [`src/safelie/envs/mamujoco.py`](src/safelie/envs/mamujoco.py) satisfying the `DualCostEnvWrapper` protocol.
-4. **Execute Pre-flight Gate**:
+3. **Read the deviations** in [`src/safelie/envs/mamujoco.py`](src/safelie/envs/mamujoco.py)'s docstring. Three are forced by the reference implementation and bound what the pilot may claim — most importantly, **ManyAgent Ant is not a Safe MAMuJoCo environment at all** (its threshold table has no entry and its constructor asserts on the name), so on that config the cost function is this repository's, not the paper's.
+4. **Execute the pre-flight gates**:
    ```bash
    pytest tests/ && python scripts/smoke_test.py
+   python scripts/calibrate_cost.py --config configs/experiment/pilot_A_clean.yaml
    ```
+   The second confirms the cost constraint actually binds. A non-binding constraint produces a run that looks like a clean null result but tests nothing (`PROJECT_REPORT.md` §R6.1).
 5. **Run Stage-2 Pilot Matrix**: Execute [`notebooks/colab_full_experiment.ipynb`](notebooks/colab_full_experiment.ipynb) using pre-configured pilot configs:
    - `configs/experiment/pilot_A_clean.yaml` (Clean baseline)
    - `configs/experiment/pilot_B_attack.yaml` (Undefended attack)
@@ -619,7 +622,9 @@ As documented in [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) and [docs/
 
 | Component | Status | Detail & Rationale |
 |---|---|---|
-| **Safe MAMuJoCo Adapter** | Deferred | Requires MuJoCo binaries; designated for Colab T4 GPU execution (`src/safelie/envs/mamujoco.py`). |
+| **Safe MAMuJoCo Adapter** | Implemented, with deviations | Two backends (`safety_gymnasium`, `gymnasium_robotics`), which cannot coexist. ManyAgent Ant does not exist in the reference implementation, so its cost function and velocity threshold are this repository's — see [`src/safelie/envs/mamujoco.py`](src/safelie/envs/mamujoco.py) and [docs/assumptions.md](docs/assumptions.md). |
+| **GPU Utilization** | None | No tensor is moved to CUDA anywhere in `safelie`; the workload is CPU-bound at ~130 env-steps/s. The report's Colab-T4 framing does not match what was built. Batching the per-agent forward passes would give ~2-3x at the cost of bitwise determinism. |
+| **MuJoCo Cost Scale** | Recalibrated | ManySegmentAnt uses `velocity_threshold=0.75`, not Safe MAMuJoCo's nearest entry (2.418), which leaves the constraint ~30x from binding at `d=25`. An intermediate value of 1.0 passed the initial-calibration bar but still left `lambda` at zero until round ~159 of 250 — see [docs/assumptions.md](docs/assumptions.md). |
 | **Comparative Baselines** | Deferred | Baselines (MACPO, Dec-PDO, PID-Lagrangian) deferred to Stage-3 after Stage-2 pilot completion. |
 | **Reliability Weights** | Opt-In / Disabled | Algorithm 1 declares reliability weights $w_m$ but the source paper omits update rules (`[GAP]` G1). Left as unweighted opt-in to avoid fabricating unverified heuristics. |
 | **Adaptive & Byzantine Attacks** | Standalone | Implemented in `src/safelie/attacks/` but not wired into default training loop per compact pilot scope. |
@@ -629,9 +634,13 @@ As documented in [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) and [docs/
 
 ## Troubleshooting & FAQ
 
-### 1. `NotImplementedError` when executing `pilot_*.yaml` configs
-**Reason**: `pilot_*.yaml` configs specify `env.name: manyagent_ant` (Stage-2 Colab GPU benchmark).  
-**Fix**: For local CPU execution, use `configs/experiment/local_demo_*.yaml` or `smoke.yaml`. To run pilot configs, complete the adapter in `src/safelie/envs/mamujoco.py`.
+### 1. `ImportError: No Safe MAMuJoCo backend is installed`
+**Reason**: `pilot_*.yaml` configs use real MuJoCo environments, an optional dependency.  
+**Fix**: `pip install "safelie[mujoco]"` (portable) or `pip install safety-gymnasium==1.0.0` (reference implementation, Linux only). They cannot coexist. For a dependency-free run use `configs/experiment/local_demo_*.yaml` or `smoke.yaml`.
+
+### 1b. `lambda` stays at 0.0 for an entire run
+**Reason**: the constraint is not binding as the *learner* sees it, so the dual update's projection eats every update and no condition can differ from any other (`PROJECT_REPORT.md` §R6.1).  
+**Fix**: run `python scripts/calibrate_cost.py --config <config>` before spending compute. Note it reports two numbers — the true discounted cost can be well above the budget while the learner's own estimate is still far below it, since an untrained cost critic under GAE reads several times low. Early rounds at `lambda = 0` are expected; hundreds are not.
 
 ### 2. `ValueError: Defense 'rce' requires effective_M > 2f`
 **Reason**: Pydantic schema validation detected that distinct `independence_class` entries do not exceed $2f$.  

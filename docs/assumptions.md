@@ -25,15 +25,16 @@ the report actually needs (S2, S5, S12).
 Hydra `@hydra.main` entry point; the `ExperimentConfig` dataclass schema
 can be reused as a Hydra structured config with minimal changes.
 
-## Environment: synthetic CPU stand-in, not Safe MAMuJoCo
+## Environment: synthetic CPU stand-in, alongside Safe MAMuJoCo
 
 **Classification: (C) Approximation**, clearly labeled everywhere it
 appears.
 
-**What was missing.** Safe MAMuJoCo / Safety-Gymnasium require MuJoCo and
-multi-agent wrapper packages not installed in this build, and the report
-itself assigns real MARL training to a Colab GPU stage, not local
-construction (§R7.1).
+**What it is for.** The real environments are now implemented
+(`safelie.envs.mamujoco`, see the next section). The synthetic
+environment remains the default for the test suite and the local demos,
+so CI and a laptop need no MuJoCo, and so every component can be
+exercised end to end without an optional dependency.
 
 **Decision.** `safelie.envs.synthetic.SyntheticConstrainedMarlEnv`: each
 agent drives a scalar state toward zero under a shared reward; per-agent
@@ -55,8 +56,192 @@ attack's effect. This is exactly the "constraint not binding" confound
 found by direct measurement (see `docs/reproducibility.md`) to make the
 constraint begin to bind by round ~30 of a ~75-round run.
 
-**To change:** implement `safelie.envs.mamujoco.build_mamujoco_env` per
-its docstring; nothing else in the pipeline needs to change.
+**To change:** point `env.name` at a MuJoCo configuration; nothing else
+in the pipeline needs to change.
+
+## Safe MAMuJoCo: velocity threshold calibrated, not inherited
+
+**Classification: (B) Under-determined by the source materials** — the
+paper specifies no threshold for its own primary environment.
+
+**What was missing.** `main_iclr.tex` §5.1 names ManyAgent Ant (N=6) as
+the primary environment and gives the budget `d=25`, but no velocity
+threshold. Nor can one be inherited: the reference Safe MAMuJoCo's
+`TASK_VELCITY_THRESHOLD` table has **no ManyAgent Ant entry at all**, and
+its constructor asserts on the name. The paper's primary environment does
+not exist in the implementation the paper cites.
+
+**Why the threshold, not the budget, is the free parameter.** `d=25` is
+`[SPEC]`. The threshold is not specified by anything, so it is the honest
+place to absorb the calibration — the reverse choice would override a
+number the paper actually states.
+
+**Decision.** `velocity_threshold: 0.75` for ManySegmentAnt 6x1, set by
+direct measurement (`scripts/calibrate_cost.py`) and then **corrected by a
+completed run**, which is the part worth recording.
+
+The first calibration picked `1.0`. At Safe MAMuJoCo's nearest table entry
+(Ant 4x2 = 2.418) a freshly-initialized policy incurs cost on 0.75% of
+steps, for a discounted cost return near 0.75 against `d=25` — roughly 30x
+from binding, so `lambda` never leaves zero and all five pilot conditions
+coincide for reasons unrelated to the hypothesis. This is the same §R6.1
+confound, and the same measurement-driven fix, that set
+`local_demo_*.yaml`'s budget to `d=5` on the synthetic environment. At
+`1.0` the measured *true* per-agent returns are 11.6-36.9 against `d=25`,
+which passes the initial-calibration bar.
+
+**Passing that bar turned out not to be sufficient.** A full 250-round
+condition-A run at `1.0` behaved as follows:
+
+| | thr = 1.00 | thr = 0.75 |
+|---|---|---|
+| first round with `lambda` > 0 | 159 / 250 | 62 / 250 |
+| `lambda` > 0, share of (round, agent) cells | 14.0% | 41.7% |
+| `lambda` peak (cap `lambda_max` = 25) | 1.67 | 4.17 |
+
+The reason is the caveat below: the dual update compares the budget
+against the *learner's* estimate, and at `1.0` that estimate did not cross
+`d=25` until round ~159 of 250. Roughly 86% of the run was therefore
+structurally incapable of distinguishing condition A from B/C/D — the
+§R6.1 failure re-entering through the estimate rather than through the
+physics. At `0.75` the true cost is 1.66x budget and the initial estimate
+0.42x rather than 0.23x, and a run shows a genuine closed-loop cycle:
+`lambda` peaks near 3.6 around rounds 100-124, drives true cost down to
+25.1 (at budget) while task return bottoms out, then relaxes as cost falls
+below budget and re-engages as it drifts back.
+
+**The general lesson**, worth applying to any future environment: an
+initial-policy calibration bounds the problem from one side only. The
+binding question is when the *learner's estimate* crosses the budget
+relative to the run length, and that depends on cost-critic convergence
+time (~150 rounds here), which is 60% of a 5x10^5-step pilot but 3% of the
+paper's 10^7-step scale. Calibrate, then verify on a completed run before
+spending a matrix.
+
+**The caveat behind all of the above.** The dual update compares the
+budget against the *learner's* cost-return estimate, not the true cost.
+At initialization those differ by 3-4x — an untrained cost critic under
+GAE (`gamma=0.99, lambda=0.95`, effective horizon ~17 steps) reads far
+low. A run can therefore be genuinely constraint-relevant while `lambda`
+sits at zero for many rounds. `scripts/calibrate_cost.py` reports both
+numbers for this reason; neither alone settles whether a config is
+well-posed.
+
+## Safe MAMuJoCo: per-agent cost, resolving `[GAP]` G4
+
+**Classification: (B) Under-determined**, and resolved differently from
+the reference implementation for a stated reason.
+
+**What was missing.** `[GAP]` G4 asks how one agent's cost could be
+observable to a peer — the premise the peer-critic sources rest on.
+
+**What the reference implementation does.** Safe MAMuJoCo computes a
+single global speed indicator from the torso velocity and assigns the
+identical scalar to every agent. Under that cost function G4 is vacuous:
+every agent's cost is the same number, and the paper's per-agent
+constraint `C^i` collapses to one shared constraint.
+
+**Decision.** `cost_mode: per_agent_velocity` on the `gymnasium_robotics`
+backend: each agent's cost is the speed of its own torso segment, read
+from shared simulator state — measurable by a peer in principle, which is
+exactly what G4 asks for, while keeping the per-agent structure the paper
+assumes. Measured per-agent cost rates differ substantially across agents
+(0.12-0.37 at initialization), so the per-agent constraint is doing real
+work rather than six copies of one number.
+
+`cost_mode: safe_mamujoco_shared` reproduces the reference behaviour
+exactly on either backend, so the two are directly comparable.
+
+## P0 implementation repair: the learner/source layer, before G0
+
+**Classification: (A) Bug fixes and (B) methodological corrections**,
+distinguished explicitly below per the repair task's own taxonomy. None
+of this changes the threat model, the attack injection point, the
+mathematical objective, the RCE mechanism, the source model, or any
+theoretical definition. Full file-by-file detail is in `CHANGELOG.md`'s
+"P0 implementation repair (pre-G0)" entry; this section records the
+*evidence*, not just the diff.
+
+**Why this section exists.** A full 5-seed, 5-condition pilot matrix
+(`results/runs/pilot_{A..E}_*_seed{0..4}`) was executed before this
+repair, under an implementation that had every bug below. That data
+predates every fix in this section and must not be used for the paper --
+it is retained on disk (not deleted) only as forensic evidence of what
+the bugs did, via `scripts/audit_source_independence.py` run against it
+(numbers below). Any future pilot run must write to a path that cannot
+be confused with those directories (see this document's G0 section).
+
+**Cost-critic bias, measured before and after.** Running
+`scripts/audit_source_independence.py` against the pre-repair
+`pilot_A_clean_seed0` (a *clean*, undefended, 250-round run -- no attack
+to explain the numbers away) shows `own_critic` biased −10.8 to −15.1
+across agents and `peer_critic` sources biased as far as −34.8, all
+sustained for the full 250 rounds. A post-repair smoke run of 75 rounds
+on the synthetic environment (`local_demo_clean.yaml`, fast enough to run
+as a same-session check, not the paper's environment) shows the same
+quantities -- own-critic bias and the aggregate ("mechanism") bias that
+actually drives the dual update -- converging from −6.7 / −9.9 at the
+first 10 rounds to −0.03 / +0.06 at the last 10, i.e. to within noise of
+zero. Task return improved over the same window (−14.9 → −10.9), and the
+dual variable responded and saturated at `lambda_max` under a budget the
+policy could not satisfy within 75 rounds (true cost stayed ~4x the
+`d=5` local-demo budget throughout -- expected behaviour for an
+unconstrained-within-budget problem on this short a schedule, not a bug;
+see this document's G0 section for the actual pilot's own calibration).
+This is the direct evidence that P0 #1/#2/#3/#5's fixes address the
+cost-critic bias mechanism, not merely its symptoms.
+
+**Source independence remains NOT supported by measurement, even after
+the peer-critic wiring fix -- report this honestly, do not paper over
+it.** The peer-critic self-collision bug (owner-relative mapping, P0 #7)
+was real: under the M=7 config, 4 of 6 agents received their own critic
+relabeled as one of their four "peer" sources. Fixing it did not fix the
+deeper problem. `scripts/audit_source_independence.py`'s participation-
+ratio "statistical effective M" measures ~1.10 (against a nominal
+`effective_M=7`) on the pre-repair `pilot_A_clean_seed0` run, and
+measures the *same* ~1.10 on the post-repair local-demo smoke run. The
+wiring bug was not the dominant cause of the M=7 -> ~1 collapse: all
+seven sources are ultimately critic or small-regression networks trained
+by similar procedures on a highly symmetric environment (six agents
+facing near-identical dynamics), so their *errors* move together over
+training time even when their weights are genuinely distinct and no
+source literally duplicates another's computation. Assumption 1(ii)
+(source independence) is not supported by this measurement, before or
+after this repair. This is not something a further code fix resolves
+without changing the environment's or the source ensemble's actual
+diversity (e.g. genuinely heterogeneous agents, or sources with
+structurally different failure modes rather than different random seeds
+on the same architecture) -- which would be a scientific redesign, not a
+P0 implementation fix, and is out of this repair's scope. Report
+`nominal M` and `statistical effective M` side by side in the paper;
+do not present the former as if it were a measured property.
+
+**A previously undocumented compounding bias mechanism: MaMuJoCo's own
+time limit.** `safelie.envs.mamujoco`'s underlying Gym environment
+truncates at ~1000 steps (measured directly: `ManySegmentAnt` 6x1 under
+zero action truncates at exactly step 999) -- well below every pilot
+config's `rollout_length=2000`. Before this repair, `compute_gae`
+treated that truncation exactly like a genuine termination (the agent
+fell over): zero bootstrap, recursion cut. That silently capped
+`ret_c[0]`'s effective horizon at whatever fraction of `rollout_length`
+elapsed before the first time-limit reset, on top of the
+already-documented GAE-effective-horizon-~17-steps bias from
+gamma=0.99/lambda=0.95. Fixed (`safelie.training.gae`, `safelie.envs.
+mamujoco`'s `info["final_observation"]`) by bootstrapping a truncation
+from the critic's own value at the true final observation, matching
+`terminated`'s and `truncated`'s distinct semantics rather than
+collapsing them. This does not change any synthetic-environment number
+(its own truncation always coincides with the buffer's last index,
+where there is nothing left to bootstrap into regardless), but changes
+every MaMuJoCo-backed round's cost-critic targets from what any run
+executed before this fix produced -- another reason the pre-repair pilot
+matrix cannot be reused.
+
+**To change:** none of the above requires further action beyond what
+`CHANGELOG.md` records, except the source-independence finding, which
+requires either a documented, honest limitation in the paper or a
+future, separately-scoped redesign of the source ensemble/environment
+heterogeneity -- not a further patch to `safelie.sources`.
 
 ## Oracle isolation: no `true_cost` field, not a per-field guard
 

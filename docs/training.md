@@ -62,7 +62,7 @@ ExperimentConfig(run_id='x', env={'name':'synthetic_constrained_marl','n_agents'
 | `local_demo_attack.yaml` | synthetic | f=1 persistent under-reporting, undefended (mean) |
 | `local_demo_rce.yaml` | synthetic | Same attack, RCE defense |
 | `local_demo_benign.yaml` | synthetic | The falsification control: unbiased noise |
-| `pilot_A_clean.yaml` .. `pilot_E_clean_rce.yaml` | `manyagent_ant` | The literal Stage-2 Colab pilot matrix (`PROJECT_REPORT.md` §R8) — **validates but does not run** without the MuJoCo adapter |
+| `pilot_A_clean.yaml` .. `pilot_E_clean_rce.yaml` | `manyagent_ant` | The literal Stage-2 pilot matrix (`PROJECT_REPORT.md` §R8). **Runs** once a backend is installed (`pip install "safelie[mujoco]"`); run `scripts/calibrate_cost.py` against the config first |
 
 The `local_demo_*` configs use `budget=5.0`, not the paper's `d=25`: see
 [assumptions.md](assumptions.md) for why (the synthetic environment's

@@ -20,6 +20,7 @@ never the learner" schema rule (PROJECT_REPORT.md §8.2).
 
 from __future__ import annotations
 
+import dataclasses
 from collections.abc import Callable
 
 import numpy as np
@@ -39,20 +40,43 @@ def evaluate_true_cost(
     seed: int,
 ) -> OracleEpisodeResult:
     """Roll out the current (frozen) policies for one fresh episode and
-    return the oracle's true-cost accounting for it. Deterministic given
-    `seed` and the current policy weights."""
+    return the oracle's full evaluation accounting for it: true cost
+    (privileged), plus task return and reported-cost return (both P0 #6
+    additions, computed here rather than in `OracleEvaluator` because they
+    read only the ordinary, learner-visible `DualCostStep` fields, not the
+    privileged handle). All three are proper discounted Monte-Carlo sums
+    over this one fresh episode -- never a GAE(lambda) training target,
+    and never mixed with anything from the learner's own rollout.
+    Deterministic given `seed` and the current policy weights.
+    """
     env = env_factory()
     step = env.reset(seed=seed)
     oracle = OracleEvaluator(env=env, gamma=gamma, budget=budget)
 
-    for _ in range(rollout_length):
+    discounted_task_return = 0.0
+    discounted_reported_cost = dict.fromkeys(env.agent_ids, 0.0)
+
+    for t in range(rollout_length):
         actions: dict[AgentID, np.ndarray] = {}
         for aid in env.agent_ids:
             obs_t = torch.as_tensor(step.obs[aid], dtype=torch.float32).unsqueeze(0)
             with torch.no_grad():
-                action, _ = agents[aid].policy.act(obs_t)
+                # P0 #2: the policy was trained on normalized
+                # observations (safelie.training.ppo) -- evaluating it on
+                # raw ones here would silently feed it an out-of-
+                # distribution input and invalidate this oracle rollout.
+                obs_n = agents[aid].normalize_obs_tensor(obs_t)
+                action, _ = agents[aid].policy.act(obs_n)
             actions[aid] = action.squeeze(0).numpy()
         step = env.step(actions)
         oracle.record()
+        discount = gamma**t
+        discounted_task_return += discount * step.reward
+        for aid in env.agent_ids:
+            discounted_reported_cost[aid] += discount * step.reported_cost[aid]
 
-    return oracle.episode_result()
+    return dataclasses.replace(
+        oracle.episode_result(),
+        episodic_task_return=float(discounted_task_return),
+        episodic_reported_cost_return={aid: float(v) for aid, v in discounted_reported_cost.items()},
+    )

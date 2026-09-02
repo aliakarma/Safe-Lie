@@ -1,11 +1,40 @@
 # Troubleshooting
 
-## `NotImplementedError` when running a `pilot_*.yaml` config
+## `ImportError: No Safe MAMuJoCo backend is installed`
 
-Expected. Those configs use `env.name: manyagent_ant`, which requires the
-Safe MAMuJoCo adapter that is intentionally not implemented in this
-repository build. See [reproducibility.md](reproducibility.md) and
-`safelie/envs/mamujoco.py`'s docstring.
+The `pilot_*.yaml` configs use real MuJoCo environments, which are an
+optional dependency. Install one of the two backends:
+
+```bash
+pip install "safelie[mujoco]"        # portable; no native cost signal
+pip install safety-gymnasium==1.0.0  # the reference implementation, Linux only
+```
+
+They cannot coexist -- `safety-gymnasium` pins `gymnasium==0.28.1`,
+`gymnasium-robotics==1.2.2` and `mujoco==2.3.3`. Install one per
+environment. See `safelie/envs/mamujoco.py`'s docstring.
+
+## `AssertionError: Invalid agent: ManySegmentAnt`
+
+You are on the `safety_gymnasium` backend with `env.name: manyagent_ant`.
+This is not fixable by configuration: the reference Safe MAMuJoCo has no
+ManyAgent Ant environment at all (`TASK_VELCITY_THRESHOLD` has no entry
+and `SafeMAEnv.__init__` asserts on the name), even though the paper's
+§5.1 names it as the primary environment. Either use the
+`gymnasium_robotics` backend, or switch to `halfcheetah_6x1` -- the one
+genuinely N=6 factorization the reference implementation supports. See
+`safelie/envs/mamujoco.py`'s docstring, Deviation 1.
+
+## `lambda` stays at 0.0 for the whole run
+
+The constraint is not binding *as the learner sees it*, so the dual
+update's projection eats every update and no condition can differ from
+any other (`PROJECT_REPORT.md` §R6.1). Run
+`python scripts/calibrate_cost.py --config <your config>` before spending
+compute. Note its two numbers: the true discounted cost can be well above
+the budget while the learner's own estimate is still far below it, since
+an untrained cost critic under GAE reads several times low. Early rounds
+with `lambda = 0` are expected; hundreds of them are not.
 
 ## `ValueError: Defense 'rce' requires effective_M > 2f`
 

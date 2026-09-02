@@ -49,6 +49,15 @@ class DualCostEnvWrapper(Protocol):
     budget: float  # d^i, assumed equal across agents (paper's ManyAgent Ant setting)
     agent_ids: list[AgentID]
 
+    # The environment is the authority on its own dimensions; the learner
+    # sizes its networks from these (`safelie.training.loop`), not from
+    # the config. Every agent must present the same widths -- a peer's
+    # cost critic is evaluated on the owner's observation during source
+    # collection -- so an environment with heterogeneous per-agent
+    # observations pads them (see `safelie.envs.mamujoco`).
+    obs_dim: int
+    action_dim: int
+
     def reset(self, seed: int | None = None) -> DualCostStep: ...
 
     def step(self, actions: dict[AgentID, np.ndarray]) -> DualCostStep: ...
