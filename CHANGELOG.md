@@ -5,6 +5,58 @@ follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### G2-peer: the peer-critic source's underlying function (post-G1)
+
+G1's verdict was FAIL. The own-critic repair itself was vindicated
+(G1a/b/c passed all three seeds), but the mechanism value that actually
+reaches the dual stayed outside G1's own 0.20*d bar in 2 of 3 seeds
+(G1d), and G1 had pre-declared exactly this failure mode: 4 of the 7
+sources (`peer_critic_1..4`) were left unchanged, still a peer's PPO
+cost-value network (`AgentBundle.cost_value`, trained against `ret_c`,
+a GAE(lambda) bootstrap target) evaluated at the owner's initial
+observation. `docs/g2_gates.md`'s pre-run audit of the three completed
+G1 runs measured `corr(peer_critic prediction, true cost)` at -0.10 to
++0.01 across all three seeds -- statistically indistinguishable from
+zero, not merely biased.
+
+**The repair.** `safelie.training.loop.ExperimentRun.
+constraint_report_heads`: one independently-initialized regression head
+per physical agent (`DiversifiedReplica`, reused from the
+`ensemble_replica`/`monitor` sources), refit once per round on that
+agent's own masked discounted-MC cost-to-go targets (the same targets
+`_cost_to_go_targets` already produces under `constraint_estimator ==
+"mc_window"`). A `peer_critic_<k>` source now reports
+`constraint_report_heads[peer_id].predict(owner_obs0)` -- the peer's own
+constraint-report head, not its PPO cost critic -- evaluated at the
+owner's observation, with the owner-relative `peer_id` mapping
+((owner_index + k) mod N) unchanged from P0 #7. `DiversifiedReplica`
+gains `refit()`/`predict()` as separate methods (`refit_and_predict()` is
+now their composition, behaviourally identical) because a peer head must
+be fit exactly once per round and then queried by up to 4 different
+owners against 4 different observations -- refitting per query would
+silently re-bias the head toward whichever owner asked most recently.
+
+**Explicitly unchanged.** `own_critic` (already reports the raw MC sum,
+zero function-approximation bias, G1a/b/c already passed) and
+`ensemble_replica`/`monitor` (already refit-per-owner-per-call on MC
+targets since G1) are untouched. `safelie.training.gae`,
+`safelie.training.ppo`, `AgentBundle.cost_value_net`'s own GAE-trained
+regression target, the threat model, RCE, attack magnitude, `d=25`, and
+the statistical methodology are all untouched.
+
+**Tests.** `tests/unit/test_constraint_report_head_wiring.py`, 15 tests,
+exhaustive over N=6 owner/offset combinations: a peer report is bit-exact
+against `constraint_report_heads[peer_id].predict(owner_obs0)` computed
+independently, never matches a different agent's head at the same
+observation, changes under a different owner's observation, and each
+head's refit data is checked against that same agent's own finalized MC
+targets and never another agent's. `docs/g2_gates.md` pre-declares the
+full G2-peer acceptance gates (individual source calibration, mechanism
+bias/MAE/RMSE, a clean false-safe rate gate, dual responsiveness,
+learning, true-cost response, stability, reproducibility), every
+numeric bar justified against the completed G1 runs already on disk.
+`scripts/analyze_g2.py` applies them.
+
 ### G1: the dual update's constraint-objective estimator (post-G0)
 
 G0 was a CONDITIONAL PASS. The learner learns, the dual responds, true

@@ -3,20 +3,44 @@
 Report reference: PROJECT_REPORT.md Phase 2 (`[GAP]` G5, ensemble/monitor
 diversification) and Phase 1 (`[GAP]` G4, peer observability of C^i).
 
-  - `own_critic`: the constraint owner's own cost-value network,
-    bootstrapped at the round's initial observation via GAE — exactly
-    `J_hat^i_C(theta_k)` in the paper's notation.
-  - `peer_critic`: a *different* agent's cost-value network, evaluated on
-    the constraint owner's initial observation. This resolves G4 by
-    restricting peer observability to state the peer's own network can
-    read (the owner's observation vector), rather than inventing
-    cross-agent private-state access.
+  - `own_critic`: the constraint owner's own discounted Monte-Carlo
+    constraint return over the round's rollout (see
+    `safelie.training.constraint_return`) — exactly `J_hat^i_C(theta_k)`
+    in the paper's notation, with no critic and no function-approximation
+    bias in the path.
+  - `peer_critic`: a *different* agent's **constraint-report head**
+    (`DiversifiedReplica`, see below) — not that agent's PPO cost-value
+    critic — evaluated on the constraint owner's initial observation. This
+    resolves G4 by restricting peer observability to state the peer's own
+    network can read (the owner's observation vector), rather than
+    inventing cross-agent private-state access. `docs/g2_gates.md`
+    records why this must be a dedicated head rather than
+    `AgentBundle.cost_value`: the PPO cost critic is trained against
+    `ret_c`, a GAE(lambda) bootstrap target, for a purpose (advantage
+    estimation) that has nothing to do with the peer's OWN constraint
+    return being queried out of distribution by another agent, and
+    G1 measured the result of that mismatch at corr(peer_critic, true)
+    ~= 0 (uncorrelated with the truth) across all three G1 seeds.
   - `ensemble_replica` / `monitor`: small, independently-initialized
     regression heads, refit every round on a bootstrap resample of the
     owner's own rollout (obs, cost-to-go) pairs. This is the diversification
     mechanism the report recommends (independent init + bootstrap-resampled
     minibatches) and is genuinely different data + genuinely different
     weights each round, not a relabeled copy of the same network.
+
+G2-peer (`docs/g2_gates.md`) reuses the same `DiversifiedReplica` class
+for a second purpose: one **constraint-report head per physical agent**,
+refit once per round on that agent's own masked MC cost-to-go targets
+(`safelie.training.loop.ExperimentRun.constraint_report_heads`), then
+queried — without refitting — once for every owner that has this agent as
+a `peer_critic` source this round. This is why `refit()` and `predict()`
+are exposed as separate methods below: a `monitor`/`ensemble_replica`
+source still calls `refit_and_predict()` once per owner per round (fit
+and query the SAME owner's data, unchanged since G1), while the new
+peer-critic head must be fit exactly once per round and then queried by
+several different owners against several different observations —
+refitting on every query would silently re-bias the head toward whichever
+owner queried it most recently in that round.
 """
 
 from __future__ import annotations
@@ -46,7 +70,11 @@ class DiversifiedReplica:
         self.steps = steps
         self.rng = np.random.default_rng(seed)
 
-    def refit_and_predict(self, obs: np.ndarray, cost_to_go: np.ndarray, query_obs: np.ndarray) -> float:
+    def refit(self, obs: np.ndarray, cost_to_go: np.ndarray) -> None:
+        """Fit this head's weights to `(obs, cost_to_go)`, in place, via
+        `self.steps` gradient steps on bootstrap resamples. Does not
+        predict; call `predict` (possibly several times, for several
+        different query points) afterward."""
         n = len(obs)
         obs_t = torch.as_tensor(obs, dtype=torch.float32)
         target_t = torch.as_tensor(cost_to_go, dtype=torch.float32)
@@ -57,9 +85,20 @@ class DiversifiedReplica:
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
+
+    def predict(self, query_obs: np.ndarray) -> float:
+        """This head's current prediction at `query_obs`, with no refit."""
         with torch.no_grad():
             query = torch.as_tensor(query_obs, dtype=torch.float32).unsqueeze(0)
             return float(self.net(query).item())
+
+    def refit_and_predict(self, obs: np.ndarray, cost_to_go: np.ndarray, query_obs: np.ndarray) -> float:
+        """`refit(obs, cost_to_go)` then `predict(query_obs)` — the
+        `ensemble_replica`/`monitor` sources' calling convention,
+        unchanged since G1: fit and query the same owner's data every
+        call."""
+        self.refit(obs, cost_to_go)
+        return self.predict(query_obs)
 
     def state_dict(self) -> dict:
         """Report reference / smoke test S14: a checkpoint that omits this

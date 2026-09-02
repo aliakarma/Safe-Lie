@@ -125,6 +125,20 @@ class ExperimentRun:
                     obs_dim=self.obs_dim, seed=cfg.seed * 1000 + i
                 )
 
+        # G2-peer (docs/g2_gates.md): one constraint-report head PER
+        # PHYSICAL AGENT, refit once per round on that agent's own masked
+        # MC cost-to-go targets (see `_cost_to_go_targets`), then queried
+        # -- without refitting -- by every owner that has this agent as a
+        # `peer_critic` source this round (`_collect_source_value`). This
+        # is a separate object from both `self.agents[aid].cost_value_net`
+        # (PPO's own cost critic, trained against `ret_c` for GAE/advantage
+        # estimation, untouched by this repair) and from `self.replicas`
+        # (which stays fit-per-owner-per-call, unchanged since G1).
+        self.constraint_report_heads: dict[AgentID, DiversifiedReplica] = {
+            aid: DiversifiedReplica(obs_dim=self.obs_dim, seed=cfg.seed * 4000 + i)
+            for i, aid in enumerate(self.env.agent_ids)
+        }
+
         self.output_dir = Path(cfg.output_dir) / cfg.run_id
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self.round_logger = JsonlLogger(self.output_dir / "rounds.jsonl")
@@ -205,15 +219,24 @@ class ExperimentRun:
                              round's rollout (the direct empirical
                              estimate of J_C^i); under `gae_lambda`, the
                              pre-G1 `ret_c[0]` bootstrap target.
-          peer_critic     -- UNCHANGED by this repair: a peer's cost-value
-                             network evaluated at the owner's initial
-                             observation. It stays a learned-value-function
-                             estimator because the cost critic's own
-                             regression target is GAE(lambda), which this
-                             repair holds fixed. Its behaviour is logged
-                             per source so the ensemble's remaining critic
-                             dependence stays visible rather than assumed
-                             away.
+          peer_critic     -- G2-peer (docs/g2_gates.md): a peer's
+                             **constraint-report head**
+                             (`self.constraint_report_heads[peer_id]`),
+                             evaluated at the owner's initial observation.
+                             The head is refit once per round, before this
+                             method is ever called for that round, on the
+                             PEER's own masked MC cost-to-go targets (see
+                             `run_round`) -- never on `ret_c`, never on the
+                             owner's data, and never on another source's
+                             estimate. This is a change from G1, where this
+                             branch queried the peer's PPO cost critic
+                             (`AgentBundle.cost_value`, trained against
+                             `ret_c` for GAE/advantage estimation) and
+                             measured corr(prediction, true) ~= 0 as a
+                             result (docs/g2_gates.md). PPO's own cost
+                             critic is untouched: GAE, `ret_c`, and the
+                             cost-value network's optimizer are not read by
+                             this branch at all any more.
           replica/monitor -- a small independently-initialized head refit
                              each round on (obs, cost-to-go); the targets
                              follow the selected estimator, see
@@ -225,10 +248,7 @@ class ExperimentRun:
             return owner_finalized["cost_return_estimate"]
         if spec.source_type == "peer_critic":
             peer_id = self._peer_agent_id(spec.source_id, owner_id)
-            peer_agent = self.agents[peer_id]
-            obs0 = torch.as_tensor(owner_finalized["obs"][0], dtype=torch.float32).unsqueeze(0)
-            with torch.no_grad():
-                return float(peer_agent.cost_value(obs0).item())
+            return self.constraint_report_heads[peer_id].predict(owner_finalized["obs"][0])
         # ensemble_replica / monitor
         replica = self.replicas[spec.source_id]
         fit_obs, fit_targets = self._cost_to_go_targets(owner_finalized)
@@ -303,6 +323,19 @@ class ExperimentRun:
                 last_value = float(self.agents[aid].value(obs_last).item())
                 last_cost_value = float(self.agents[aid].cost_value(obs_last).item())
             finalized[aid] = rollouts[aid].finalize(cfg.ppo.gamma, cfg.ppo.gae_lambda, last_value, last_cost_value)
+
+        # G2-peer (docs/g2_gates.md): refit every agent's constraint-report
+        # head EXACTLY ONCE this round, on that agent's own masked MC
+        # cost-to-go targets, before any owner's `peer_critic` sources are
+        # collected below. Refitting once per round (not once per query)
+        # is required: a physical agent is queried as a peer by several
+        # different owners in the loop that follows, and re-fitting on
+        # each query would silently re-bias the head toward whichever
+        # owner queried it most recently, rather than reporting one
+        # consistent belief for the whole round.
+        for aid in self.env.agent_ids:
+            fit_obs, fit_targets = self._cost_to_go_targets(finalized[aid])
+            self.constraint_report_heads[aid].refit(fit_obs, fit_targets)
 
         round_record: dict[str, Any] = {"round_k": self.round_index, "constraints": {}}
         new_lam = np.zeros_like(self.lam)
@@ -484,6 +517,9 @@ class ExperimentRun:
         state = {
             "agents": {aid: b.state_dict() for aid, b in self.agents.items()},
             "replicas": {sid: r.state_dict() for sid, r in self.replicas.items()},
+            "constraint_report_heads": {
+                aid: h.state_dict() for aid, h in self.constraint_report_heads.items()
+            },
             "lam": self.lam,
             "round_index": self.round_index,
             "clean_run_disagreements": list(self.clean_run_disagreements),
@@ -491,6 +527,9 @@ class ExperimentRun:
                 "env": self.env_rng.bit_generator.state,
                 "attack": self.attack_rng.bit_generator.state,
                 "replicas": {sid: r.rng.bit_generator.state for sid, r in self.replicas.items()},
+                "constraint_report_heads": {
+                    aid: h.rng.bit_generator.state for aid, h in self.constraint_report_heads.items()
+                },
                 "torch_global": torch.get_rng_state(),
                 "numpy_global": np.random.get_state(),
             },
@@ -504,6 +543,8 @@ class ExperimentRun:
             self.agents[aid].load_state_dict(sd)
         for sid, sd in state["replicas"].items():
             self.replicas[sid].load_state_dict(sd)
+        for aid, sd in state.get("constraint_report_heads", {}).items():
+            self.constraint_report_heads[aid].load_state_dict(sd)
         self.lam = state["lam"]
         self.round_index = state["round_index"]
         self.clean_run_disagreements = list(state["clean_run_disagreements"])
@@ -511,6 +552,8 @@ class ExperimentRun:
         self.attack_rng.bit_generator.state = state["rng_state"]["attack"]
         for sid, rng_state in state["rng_state"]["replicas"].items():
             self.replicas[sid].rng.bit_generator.state = rng_state
+        for aid, rng_state in state["rng_state"].get("constraint_report_heads", {}).items():
+            self.constraint_report_heads[aid].rng.bit_generator.state = rng_state
         torch.set_rng_state(state["rng_state"]["torch_global"])
         np.random.set_state(state["rng_state"]["numpy_global"])
         return state.get("extra", {})
