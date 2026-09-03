@@ -152,14 +152,22 @@ def source_row(mean: float, r: int, se_m: float, ref_mean: float, se_ref: float,
     bias = mean - ref_mean
     denom = math.sqrt(se_m**2 + se_ref**2)
     z = bias / denom
+    p_within = _phi((BUDGET_D - (ref_mean + (drift or 0.0))) / se_m)
     row = {
         "r": r, "mean": mean, "se": se_m, "bias_vs_anchor_reference": bias,
         "abs_bias_frac_of_budget": abs(bias) / BUDGET_D, "z": z,
         "label": "good" if abs(z) <= Z_GOOD else ("poor" if abs(z) > Z_POOR else "mixed"),
         "ci95": [mean - 1.96 * se_m, mean + 1.96 * se_m],
-        # P(source reports "within budget") under its own sampling law
+        # P(source reports "within budget") under its own sampling law,
         # centred on the anchor's best-estimate J_C plus this slot's drift.
-        "false_safe_prob": _phi((BUDGET_D - (ref_mean + (drift or 0.0))) / se_m),
+        "prob_reports_within_budget": p_within,
+        # docs/g8_gates.md step 5 defines the false-safe probability as
+        # that same number CONDITIONED on the anchor actually being over
+        # budget; when the anchor's reference is already within `d` a
+        # "within budget" report is correct, not a false safe, so the
+        # field is null rather than a large and misleading number.
+        "anchor_reference_over_budget": bool(ref_mean > BUDGET_D),
+        "false_safe_prob": (p_within if ref_mean > BUDGET_D else None),
     }
     if drift is not None:
         row["target_drift"] = drift
@@ -346,6 +354,24 @@ def analyse_anchor(data: dict, ckpt_dir: Path, logged_kl: dict) -> dict:
         drift_seqd_extrap_src3 = 2.0 * abs(dj_delta)  # local linearity, labelled extrapolation
         tol = Z_TOL * se_m_anchor
 
+        # Each Delta J_C is itself estimated from two 120-round reference
+        # pools, so it carries its own standard error. The GATE is the
+        # pre-declared point-estimate comparison and is not touched; these
+        # two extra readings are reported beside it so a marginal verdict
+        # can be seen for what it is rather than read as exact.
+        se_drift = {"1": distances["1"]["delta_J_C"][aid]["se"],
+                    "2": distances["2"]["delta_J_C"][aid]["se"],
+                    "delta": distances["delta"]["delta_J_C"][aid]["se"]}
+
+        def _ci_reading(drifts: list[float], ses: list[float]) -> dict:
+            hi = [abs(d) + 1.96 * s for d, s in zip(drifts, ses)]
+            lo = [max(0.0, abs(d) - 1.96 * s) for d, s in zip(drifts, ses)]
+            return {
+                "strict_pass_ci_upper_within_tolerance": max(hi) <= tol,
+                "weak_pass_cannot_reject_tolerance": max(lo) <= tol,
+                "drift_ci_upper": hi, "drift_ci_lower": lo,
+            }
+
         owner_results.append({
             "agent_id": aid,
             "sigma_hat_anchor": sigma_anchor,
@@ -365,15 +391,19 @@ def analyse_anchor(data: dict, ckpt_dir: Path, logged_kl: dict) -> dict:
             "step7": {
                 "tolerance_2se": tol,
                 "SEQ1": {"max_abs_drift": max(drift_seq1), "drifts": drift_seq1,
-                         "pass": max(drift_seq1) <= tol},
+                         "pass": max(drift_seq1) <= tol,
+                         **_ci_reading(drift_seq1, [0.0, se_drift["1"], se_drift["2"]])},
                 "SEQD_measured_2_sources": {"max_abs_drift": max(drift_seqd_measured),
                                             "drifts": drift_seqd_measured,
-                                            "pass": max(drift_seqd_measured) <= tol},
+                                            "pass": max(drift_seqd_measured) <= tol,
+                                            **_ci_reading(drift_seqd_measured, [0.0, se_drift["delta"]])},
                 "SEQD_with_extrapolated_source3": {
                     "max_abs_drift": drift_seqd_extrap_src3,
                     "drifts": drift_seqd_measured + [drift_seqd_extrap_src3],
                     "source3_is_extrapolated": True,
-                    "pass": drift_seqd_extrap_src3 <= tol},
+                    "pass": drift_seqd_extrap_src3 <= tol,
+                    **_ci_reading(drift_seqd_measured + [drift_seqd_extrap_src3],
+                                  [0.0, se_drift["delta"], 2 * se_drift["delta"]])},
             },
         })
 
