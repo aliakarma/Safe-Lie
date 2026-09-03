@@ -120,8 +120,11 @@ class TestPeerCriticQueriesTheCorrectHeadAtTheCorrectObservation:
         orig = run._collect_source_value
         calls: list[tuple[str, str, np.ndarray, float]] = []
 
-        def wrapper(spec, owner_id, owner_finalized):
-            val = orig(spec, owner_id=owner_id, owner_finalized=owner_finalized)
+        # `batch` accepts G9's trajectory-batch payload (always None on
+        # this neural-source config) so the wrapper keeps matching
+        # `_collect_source_value`'s signature.
+        def wrapper(spec, owner_id, owner_finalized, batch=None):
+            val = orig(spec, owner_id=owner_id, owner_finalized=owner_finalized, batch=batch)
             if spec.source_type == "peer_critic":
                 calls.append((spec.source_id, owner_id, np.array(owner_finalized["obs"][0], copy=True), val))
             return val

@@ -26,6 +26,7 @@ import json
 import platform
 import subprocess
 import sys
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -134,12 +135,31 @@ def run_experiment_with_oracle(
     oracle_logger = JsonlLogger(run.output_dir / "oracle.jsonl")
 
     num_rounds = max(1, cfg.total_steps // cfg.rollout_length)
-    _write_run_metadata(run.output_dir, cfg, "running", resumed_from_round=start_k)
+    _write_run_metadata(
+        run.output_dir, cfg, "running", resumed_from_round=start_k,
+        source_collection=(
+            {"mode": cfg.source_collection.mode, "spawn_keys": run.batch_sources.seed_audit()["spawn_keys"]}
+            if run.batch_sources else {"mode": cfg.source_collection.mode}
+        ),
+    )
+
+    # G9j: wall clock is attributed to the three phases separately, not
+    # reported as one total, because "the source architecture costs 46x the
+    # environment steps" is a claim about one of the three and the other
+    # two are unchanged from G2.
+    timing = {"source_s": 0.0, "oracle_s": 0.0, "learner_total_s": 0.0}
+    t_run0 = time.time()
 
     for k in range(start_k, num_rounds):
+        t_round = time.time()
         learner_record = run.run_round()
+        timing["learner_total_s"] += time.time() - t_round
+        timing["source_s"] += float(
+            learner_record.get("source_batch", {}).get("wall_clock_s", 0.0)
+        ) + float(learner_record.get("source_batch", {}).get("reference_wall_clock_s", 0.0))
 
         if k % eval_every == 0:
+            t_oracle = time.time()
             eval_seed = int(eval_seed_rng.integers(0, 2**31 - 1))
             oracle_result = evaluate_true_cost(
                 env_factory=env_factory,
@@ -214,6 +234,7 @@ def run_experiment_with_oracle(
                     "peak_violation_so_far": peak_violation(episodes_by_agent[aid], aid),
                 }
             oracle_logger.write(oracle_record)
+            timing["oracle_s"] += time.time() - t_oracle
 
         if checkpoint_every > 0 and (k + 1) % checkpoint_every == 0:
             run.checkpoint(
@@ -235,10 +256,32 @@ def run_experiment_with_oracle(
 
     run.round_logger.close()
     oracle_logger.close()
-    _write_run_metadata(
-        run.output_dir, cfg, "complete",
-        rounds_completed=run.round_index,
-        checkpoint=str(ckpt_path.name) if ckpt_path.exists() else None,
-        eval_every=eval_every,
-    )
+
+    wall = time.time() - t_run0
+    rounds_run = max(1, num_rounds - start_k)
+    extra: dict[str, Any] = {
+        "rounds_completed": run.round_index,
+        "checkpoint": str(ckpt_path.name) if ckpt_path.exists() else None,
+        "eval_every": eval_every,
+        "timing": {
+            **timing,
+            "wall_clock_s": wall,
+            "s_per_round": wall / rounds_run,
+            "source_s_per_round": timing["source_s"] / rounds_run,
+        },
+        "env_steps": {
+            "ppo": rounds_run * cfg.rollout_length,
+            "source": (
+                rounds_run * cfg.source_collection.M * cfg.source_collection.R_m * cfg.rollout_length
+                if run.batch_sources else 0
+            ),
+            "oracle": (rounds_run // max(1, eval_every)) * cfg.rollout_length,
+        },
+    }
+    if run.batch_sources is not None:
+        # G9g-ii/iii as an artifact fact, written by the run itself rather
+        # than reconstructed by the analysis script from the seed log.
+        extra["source_seed_audit"] = run.batch_sources.seed_audit()
+    _write_run_metadata(run.output_dir, cfg, "complete", **extra)
+    run.close()
     return run.output_dir

@@ -51,6 +51,11 @@ from safelie.sources.registry import SourceRegistry
 from safelie.training.buffer import AgentRollout
 from safelie.training.dual import dual_update
 from safelie.training.ppo import ppo_lagrangian_update
+from safelie.training.source_batch import (
+    BatchSourceResult,
+    ParallelBatchSourceCollector,
+    policy_checksum,
+)
 from safelie.utils.config import ExperimentConfig, SourceSpec
 from safelie.utils.logging import JsonlLogger
 from safelie.utils.seeding import seed_everything
@@ -139,9 +144,27 @@ class ExperimentRun:
             for i, aid in enumerate(self.env.agent_ids)
         }
 
+        # G9 (docs/g9_gates.md). When the parallel trajectory-batch source
+        # architecture is selected, the M sources are no longer critics or
+        # fitted heads read off this round's PPO rollout -- they are M
+        # independent rollout BATCHES collected under a pinned theta_k by
+        # `safelie.training.source_batch`. `self.replicas` is empty in that
+        # mode (no spec has type ensemble_replica/monitor) and
+        # `self.constraint_report_heads` is constructed but never refit and
+        # never queried, which `_source_pipeline_audit` records every round.
+        self.batch_sources: ParallelBatchSourceCollector | None = None
+        if cfg.source_collection.mode == "parallel_trajectory_batch":
+            self.batch_sources = ParallelBatchSourceCollector(cfg, list(self.env.agent_ids))
+
         self.output_dir = Path(cfg.output_dir) / cfg.run_id
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self.round_logger = JsonlLogger(self.output_dir / "rounds.jsonl")
+        self.source_logger: JsonlLogger | None = (
+            JsonlLogger(self.output_dir / "source_seeds.jsonl") if self.batch_sources else None
+        )
+        self.reference_logger: JsonlLogger | None = (
+            JsonlLogger(self.output_dir / "validation_reference.jsonl") if self.batch_sources else None
+        )
         self.clean_run_disagreements: list[float] = []
         self.round_index = 0
 
@@ -203,7 +226,13 @@ class ExperimentRun:
             return owner_finalized["obs"][:n], owner_finalized["mc_cost_to_go"][:n]
         return owner_finalized["obs"], owner_finalized["ret_c"]
 
-    def _collect_source_value(self, spec: SourceSpec, owner_id: AgentID, owner_finalized: dict) -> float:
+    def _collect_source_value(
+        self,
+        spec: SourceSpec,
+        owner_id: AgentID,
+        owner_finalized: dict,
+        batch: BatchSourceResult | None = None,
+    ) -> float:
         """One source's return-scale estimate of the owner's J_C^i.
 
         The constraint estimator selected by
@@ -241,7 +270,28 @@ class ExperimentRun:
                              each round on (obs, cost-to-go); the targets
                              follow the selected estimator, see
                              `_cost_to_go_targets`.
+          trajectory_batch -- G9 (docs/g9_gates.md): replica `spec.source_id`'s
+                             sample mean of `sum_t gamma^t C_t^i` over its
+                             own `R_m` trajectories, drawn under the pinned
+                             `theta_k` by `safelie.training.source_batch`
+                             BEFORE this method is called. Nothing is
+                             computed here -- the value was produced by a
+                             separate rollout batch, not by any network --
+                             so this branch is a lookup, and deliberately
+                             so: any arithmetic here would be arithmetic
+                             the estimator's definition does not contain.
+                             `owner_finalized` is not read at all on this
+                             path, which is what keeps the PPO rollout out
+                             of the constraint estimate.
         """
+        if spec.source_type == "trajectory_batch":
+            if batch is None:
+                raise RuntimeError(
+                    "trajectory_batch source requested without a collected batch; "
+                    "ExperimentRun.run_round must collect sources under the pinned "
+                    "theta_k before assembling reports (docs/g9_gates.md step 3)."
+                )
+            return batch.source_means[spec.source_id][owner_id]
         if spec.source_type == "own_critic":
             if self.cfg.constraint_estimator == "mc_window":
                 return float(owner_finalized["mc_cost_return"])
@@ -324,25 +374,117 @@ class ExperimentRun:
                 last_cost_value = float(self.agents[aid].cost_value(obs_last).item())
             finalized[aid] = rollouts[aid].finalize(cfg.ppo.gamma, cfg.ppo.gae_lambda, last_value, last_cost_value)
 
-        # G2-peer (docs/g2_gates.md): refit every agent's constraint-report
-        # head EXACTLY ONCE this round, on that agent's own masked MC
-        # cost-to-go targets, before any owner's `peer_critic` sources are
-        # collected below. Refitting once per round (not once per query)
-        # is required: a physical agent is queried as a peer by several
-        # different owners in the loop that follows, and re-fitting on
-        # each query would silently re-bias the head toward whichever
-        # owner queried it most recently, rather than reporting one
-        # consistent belief for the whole round.
-        for aid in self.env.agent_ids:
-            fit_obs, fit_targets = self._cost_to_go_targets(finalized[aid])
-            self.constraint_report_heads[aid].refit(fit_obs, fit_targets)
+        # ------------------------------------------------------------------
+        # G9 step 3 (docs/g9_gates.md). theta_k is pinned HERE: the PPO
+        # rollout above is complete, and the PPO update below has not run.
+        # Everything from this point to the dual update therefore refers to
+        # exactly one policy, which is what makes `Jhat_agg^i` an estimate
+        # of `J_C^i(theta_k)` -- the same quantity G0-G2's dual update
+        # consumed, estimated differently. The 90 trajectories collected
+        # here enter no buffer, touch no optimizer, and update no
+        # normalization statistic; `finalized` above stays PPO's only data.
+        # ------------------------------------------------------------------
+        batch: BatchSourceResult | None = None
+        theta_k_checksum: str | None = None
+        if self.batch_sources is not None:
+            theta_k_checksum = policy_checksum(self.agents, list(self.env.agent_ids))
+            batch = self.batch_sources.collect(
+                self.agents,
+                self.round_index,
+                collect_reference=self.round_index in set(cfg.source_collection.validation_rounds),
+            )
+        else:
+            # G2-peer (docs/g2_gates.md): refit every agent's constraint-report
+            # head EXACTLY ONCE this round, on that agent's own masked MC
+            # cost-to-go targets, before any owner's `peer_critic` sources are
+            # collected below. Refitting once per round (not once per query)
+            # is required: a physical agent is queried as a peer by several
+            # different owners in the loop that follows, and re-fitting on
+            # each query would silently re-bias the head toward whichever
+            # owner queried it most recently, rather than reporting one
+            # consistent belief for the whole round.
+            #
+            # Skipped entirely under the G9 trajectory-batch architecture:
+            # no source queries a head there, so refitting one would be
+            # both wasted compute and a neural component executing inside a
+            # round whose gate G9a-v says none may.
+            for aid in self.env.agent_ids:
+                fit_obs, fit_targets = self._cost_to_go_targets(finalized[aid])
+                self.constraint_report_heads[aid].refit(fit_obs, fit_targets)
 
         round_record: dict[str, Any] = {"round_k": self.round_index, "constraints": {}}
+        if batch is not None:
+            round_record["source_batch"] = {
+                "policy_checksum": batch.policy_checksum,
+                "worker_checksums_all_match": True,  # collect() raises otherwise
+                "n_chunks": len(batch.worker_checksums),
+                "M": self.batch_sources.M,
+                "R_m": cfg.source_collection.R_m,
+                "n_trajectories": batch.n_trajectories,
+                "env_steps": batch.env_steps,
+                "wall_clock_s": batch.wall_clock_s,
+                "reference_collected": batch.reference_mean is not None,
+                "reference_n": batch.reference_n,
+                "reference_wall_clock_s": batch.reference_wall_clock_s,
+                # Per-owner within-round sampling statistics: the pooled
+                # per-trajectory sd over this round's own 3 x R_m draws
+                # (G9f's `s2_within`) and the between-source variance
+                # (`s2_between`). Logged per round because sigma is a
+                # property of theta_k and pooling it across rounds would
+                # fold policy drift into a sampling-variance estimate.
+                "per_owner": {
+                    aid: {
+                        "source_means": {
+                            rid: batch.source_means[rid][aid] for rid in self.batch_sources.replica_ids
+                        },
+                        "sigma_hat": float(
+                            np.sqrt(
+                                np.mean([
+                                    np.var(batch.per_trajectory[rid][aid], ddof=1)
+                                    for rid in self.batch_sources.replica_ids
+                                ])
+                            )
+                        ),
+                        "s2_between": float(
+                            np.var(
+                                [batch.source_means[rid][aid] for rid in self.batch_sources.replica_ids],
+                                ddof=1,
+                            )
+                        ),
+                    }
+                    for aid in self.env.agent_ids
+                },
+            }
+            if self.source_logger is not None:
+                self.source_logger.write({
+                    "round_k": self.round_index,
+                    "policy_checksum": batch.policy_checksum,
+                    "seeds": {rid: [list(p) for p in pairs] for rid, pairs in batch.seeds.items()},
+                    "reference_seeds": [list(p) for p in batch.reference_seeds],
+                })
+            if batch.reference_mean is not None and self.reference_logger is not None:
+                # Written to its own file, never into `rounds.jsonl`, so
+                # there is no path by which the high-precision reference
+                # could be mistaken for something the dual update saw.
+                self.reference_logger.write({
+                    "round_k": self.round_index,
+                    "policy_checksum": batch.policy_checksum,
+                    "R_ref": batch.reference_n,
+                    "reference_mean": batch.reference_mean,
+                    "reference_per_trajectory": batch.reference_per_trajectory,
+                    "source_means": batch.source_means,
+                    "source_per_trajectory": batch.per_trajectory,
+                })
         new_lam = np.zeros_like(self.lam)
         for i, aid in enumerate(self.env.agent_ids):
             reports = self.source_registry.collect(
                 aid, self.round_index,
-                functools.partial(self._collect_source_value, owner_id=aid, owner_finalized=finalized[aid]),
+                functools.partial(
+                    self._collect_source_value,
+                    owner_id=aid,
+                    owner_finalized=finalized[aid],
+                    batch=batch,
+                ),
             )
             residuals = {r.source_id: r.value - cfg.env.budget for r in reports}
 
@@ -472,7 +614,39 @@ class ExperimentRun:
             }
 
         residual_vec = new_lam
+        # G9d-i is checked from the artifact rather than asserted here, so
+        # record the two inputs the identity needs: the pre-update mixed
+        # multiplier `W @ lambda_k` and the residual the dual consumed.
+        mixed_lam = self.W @ self.lam
         self.lam = dual_update(self.lam, self.W, cfg.dual.eta_lambda, residual_vec, cfg.dual.lambda_max)
+
+        # G9h-iii, extended to cover steps 4-6: the attack hook, the
+        # aggregation and the dual update must not have moved theta
+        # either. If any of them ever did, the dual update at round k
+        # would be consuming an estimate of a policy that no longer
+        # exists, and the timing of the algorithm would have changed
+        # silently -- the section-19 stop condition this check exists for.
+        if theta_k_checksum is not None:
+            now = policy_checksum(self.agents, list(self.env.agent_ids))
+            if now != theta_k_checksum:
+                raise RuntimeError(
+                    f"G9h FAILED at round {self.round_index}: theta changed between source "
+                    f"collection and the PPO update ({theta_k_checksum} -> {now})."
+                )
+            round_record["source_batch"]["theta_k_checksum_stable_through_dual"] = True
+
+        # G9c-v: `||theta_{k+1} - theta_k|| / ||theta_k||` over policy
+        # parameters only (critics excluded -- they do not define the
+        # trajectory distribution). `approx_kl` already says the update was
+        # non-trivial in distribution space, but the gate was declared in
+        # parameter space and the two can disagree: a policy whose log_std
+        # has collapsed can post a healthy KL from a tiny parameter step.
+        # One concatenation of ~52k floats per round; the cost is nil next
+        # to a 2000-step rollout.
+        theta_before = torch.cat([
+            p.detach().reshape(-1) for aid in self.env.agent_ids
+            for p in self.agents[aid].policy.parameters()
+        ])
 
         for i, aid in enumerate(self.env.agent_ids):
             # `ppo_lagrangian_update` has always returned PPOUpdateStats;
@@ -484,6 +658,10 @@ class ExperimentRun:
             # writes down what was already being produced.
             ppo_stats = ppo_lagrangian_update(self.agents[aid], finalized[aid], float(self.lam[i]), cfg.ppo)
             round_record["constraints"][aid]["lambda_after"] = float(self.lam[i])
+            # G9d-i: `lambda_after - lambda_mixed_before == eta * residual`
+            # on every unclipped cell, checkable directly from the log
+            # without re-deriving `W @ lambda_k` from six other fields.
+            round_record["constraints"][aid]["lambda_mixed_before"] = float(mixed_lam[i])
             round_record["constraints"][aid]["ppo"] = {
                 "policy_loss": ppo_stats.policy_loss,
                 "value_loss": ppo_stats.value_loss,
@@ -491,6 +669,15 @@ class ExperimentRun:
                 "entropy": ppo_stats.entropy,
                 "approx_kl": ppo_stats.approx_kl,
             }
+
+        theta_after = torch.cat([
+            p.detach().reshape(-1) for aid in self.env.agent_ids
+            for p in self.agents[aid].policy.parameters()
+        ])
+        denom = float(torch.norm(theta_before))
+        round_record["policy_param_rel_change"] = (
+            float(torch.norm(theta_after - theta_before) / denom) if denom > 0 else 0.0
+        )
 
         self.round_logger.write(round_record)
         self.round_index += 1
@@ -532,6 +719,12 @@ class ExperimentRun:
                 },
                 "torch_global": torch.get_rng_state(),
                 "numpy_global": np.random.get_state(),
+                # G9: the M+1 spawned source streams and the full set of
+                # seeds already issued. Without these a resumed run would
+                # restart its source streams from the spawn point and
+                # re-issue seeds it had already used, which is exactly the
+                # duplication gate G9g-ii forbids.
+                "batch_sources": self.batch_sources.state_dict() if self.batch_sources else None,
             },
             "extra": extra or {},
         }
@@ -556,9 +749,24 @@ class ExperimentRun:
             self.constraint_report_heads[aid].rng.bit_generator.state = rng_state
         torch.set_rng_state(state["rng_state"]["torch_global"])
         np.random.set_state(state["rng_state"]["numpy_global"])
+        bs = state["rng_state"].get("batch_sources")
+        if self.batch_sources is not None and bs is not None:
+            self.batch_sources.load_state_dict(bs)
         return state.get("extra", {})
+
+    def close(self) -> None:
+        """Release the source worker pool. Idempotent, and safe to call on
+        a run that never had one."""
+        if self.batch_sources is not None:
+            self.batch_sources.close()
+        for logger in (self.source_logger, self.reference_logger):
+            if logger is not None:
+                logger.close()
 
 
 def run_experiment(cfg: ExperimentConfig) -> Path:
     run = ExperimentRun(cfg)
-    return run.run()
+    try:
+        return run.run()
+    finally:
+        run.close()

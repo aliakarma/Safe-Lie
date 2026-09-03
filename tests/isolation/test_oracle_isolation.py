@@ -17,7 +17,13 @@ from safelie.envs.guards import LearnerAccessError
 from safelie.envs.synthetic import SyntheticConstrainedMarlEnv
 
 SRC_ROOT = Path(__file__).resolve().parents[2] / "src" / "safelie"
-LEARNER_MODULES = ["training", "algos"]
+# G9i-i (docs/g9_gates.md): `sources` is listed explicitly alongside
+# `training` and `algos`. It was always learner-side, but the
+# trajectory-batch architecture makes the source layer a rollout
+# collector rather than a pure function of the learner's own buffer, and
+# a rollout collector is precisely the kind of code that could reach for
+# an oracle handle by accident.
+LEARNER_MODULES = ["training", "algos", "sources"]
 
 
 def test_bare_oracle_handle_raises_on_true_cost():

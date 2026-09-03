@@ -30,8 +30,51 @@ from pydantic import BaseModel, Field, model_validator
 
 class SourceSpec(BaseModel):
     source_id: str
-    source_type: Literal["own_critic", "peer_critic", "ensemble_replica", "monitor"]
+    source_type: Literal[
+        "own_critic", "peer_critic", "ensemble_replica", "monitor", "trajectory_batch"
+    ]
     independence_class: str
+
+
+class SourceCollectionConfig(BaseModel):
+    """How the M constraint sources are produced (G9, docs/g9_gates.md).
+
+    `"neural"` is the G0-G2 path: every source is a critic or a fitted
+    regression head evaluated on the round's own PPO rollout
+    (`safelie.sources.estimators`). It is the default so that no existing
+    config changes meaning by the mere existence of this field.
+
+    `"parallel_trajectory_batch"` is the G8-recommended architecture: per
+    dual update the policy is pinned at `theta_k` and `M` replicas, each
+    with its own environment instance and its own RNG stream, each collect
+    `R_m` independent trajectories and report one Monte-Carlo scalar
+    `(1/R_m) sum_r sum_t gamma^t C_{r,t}^i`. No critic, no GAE, no fitted
+    head anywhere in the path (`safelie.training.source_batch`).
+
+    `workers` is a **compute knob with no scientific content**: every
+    trajectory's seeds are drawn in the main process from per-replica
+    spawned streams, so the collected values are bitwise independent of
+    how many processes ran them (asserted by
+    `tests/unit/test_source_batch.py`). It is deliberately NOT tied to
+    `M`: G8 requires `M` independent *batches*, not `M` processes, and
+    conflating the two would either cap parallelism at 3 or make the
+    replica count a performance decision.
+    """
+
+    mode: Literal["neural", "parallel_trajectory_batch"] = "neural"
+    M: int = Field(default=3, ge=1)  # G8's operating point; not tuned by G9
+    R_m: int = Field(default=30, ge=1)  # G8's operating point; not tuned by G9
+    workers: int = Field(default=1, ge=1)
+    # Chunks dispatched per worker per round. Scheduling only, same
+    # rationale as `workers`: it changes how the trajectory list is
+    # partitioned across `Pool.map`, never which trajectories are drawn.
+    chunks_per_worker: int = Field(default=3, ge=1)
+    seed_entropy: int = Field(default=286_314_957_402_113_664_887_331_205_920_951_063_913)
+    # Independent high-precision reference collected under the SAME pinned
+    # theta_k at these rounds, logged separately and never fed to the dual
+    # update (docs/g9_gates.md step 3b, gate G9b).
+    validation_rounds: list[int] = Field(default_factory=list)
+    R_ref: int = Field(default=120, ge=1)
 
 
 class SourcesConfig(BaseModel):
@@ -195,6 +238,10 @@ class ExperimentConfig(BaseModel):
     # every config that does not mention this field.
     constraint_estimator: Literal["mc_window", "gae_lambda"] = "mc_window"
 
+    # G9 (docs/g9_gates.md). Absent => the G0-G2 neural source path, so
+    # every pre-existing config keeps its exact meaning.
+    source_collection: SourceCollectionConfig = SourceCollectionConfig()
+
     @model_validator(mode="after")
     def _cross_field_checks(self) -> ExperimentConfig:
         if self.topology.n_agents != self.env.n_agents:
@@ -247,6 +294,46 @@ class ExperimentConfig(BaseModel):
                     f"would make every owner its own peer (P0 #7). Use an offset in "
                     f"1..{n - 1} not divisible by {n}."
                 )
+
+        # G9. The two source-production paths are mutually exclusive by
+        # construction, and a config that mixes them would silently feed
+        # the dual update a mean over two incomparable kinds of estimate
+        # (a state-conditional head prediction and a policy-level Monte-
+        # Carlo mean). Reject rather than aggregate.
+        batch_specs = [s for s in self.sources.sources if s.source_type == "trajectory_batch"]
+        if self.source_collection.mode == "parallel_trajectory_batch":
+            if len(batch_specs) != len(self.sources.sources):
+                offenders = sorted(
+                    s.source_id for s in self.sources.sources if s.source_type != "trajectory_batch"
+                )
+                raise ValueError(
+                    "source_collection.mode='parallel_trajectory_batch' requires every source "
+                    f"to have source_type='trajectory_batch'; these do not: {offenders}. "
+                    "Mixing a neural source with a trajectory-batch source would average a "
+                    "state-conditional prediction into a policy-level Monte-Carlo mean."
+                )
+            if self.source_collection.M != len(self.sources.sources):
+                raise ValueError(
+                    f"source_collection.M ({self.source_collection.M}) must equal the number of "
+                    f"configured sources ({len(self.sources.sources)}); they are the same "
+                    "quantity (one replica per source) and must not disagree."
+                )
+            bad_rounds = [
+                k for k in self.source_collection.validation_rounds
+                if not 0 <= k < max(1, self.total_steps // self.rollout_length)
+            ]
+            if bad_rounds:
+                raise ValueError(
+                    f"source_collection.validation_rounds contains rounds outside this run's "
+                    f"0..{max(1, self.total_steps // self.rollout_length) - 1} range: {bad_rounds}"
+                )
+        elif batch_specs:
+            raise ValueError(
+                "sources of source_type='trajectory_batch' require "
+                "source_collection.mode='parallel_trajectory_batch'; got mode="
+                f"{self.source_collection.mode!r}. A trajectory-batch source has no neural "
+                "estimator to fall back on and would have no value to report."
+            )
         return self
 
 
