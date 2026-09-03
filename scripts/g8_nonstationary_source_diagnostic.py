@@ -346,6 +346,16 @@ def analyse_anchor(data: dict, ckpt_dir: Path, logged_kl: dict) -> dict:
         rho_from_2 = abs(distances["2"]["delta_J_C"][aid]["delta"]) / 2.0
         rho_from_2_se = distances["2"]["delta_J_C"][aid]["se"] / 2.0
         r_m_max = ((2 * sigma_anchor) / (rho * (M - 0.5))) ** (2 / 3) if rho > 0 else float("inf")
+        # The step-8 formula assumes a locally LINEAR drift rate. Where the
+        # two pre-declared rate estimates disagree (the `consistent_within_2se`
+        # cross-check), that assumption is false and the Delta-stride rate --
+        # which averages a non-monotone excursion back down towards zero --
+        # understates short-horizon drift. The same formula evaluated at the
+        # short-horizon rate is therefore reported beside it; neither is a
+        # gate, and where they disagree the report says the linear model does
+        # not hold rather than picking the friendlier number.
+        r_m_max_short = (((2 * sigma_anchor) / (rho_from_2 * (M - 0.5))) ** (2 / 3)
+                         if rho_from_2 > 0 else float("inf"))
 
         # Step 7 criterion, per schedule.
         drift_seq1 = [0.0, abs(distances["1"]["delta_J_C"][aid]["delta"]),
@@ -372,6 +382,19 @@ def analyse_anchor(data: dict, ckpt_dir: Path, logged_kl: dict) -> dict:
                 "drift_ci_upper": hi, "drift_ci_lower": lo,
             }
 
+        # Model-free counterpart to R_m_max: the largest MEASURED stride whose
+        # drift is still inside the tolerance. Answers "how many policy updates
+        # may elapse between the first and the last source?" with no rate model
+        # at all -- which matters here precisely because the linear model is the
+        # part that can fail.
+        measured_strides = [(0, 0.0, 0.0),
+                            (1, abs(distances["1"]["delta_J_C"][aid]["delta"]), se_drift["1"]),
+                            (2, abs(distances["2"]["delta_J_C"][aid]["delta"]), se_drift["2"]),
+                            (delta, abs(dj_delta), se_drift["delta"])]
+        max_admissible = max(s for s, dv, _ in measured_strides if dv <= tol)
+        max_admissible_strict = max(
+            [s for s, dv, sv in measured_strides if dv + 1.96 * sv <= tol] or [0])
+
         owner_results.append({
             "agent_id": aid,
             "sigma_hat_anchor": sigma_anchor,
@@ -388,6 +411,14 @@ def analyse_anchor(data: dict, ckpt_dir: Path, logged_kl: dict) -> dict:
                 "consistent_within_2se": abs(rho - rho_from_2) <= 2 * math.hypot(rho_se, rho_from_2_se),
             },
             "R_m_max_sequential_M3": r_m_max,
+            "R_m_max_sequential_M3_short_horizon_rate": r_m_max_short,
+            "max_admissible_updates_between_sources": {
+                "point_estimate": max_admissible,
+                "ci_conservative": max_admissible_strict,
+                "strides_measured": [s for s, _, _ in measured_strides],
+                "abs_drift_measured": [dv for _, dv, _ in measured_strides],
+                "tolerance_2se": tol,
+            },
             "step7": {
                 "tolerance_2se": tol,
                 "SEQ1": {"max_abs_drift": max(drift_seq1), "drifts": drift_seq1,
