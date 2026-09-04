@@ -449,3 +449,49 @@ second-environment experiment; and no `M = 5`. G10 establishes nothing about
 attack effectiveness, stealth, Theorem 2's numerical bound, other environments,
 other `f`, or other topologies. It is clean replication only, and the attack
 study is not launched until this report has been reviewed.
+
+---
+
+## Appendix A — operating characteristics of these gates
+
+Added while seed 1 was in its opening rounds and before seed 2 existed. It
+uses **only** the committed G9 seed-0 report. **It changes no bar.** It
+publishes how often each already-fixed bar fires when the source is
+*perfectly calibrated*, so that a miss in the final report is read against its
+prior rather than over-interpreted. Produced by `scripts/g10_gate_power.py`
+(400,000 Monte Carlo draws, `results/g10_gate_power.json`).
+
+The correlation structure is **measured, not assumed**:
+
+* owner-to-owner correlation of the per-source `z` at a checkpoint, read off
+  the G9 report: **0.975** (min 0.948). The six owners are, statistically,
+  very nearly one test.
+* source-to-source correlation through the shared reference batch:
+  `ρ = (1/R_ref)/(1/R_m + 1/R_ref) = 0.20`.
+* so the 18 owner-cells at a checkpoint are **~3 effective tests, not 18** —
+  the fact §4.2 rests on, now quantified rather than argued.
+
+| gate | P(fail) under a perfectly calibrated source, one seed | across three seeds |
+|---|---|---|
+| **G9b** (demoted) | **0.173** | 0.435 |
+| G10-A-i (`\|z̄\|≤3` at all 5 checkpoints) | 0.014 | 0.040 |
+| G10-A-ii (pooled `\|bias\|≤1.0`) | 0.017 | 0.051 |
+| **G10-A** (both) | **0.031** | **0.089** |
+| G10-A meta (3-seed pooled `\|bias\|≤0.6`) | — | 0.013 |
+
+Two consequences, both fixed here in advance:
+
+1. **G9's G9b FAIL is what a correctly calibrated source does about one time
+   in six.** The simulated `P(≤3 of 5 checkpoints)` is 0.173, and G9 scored
+   exactly 3 of 5. This is a stronger statement than §4.2's analytic ~13%
+   estimate and it settles the demotion: G9b carries essentially no evidence
+   against the architecture. It is still computed and reported for all three
+   seeds.
+
+2. **G10-A is ~5.6× less trigger-happy than G9b per seed, but is not free.**
+   A single G10-A miss somewhere across three seeds has prior **0.089**. If
+   exactly one such miss occurs, the report will state this prior explicitly
+   and will **not** treat one miss as evidence that the architecture is
+   miscalibrated; the verdict rule in §9 (which makes any G10-A failure a
+   FAIL) is deliberately left unchanged, and the tension between the rule and
+   the prior will be reported rather than resolved by moving the bar.
