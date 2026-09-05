@@ -183,9 +183,13 @@ def main() -> int:
                             state["events"].append(ev)
                             log(f"STALL  {name} round {k}: {t:.0f} s "
                                 f"= {t / med:.0f}x median ({med:.0f} s)")
-                    # (b) live: no new round for longer than the threshold
+                    # (b) live: no new round for longer than the threshold.
+                    # Suppressed once the run is complete -- a finished run
+                    # stops producing rounds by definition, and warning about
+                    # that at the end of all six runs would train the reader
+                    # to ignore the warning that matters.
                     prev = last_seen.get(name)
-                    if prev and prev[0] == n:
+                    if prev and prev[0] == n and n < EXPECTED_ROUNDS:
                         waiting = time.time() - prev[1]
                         if waiting > thresh and live_warned.get(name, 0) < prev[1]:
                             live_warned[name] = prev[1]
