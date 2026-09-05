@@ -61,12 +61,26 @@ from safelie.utils.logging import JsonlLogger
 from safelie.utils.seeding import seed_everything
 
 
-def select_corrupted_sources(specs: list[SourceSpec], f: int) -> set[str]:
-    """Deterministic choice of which `f` sources are attacker-controlled:
-    the first `f` non-`own_critic` sources, in config order. Kept out of
-    the attack module itself, per Phase 5's "one clean hook" principle --
-    the attack module transforms residuals, it does not decide who is
-    compromised."""
+def select_corrupted_sources(
+    specs: list[SourceSpec], f: int, explicit: list[str] | None = None
+) -> set[str]:
+    """Deterministic choice of which `f` sources are attacker-controlled.
+
+    `explicit` (from `AttackConfig.corrupted_source_ids`) names them
+    outright; it is already validated against the source list and against
+    `f` at config construction, so it is returned verbatim. This is what
+    A1 uses to balance the attacked source across training seeds
+    (docs/a1_attack_gates.md §3) without reordering `cfg.sources.sources`
+    -- an order that, under `parallel_trajectory_batch`, also fixes which
+    spawned RNG stream each replica draws from.
+
+    Without it the historical rule applies: the first `f` non-`own_critic`
+    sources, in config order. Kept out of the attack module itself, per
+    Phase 5's "one clean hook" principle -- the attack module transforms
+    residuals, it does not decide who is compromised.
+    """
+    if explicit is not None:
+        return set(explicit)
     candidates = [s.source_id for s in specs if s.source_type != "own_critic"] or [
         s.source_id for s in specs
     ]
@@ -117,7 +131,9 @@ class ExperimentRun:
             cfg.topology.name, cfg.topology.n_agents, p=cfg.topology.p, graph_seed=cfg.topology.graph_seed
         )
         self.source_registry = SourceRegistry(cfg.sources)
-        self.corrupted_ids = select_corrupted_sources(cfg.sources.sources, cfg.attack.f)
+        self.corrupted_ids = select_corrupted_sources(
+            cfg.sources.sources, cfg.attack.f, cfg.attack.corrupted_source_ids
+        )
         self.ledger = AttackLedger()
 
         self.env_rng = self.seed_bundle.rng("env")

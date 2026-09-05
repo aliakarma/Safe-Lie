@@ -1,0 +1,80 @@
+# A1 mechanism check -- condition D arm (docs/a1_attack_gates.md §16).
+#
+# configs/experiment/g10_batch_clean_seed1.yaml with the SEED-0 entropy and
+# only the round count changed: 4 rounds instead of 250, and one validation
+# round moved inside that range. Nothing else differs, so the source values
+# this produces in rounds 0-3 are the values the production seed-0 run
+# produces in rounds 0-3.
+#
+# Its only job is to give `_mechanism_check_attack.yaml` and
+# `_mechanism_check_noise.yaml` a bit-identical clean reference, so the
+# §16 identities
+#
+#     J_hat_m^attack - J_hat_m^clean = -B        (attacked source)
+#     J_hat_m'^attack - J_hat_m'^clean = 0       (the other two)
+#     mean^attack - mean^clean = -B/M
+#
+# are measured against matched underlying draws rather than against a
+# second sample. Discarded after the check; not an A1 result.
+run_id: mech_noise
+seed: 0
+
+env:
+  name: manyagent_ant
+  n_agents: 6
+  budget: 25.0
+  velocity_threshold: 0.75
+  cost_mode: per_agent_velocity
+
+topology:
+  name: ring
+  n_agents: 6
+
+sources:
+  sources:
+    - source_id: batch_1
+      source_type: trajectory_batch
+      independence_class: ic_batch1
+    - source_id: batch_2
+      source_type: trajectory_batch
+      independence_class: ic_batch2
+    - source_id: batch_3
+      source_type: trajectory_batch
+      independence_class: ic_batch3
+
+source_collection:
+  mode: parallel_trajectory_batch
+  M: 3
+  R_m: 30
+  seed_entropy: 286314957402113664887331205920951063913   # seed 0, the G9 constant
+  workers: 12
+  chunks_per_worker: 4
+  validation_rounds: [2]    # moved into range; production uses [25,75,125,175,225]
+  R_ref: 120
+
+attack:
+  name: benign_control   # zero-mean magnitude-matched generic perturbation
+  f: 1
+  budget_ratio: 0.5      # sigma = 0.5 * d = 12.5
+  corrupted_source_ids: [batch_1]
+
+defense:
+  name: mean
+  f: 0
+
+ppo:
+  clip: 0.2
+  gae_lambda: 0.95
+  gamma: 0.99
+  lr: 0.0003
+  epochs: 4
+  minibatches: 4
+  hidden_dim: 64
+
+dual:
+  eta_lambda: 0.035
+  lambda_max: 25.0
+
+total_steps: 8000     # 4 rounds
+rollout_length: 2000
+output_dir: results/a1_mechanism_check

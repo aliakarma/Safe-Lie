@@ -1,0 +1,141 @@
+# A1 condition D -- magnitude-matched generic perturbation
+# docs/a1_attack_gates.md. Training seed 0.
+#
+# This file is the FROZEN G10 architecture. It is
+# configs/experiment/g10_batch_clean_seed0.yaml with exactly these fields
+# changed, and no others:
+#
+#   run_id            -> D_seed0
+#   output_dir        -> results/runs_a1
+#   attack.*          -> the corruption treatment described below
+#
+# Everything the G10 three-seed validation froze is inherited verbatim:
+# M=3, R_m=30, pinned-policy parallel trajectory-batch collection, PPO,
+# GAE, the dual update, the ring consensus matrix, d=25, eta_lambda=0.035,
+# lambda_max=25, manyagent_ant N=6 at velocity_threshold=0.75,
+# cost_mode=per_agent_velocity, mean aggregation with f=0 on the DEFENSE
+# side (A1 is the attack-WITHOUT-defense experiment -- no RCE, no robust
+# aggregation), 250 rounds at rollout_length 2000, the R_ref=120 withheld
+# reference at rounds {25,75,125,175,225}, and the worker/chunk knobs.
+#
+# COMMON RANDOM NUMBERS. `source_collection.seed_entropy` is the SAME
+# value as seed 0's clean run (results/runs_constraint_batch_g9/g9_batch_clean).
+# The M+1 spawned streams therefore draw the IDENTICAL 23,100 (env,torch)
+# seed pairs in the identical order, so this run is paired with its clean
+# control at the source-sampling level: at round 0, before the policies can
+# diverge, the underlying source values are bit-identical and the ONLY
+# difference is the injected corruption. `seed: 0` likewise gives the
+# identical policy initialisation and env stream. What stays independent is
+# what must: the three replica streams remain mutually disjoint WITHIN this
+# run (0 shared env seeds, audited per run), exactly as in G10.
+#
+# Attacked/perturbed source for seed 0: batch_1 (balanced mapping, §3).
+run_id: D_seed0
+seed: 0
+
+env:
+  name: manyagent_ant   # [SPEC] main_iclr.tex 5.1
+  n_agents: 6           # [SPEC] N=6
+  budget: 25.0          # [SPEC] d=25 per agent -- UNCHANGED, not tuned by G9
+  velocity_threshold: 0.75   # identical to pilot_A_clean.yaml
+  cost_mode: per_agent_velocity
+
+topology:
+  name: ring            # identical to pilot_A_clean.yaml
+  n_agents: 6
+
+sources:
+  # G8's M=3. One independence class per replica: each is a separate
+  # environment instance driven by a separately spawned RNG stream in a
+  # separate OS process, which is a genuinely distinct failure domain in
+  # the sense docs/architecture.md's D10 accounting requires -- unlike the
+  # three same-process ensemble replicas of `default_m5_sources`, which
+  # deliberately share one class.
+  sources:
+    - source_id: batch_1
+      source_type: trajectory_batch
+      independence_class: ic_batch1
+    - source_id: batch_2
+      source_type: trajectory_batch
+      independence_class: ic_batch2
+    - source_id: batch_3
+      source_type: trajectory_batch
+      independence_class: ic_batch3
+
+source_collection:
+  mode: parallel_trajectory_batch
+  M: 3          # G8's operating point -- not tuned by G9
+  R_m: 30       # G8's operating point -- not tuned by G9
+  # A1: the SAME entropy as seed 0's clean run, for cross-condition
+  # common random numbers (see this file's header).
+  seed_entropy: 286314957402113664887331205920951063913
+  # Compute knobs only. Every trajectory's seeds are drawn in the main
+  # process, so neither can change a reported number: asserted by
+  # tests/unit/test_source_batch.py, and confirmed live -- collecting the
+  # same round at (9,3), (11,3) and (12,4) returned identical seeds AND
+  # identical source values. Chosen by measurement on the run machine
+  # (12 logical CPUs), two rounds each in a fresh process:
+  #   workers= 9, chunks_per_worker=1 -> 112-122 s per 90 trajectories
+  #   workers= 9, chunks_per_worker=3 -> 121.9 s
+  #   workers=12, chunks_per_worker=4 -> 101.4 s   <- selected
+  workers: 12
+  chunks_per_worker: 4
+  # docs/g9_gates.md step 3b: an independent R_ref=120 reference collected
+  # under the SAME pinned theta_k at these rounds. Written to
+  # validation_reference.jsonl, never to rounds.jsonl, and never fed to the
+  # dual update -- it exists to separate source-implementation failure from
+  # downstream policy-control failure.
+  validation_rounds: [25, 75, 125, 175, 225]
+  R_ref: 120
+
+attack:
+  # Condition D: MAGNITUDE-MATCHED GENERIC PERTURBATION.
+  # NOT an adversarial control -- see docs/a1_attack_gates.md §9.
+  #
+  #   J_hat_{C,m}^noise = J_hat_{C,m} + eps,   eps ~ N(0, sigma^2)
+  #
+  # distribution   Gaussian
+  # mean           0 (exactly; not a sample-zero-mean construction)
+  # sd             sigma = budget_ratio * d = 12.5 -- the SAME nominal
+  #                magnitude as condition B's B
+  # temporal       i.i.d., redrawn every round; no persistence, no
+  # structure      autocorrelation, no drift
+  # clipping       NONE
+  # source         `batch_1` -- the same single source condition B attacks
+  # duration       every round 0..249, same as condition B
+  # draw grain     one draw per (round, owner) -- the corruption hook runs
+  #                inside the per-owner loop, so the six owners' reports of
+  #                this source get six independent draws. This is inherited
+  #                from the pilot's `safelie.attacks.static.benign_control`
+  #                and is NOT changed for A1; docs/a1_attack_gates.md §5.2
+  #                states the consequence for the network average.
+  # rng            `SeedBundle.rng("attack")`, a stream spawned from
+  #                `seed` that conditions A and B never draw from -- so
+  #                adding it cannot perturb the env, policy-init, torch or
+  #                source streams this run shares with its clean control.
+  name: benign_control
+  f: 1
+  budget_ratio: 0.5
+  corrupted_source_ids: [batch_1]
+
+defense:
+  name: mean
+  f: 0
+
+ppo:
+  # [SPEC] main_iclr.tex App. B -- identical to pilot_A_clean.yaml
+  clip: 0.2
+  gae_lambda: 0.95
+  gamma: 0.99
+  lr: 0.0003
+  epochs: 4
+  minibatches: 4
+  hidden_dim: 64
+
+dual:
+  eta_lambda: 0.035   # [SPEC] -- UNCHANGED
+  lambda_max: 25.0    # [SPEC] -- UNCHANGED
+
+total_steps: 500000    # 250 rounds at rollout_length 2000 -- UNCHANGED
+rollout_length: 2000
+output_dir: results/runs_a1

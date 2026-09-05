@@ -141,6 +141,29 @@ class AttackConfig(BaseModel):
     adaptivity: Literal["static", "adaptive"] = "static"
     consistency: Literal["consistent", "byzantine"] = "consistent"
 
+    # A1 (docs/a1_attack_gates.md §3). Which sources the adversary holds,
+    # by `source_id`. `None` keeps the historical rule -- the first `f`
+    # non-`own_critic` sources in config order
+    # (`safelie.training.loop.select_corrupted_sources`), which always
+    # picks `batch_1` under the G10 source list and would make "the
+    # attacked source" a constant across every seed.
+    #
+    # Why this field exists rather than reordering the source list: under
+    # `parallel_trajectory_batch`, replica RNG streams are assigned BY
+    # POSITION -- `ParallelBatchSourceCollector.replica_ids` zips
+    # `cfg.sources.sources` against `SeedSequence(seed_entropy).spawn()`
+    # children in order (`safelie.training.source_batch`). Moving
+    # `batch_2` to the front to attack it would hand it `batch_1`'s
+    # stream, changing which 7,500 trajectories every replica draws and
+    # destroying the common-random-number pairing between a seed's clean
+    # and attacked runs. Naming the source instead leaves all M streams
+    # exactly where they were.
+    #
+    # Validated at construction: every id must exist in `sources`, and
+    # the count must equal `f` -- so a typo fails the config rather than
+    # silently running an unattacked "attack".
+    corrupted_source_ids: list[str] | None = None
+
 
 class DefenseConfig(BaseModel):
     name: Literal["mean", "coordinate_median", "krum", "trimmean", "rce"] = "mean"
@@ -267,6 +290,31 @@ class ExperimentConfig(BaseModel):
                 f"attack.f ({self.attack.f}) cannot exceed the number of "
                 f"sources M ({self.sources.M})"
             )
+
+        # A1. An explicit adversary set must name real sources and must
+        # have exactly `f` of them. Both failures are silent otherwise: a
+        # typo'd id corrupts nothing and the run looks clean, while a set
+        # of the wrong size makes `f` disagree with what the defense's
+        # M >= 2f+1 accounting assumed.
+        if self.attack.corrupted_source_ids is not None:
+            known = {s.source_id for s in self.sources.sources}
+            named = self.attack.corrupted_source_ids
+            unknown = [sid for sid in named if sid not in known]
+            if unknown:
+                raise ValueError(
+                    f"attack.corrupted_source_ids names sources that do not exist: "
+                    f"{unknown}. Configured sources are {sorted(known)}."
+                )
+            if len(set(named)) != len(named):
+                raise ValueError(
+                    f"attack.corrupted_source_ids contains duplicates: {named}"
+                )
+            if len(named) != self.attack.f:
+                raise ValueError(
+                    f"attack.corrupted_source_ids has {len(named)} entries but "
+                    f"attack.f is {self.attack.f}; the adversary's size is one "
+                    "quantity and the two must not disagree."
+                )
 
         # P0 #7: `peer_critic_<k>` is resolved owner-relatively as agent
         # (owner_index + k) mod N (safelie.training.loop._peer_agent_id).
