@@ -529,6 +529,16 @@ the numbers show.** Seeds 3 and 4 are not a contingency to be triggered by a
 disappointing p-value; extending to five seeds is a decision to be taken on
 this power analysis alone, before any A1 result is seen, or not taken at all.
 
+**Decision taken, on this power analysis alone, before any A1 run existed:
+A1 is a three-seed experiment. Seeds 3 and 4 will not be added.** B−D is
+therefore permanently descriptive within A1 — an estimate with a 95% CI and
+three per-seed signs — and the A1 report will state that the design was
+underpowered for it *by pre-run calculation*, not by hindsight. Any future
+inferential claim about B−D requires a separately pre-declared experiment at
+`n ≥ 5`, not a post-hoc extension of this one. If the eventual B−D estimate
+looks tantalising, that is not grounds to add seeds to A1; it is grounds to
+pre-declare a new experiment.
+
 Caveat on these numbers, also stated in advance: the pilot ran the pre-G9
 **neural** source architecture, whose clean between-seed variance was much
 larger than G10's (clean whole-run network-average sd 0.143 across the three
