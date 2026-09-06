@@ -174,17 +174,56 @@ def summarize(run: dict) -> dict:
 
 
 # -------------------------------------------------------- mechanism (§7.1)
-def mechanism_identity(run: dict, expect_shift: bool) -> dict:
-    """mean(pre-attack sources) - post-attack aggregate == B/M on every cell."""
+def mechanism_identity(run: dict, condition: str) -> dict:
+    """What `mean(pre-hook sources) - post-hook aggregate` must equal.
+
+    The §7.1 identity is a CONSTANT only for conditions A and B:
+
+        A  ->  0        (the hook is the identity map)
+        B  ->  +B/M     (one source shifted by a constant -B)
+
+    Condition D is a zero-mean i.i.d. Gaussian, so its difference is a
+    fresh draw every (round, owner) and asserting a constant would be
+    wrong. What is checkable for D is that the perturbation is live and
+    that its realised distribution matches what §2 declares: implied
+    per-source epsilon = M x (post - pre) with mean 0 and sd sigma = 12.5,
+    i.i.d. across owners. Tolerances are sampling bounds, not the exact
+    identity: at n cells the sample mean has se = sigma/sqrt(n), so +-4 se
+    is a ~1-in-16,000 false alarm, and the sd is checked to +-15%.
+    """
     stack = np.stack([run["source_values"][s] for s in run["source_ids"]], axis=0)  # S x K x N
     pre = stack.mean(axis=0)
-    err = np.abs((pre - run["mech_reported"]) - (B_OVER_M if expect_shift else 0.0))
+    diff = pre - run["mech_reported"]
+
+    if condition in ("A", "B"):
+        expected = B_OVER_M if condition == "B" else 0.0
+        err = np.abs(diff - expected)
+        return {
+            "kind": "constant identity",
+            "n_cells": int(err.size),
+            "expected_pre_minus_post": expected,
+            "max_abs_error": float(err.max()),
+            "frac_cells_within_tol": float((err <= TOL).mean()),
+            "pass": bool(err.max() <= TOL),
+        }
+
+    eps = -M_SOURCES * diff.ravel()          # implied per-source perturbation
+    n = eps.size
+    sigma_declared = 0.5 * D_BUDGET          # §2: sigma = budget_ratio * d
+    se = sigma_declared / math.sqrt(n)
+    mean_ok = abs(float(eps.mean())) <= 4 * se
+    sd_ok = 0.85 <= float(eps.std(ddof=1)) / sigma_declared <= 1.15
+    live = bool(np.abs(diff).min() > TOL)
     return {
-        "n_cells": int(err.size),
-        "expected_pre_minus_post": B_OVER_M if expect_shift else 0.0,
-        "max_abs_error": float(err.max()),
-        "frac_cells_within_tol": float((err <= TOL).mean()),
-        "pass": bool(err.max() <= TOL),
+        "kind": "zero-mean perturbation, distribution check",
+        "n_cells": n,
+        "implied_epsilon_mean": float(eps.mean()),
+        "implied_epsilon_mean_tolerance": 4 * se,
+        "implied_epsilon_sd": float(eps.std(ddof=1)),
+        "declared_sigma": sigma_declared,
+        "sd_ratio": float(eps.std(ddof=1)) / sigma_declared,
+        "perturbation_live_on_every_cell": live,
+        "pass": bool(mean_ok and sd_ok and live),
     }
 
 
@@ -323,7 +362,7 @@ def evaluate_gates(summaries, runs, seeds) -> dict:
     for c in ("A", "B", "D"):
         for s in seeds:
             if (c, s) in runs:
-                mech[f"{c}_seed{s}"] = mechanism_identity(runs[(c, s)], expect_shift=(c == "B"))
+                mech[f"{c}_seed{s}"] = mechanism_identity(runs[(c, s)], c)
     lam = paired(summaries, "lambda_mean", "B", "A", seeds)
     g["A1_G4"] = {
         "G4_i_mechanism_identity": mech,
@@ -338,20 +377,24 @@ def evaluate_gates(summaries, runs, seeds) -> dict:
     g["A1_G4"]["pass"] = bool(all(m["pass"] for m in mech.values())
                               and g["A1_G4"]["G4_ii_attack_lowers_lambda"]["pass"])
 
-    g["A1_G5"] = {
-        "G5_i_B_minus_D": {m: paired(summaries, m, "B", "D", seeds)
-                           for m in ("true_cost_net_whole", "true_cost_net_last50",
-                                     "detection_gap_whole", "task_return_last50",
-                                     "mech_reported_whole", "lambda_mean",
-                                     "violation_rate_whole")},
-        "G5_ii_D_minus_A": {m: paired(summaries, m, "D", "A", seeds)
-                            for m in ("true_cost_net_whole", "true_cost_net_last50",
-                                      "detection_gap_whole", "task_return_last50",
-                                      "mech_reported_whole", "lambda_mean",
-                                      "violation_rate_whole")},
-        "gated": False,
-        "note": "§11.3 -- reported as an estimate; no significance claim at n=3",
-    }
+    if all(("D", s) in summaries for s in seeds):
+        g["A1_G5"] = {
+            "G5_i_B_minus_D": {m: paired(summaries, m, "B", "D", seeds)
+                               for m in ("true_cost_net_whole", "true_cost_net_last50",
+                                         "detection_gap_whole", "task_return_last50",
+                                         "mech_reported_whole", "lambda_mean",
+                                         "violation_rate_whole")},
+            "G5_ii_D_minus_A": {m: paired(summaries, m, "D", "A", seeds)
+                                for m in ("true_cost_net_whole", "true_cost_net_last50",
+                                          "detection_gap_whole", "task_return_last50",
+                                          "mech_reported_whole", "lambda_mean",
+                                          "violation_rate_whole")},
+            "gated": False,
+            "note": "§11.3 -- reported as an estimate; no significance claim at n=3",
+        }
+    else:
+        g["A1_G5"] = {"available": False,
+                      "note": "condition D incomplete; B-D and D-A withheld"}
 
     health = {}
     for c in ("B", "D"):
@@ -378,6 +421,10 @@ def main() -> int:
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--out", default="results/runs_a1/a1_report.json")
     ap.add_argument("--seeds", default="0,1,2")
+    ap.add_argument("--allow-missing", action="store_true",
+                    help="evaluate the gates computable from the conditions present. "
+                         "A1-G1..G4/G6 need only A and B; A1-G5 and the verdict need "
+                         "D and are withheld without it.")
     args = ap.parse_args()
     seeds = [int(s) for s in args.seeds.split(",")]
 
@@ -403,9 +450,13 @@ def main() -> int:
         "per_run": {f"{c}_seed{s}": v for (c, s), v in sorted(summaries.items())},
     }
 
-    complete = all((c, s) in summaries for c in ("A", "B", "D") for s in seeds)
+    have = {c for c in ("A", "B", "D") if all((c, s) in summaries for s in seeds)}
+    complete = have == {"A", "B", "D"}
+    primary_ready = {"A", "B"} <= have
     report["complete"] = complete
-    if not complete:
+    report["conditions_available"] = sorted(have)
+    report["primary_contrast_ready"] = primary_ready
+    if not complete and not (primary_ready and args.allow_missing):
         report["status"] = "INCOMPLETE -- gates not evaluated"
         Path(args.out).parent.mkdir(parents=True, exist_ok=True)
         Path(args.out).write_text(json.dumps(report, indent=2), encoding="utf-8")
@@ -422,11 +473,12 @@ def main() -> int:
             "mech_reported_whole", "lambda_mean", "lambda_max",
             "violation_rate_whole", "violation_rate_last50")}
         for x, y in (("B", "A"), ("B", "D"), ("D", "A"))
+        if {x, y} <= have
     }
     report["cross_condition_round0"] = {
         f"{c}_seed{s}": cross_condition_round0(
             runs[("A", s)], runs[(c, s)], ATTACKED_SOURCE[s], expect_constant=(c == "B"))
-        for c in ("B", "D") for s in seeds
+        for c in ("B", "D") if c in have for s in seeds
     }
     report["stealth"] = {
         "delta_equiv": DELTA_EQUIV,
@@ -444,7 +496,7 @@ def main() -> int:
         "applied": len(seeds) >= MIN_SEEDS_FOR_INFERENCE,
         "note": f"decision D6: not applied below {MIN_SEEDS_FOR_INFERENCE} seeds (§11.1)",
     }
-    if len(seeds) >= MIN_SEEDS_FOR_INFERENCE:
+    if len(seeds) >= MIN_SEEDS_FOR_INFERENCE and complete:
         from safelie.analysis.stats import holm_correction
         ps = [report["contrasts"][c]["true_cost_net_whole"]["paired_t"]["p"]
               for c in ("B-A", "B-D", "D-A")]
@@ -454,15 +506,23 @@ def main() -> int:
     gates = report["gates"]
     structural_ok = gates["A1_G4"]["pass"]
     g1 = gates["A1_G1"]["pass"]
-    bd_positive = all(v > 0 for v in
-                      gates["A1_G5"]["G5_i_B_minus_D"]["true_cost_net_whole"]["per_seed"].values())
     all_sci = all(gates[k]["pass"] for k in ("A1_G1", "A1_G2", "A1_G3", "A1_G4", "A1_G6"))
-    if not structural_ok or not g1:
-        verdict = "FAIL"
-    elif all_sci and bd_positive:
-        verdict = "PASS"
+    if complete:
+        bd_positive = all(
+            v > 0 for v in
+            gates["A1_G5"]["G5_i_B_minus_D"]["true_cost_net_whole"]["per_seed"].values())
+        if not structural_ok or not g1:
+            verdict = "FAIL"
+        elif all_sci and bd_positive:
+            verdict = "PASS"
+        else:
+            verdict = "CONDITIONAL PASS"
     else:
-        verdict = "CONDITIONAL PASS"
+        # The verdict rule needs B-D. Withholding it is not a formality: a
+        # PASS requires the generic-perturbation control, and announcing one
+        # before condition D exists would be claiming that control passed.
+        bd_positive = None
+        verdict = "WITHHELD -- condition D incomplete"
     report["verdict"] = verdict
     report["verdict_inputs"] = {
         "structural_mechanism_ok": structural_ok, "A1_G1": g1,
@@ -474,11 +534,14 @@ def main() -> int:
     print(f"\nA1 gates ({len(seeds)} seeds)")
     for k in ("A1_G1", "A1_G2", "A1_G3", "A1_G4", "A1_G6"):
         print(f"  [{'PASS' if gates[k]['pass'] else 'FAIL'}] {k}")
-    print(f"  [ est] A1_G5 (B-D, not gated at n={len(seeds)})")
-    bd = gates["A1_G5"]["G5_i_B_minus_D"]["true_cost_net_whole"]
     ba = report["contrasts"]["B-A"]["true_cost_net_whole"]
     print(f"\n  B-A true cost (whole-run): {ba['mean']:+.3f}  per-seed {ba['per_seed']}")
-    print(f"  B-D true cost (whole-run): {bd['mean']:+.3f}  per-seed {bd['per_seed']}")
+    if gates["A1_G5"].get("available") is False:
+        print("  [held] A1_G5 (B-D): condition D incomplete")
+    else:
+        print(f"  [ est] A1_G5 (B-D, not gated at n={len(seeds)})")
+        bd = gates["A1_G5"]["G5_i_B_minus_D"]["true_cost_net_whole"]
+        print(f"  B-D true cost (whole-run): {bd['mean']:+.3f}  per-seed {bd['per_seed']}")
     print(f"\nVERDICT: {verdict}   -> {args.out}")
     return 0
 
