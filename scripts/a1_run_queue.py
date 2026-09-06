@@ -83,14 +83,14 @@ def run_gates(cond: str, seed: int, run_dir: Path, log: Path) -> tuple[bool, str
         "--attacked-source", ATTACKED[seed],
         "--out", str(report),
     ]
-    # The validator always needs an --attack path; for a D run point it at
-    # the clean run so the attack-specific identities are trivially the
-    # no-shift case, and let --noise carry the D-specific checks.
+    # A D run gets NO --attack path. Pointing it at the clean run (the
+    # original wiring) made `in_run_identity(..., expect_shift=True)`
+    # demand that the CLEAN run carry a -B shift, which halted the queue on
+    # a D run whose own three checks had all passed.
     if cond == "D":
         cmd = [
             PY, str(ROOT / "scripts/a1_mechanism_validation.py"),
             "--clean", str(CLEAN_DIR[seed]),
-            "--attack", str(CLEAN_DIR[seed]),
             "--noise", str(run_dir),
             "--B", "12.5", "--M", "3",
             "--attacked-source", ATTACKED[seed],
@@ -111,18 +111,33 @@ def run_gates(cond: str, seed: int, run_dir: Path, log: Path) -> tuple[bool, str
     if not md.exists():
         return False, "run_metadata.json missing"
     meta = json.loads(md.read_text(encoding="utf-8"))
-    steps = meta.get("env_steps", {})
-    if steps.get("ppo") != 500_000:
-        return False, f"A1-S4: PPO env steps {steps.get('ppo')} != 500000"
+    cfg_snap = meta.get("config_snapshot", {})
+
+    # A1-S4 from PRIMARY EVIDENCE, not from the metadata summary. Each round
+    # is exactly one PPO rollout of `rollout_length` steps, and each round's
+    # own source cost is logged in rounds.jsonl -- both independent of
+    # whatever a resume may have written into env_steps.
+    rollout = int(cfg_snap.get("rollout_length", 0))
+    ppo_steps = k * rollout
+    if ppo_steps != 500_000:
+        return False, (f"A1-S4: derived PPO env steps {ppo_steps} "
+                       f"({k} rounds x {rollout}) != 500000")
+    src_steps = 0
+    with (run_dir / "rounds.jsonl").open(encoding="utf-8") as fh:
+        for ln in fh:
+            if ln.strip():
+                src_steps += int((json.loads(ln).get("source_batch") or {}).get("env_steps", 0))
+    if src_steps != 45_000_000:
+        return False, f"A1-S4: derived source env steps {src_steps} != 45000000"
+
     audit = meta.get("source_seed_audit", {})
     if audit.get("duplicate_seed_events", -1) != 0:
         return False, f"A1-S5: {audit.get('duplicate_seed_events')} duplicate source seeds"
     if audit.get("n_env_seeds_issued") != 23_100:
         return False, f"A1-S5: {audit.get('n_env_seeds_issued')} env seeds issued, expected 23100"
-    cfg = meta.get("config_snapshot", {})
-    if cfg.get("attack", {}).get("corrupted_source_ids") != [ATTACKED[seed]]:
+    if cfg_snap.get("attack", {}).get("corrupted_source_ids") != [ATTACKED[seed]]:
         return False, ("§3 mapping violated: run corrupted "
-                       f"{cfg.get('attack', {}).get('corrupted_source_ids')}, "
+                       f"{cfg_snap.get('attack', {}).get('corrupted_source_ids')}, "
                        f"expected [{ATTACKED[seed]!r}]")
     return True, "ok"
 
@@ -173,6 +188,27 @@ def main() -> int:
             continue
 
         done = rounds_done(run_dir)
+
+        # Never re-enter a finished run. `run_experiment_with_oracle` resumes,
+        # runs zero rounds, and still rewrites run_metadata.json -- with THIS
+        # invocation's env_steps (2,000 instead of 500,000) and a 0.1 s timing
+        # block. That is what clobbered D_seed0's metadata on the first
+        # restart. A complete run needs gating, not training.
+        if done >= EXPECTED_ROUNDS:
+            print(f"[{now()}] {name}: already at {done} rounds -- gating only, "
+                  f"not re-entering training")
+            ok, why = run_gates(cond, seed, run_dir, log)
+            state["runs"].setdefault(name, {}).update(
+                status="complete" if ok else "gate-failed",
+                gates_pass=ok, gate_note=why, gated_without_retraining=True)
+            write_status(state)
+            print(f"[{now()}] {name}: {'gates PASS' if ok else 'GATES FAIL -- ' + why}")
+            if not ok:
+                state["halted"] = f"{name}: {why}"
+                write_status(state)
+                return 1
+            continue
+
         note = f" (resuming from round {done})" if done else ""
         print(f"[{now()}] {name}: launching{note}  cfg={cfg.name}  "
               f"attacked={ATTACKED[seed]}")

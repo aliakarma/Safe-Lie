@@ -257,7 +257,11 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--clean", required=True)
-    ap.add_argument("--attack", required=True)
+    ap.add_argument("--attack", default=None,
+                    help="an ATTACKED run. Omit when validating a condition-D run: "
+                         "the attack identities do not apply to it, and pointing this "
+                         "at the clean run instead makes them assert that the clean "
+                         "run carries a -B shift.")
     ap.add_argument("--noise", default=None)
     ap.add_argument("--B", type=float, default=12.5)
     ap.add_argument("--M", type=int, default=3)
@@ -265,25 +269,27 @@ def main() -> int:
     ap.add_argument("--out", required=True)
     args = ap.parse_args()
 
-    clean, attack = Path(args.clean), Path(args.attack)
+    clean = Path(args.clean)
     report: dict = {"B": args.B, "M": args.M, "B_over_M": args.B / args.M,
                     "attacked_source": args.attacked_source, "tolerance": TOL}
 
     report["clean_in_run_identity"] = in_run_identity(
         clean, args.B, args.M, expect_shift=False)
-    report["attack_in_run_identity"] = in_run_identity(
-        attack, args.B, args.M, expect_shift=True, attacked_source=args.attacked_source)
-    report["attack_vs_clean_round0"] = cross_run_round0(
-        clean, attack, args.B, args.M, args.attacked_source, expect_constant_shift=True)
-    report["attack_reference_unshifted"] = reference_unshifted(attack, clean, args.B)
+    gating = [report["clean_in_run_identity"]["pass"]]
 
-    gating = [
-        report["clean_in_run_identity"]["pass"],
-        report["attack_in_run_identity"]["pass"],
-        report["attack_vs_clean_round0"]["pass"],
-    ]
-    if report["attack_reference_unshifted"]["pass"] is not None:
-        gating.append(report["attack_reference_unshifted"]["pass"])
+    if args.attack:
+        attack = Path(args.attack)
+        report["attack_in_run_identity"] = in_run_identity(
+            attack, args.B, args.M, expect_shift=True,
+            attacked_source=args.attacked_source)
+        report["attack_vs_clean_round0"] = cross_run_round0(
+            clean, attack, args.B, args.M, args.attacked_source,
+            expect_constant_shift=True)
+        report["attack_reference_unshifted"] = reference_unshifted(attack, clean, args.B)
+        gating += [report["attack_in_run_identity"]["pass"],
+                   report["attack_vs_clean_round0"]["pass"]]
+        if report["attack_reference_unshifted"]["pass"] is not None:
+            gating.append(report["attack_reference_unshifted"]["pass"])
 
     if args.noise:
         noise = Path(args.noise)
@@ -300,6 +306,33 @@ def main() -> int:
         d_agg = np.asarray([
             float(rn["constraints"][a]["mechanism_reported_cost_return"])
             - float(rc["constraints"][a]["mechanism_reported_cost_return"]) for a in aids])
+        # Whole-run distribution, not just round 0: §2 declares D as
+        # N(0, sigma^2) i.i.d. per (round, owner) with sigma = 12.5 and no
+        # clipping. Checking only the first round would miss a perturbation
+        # that drifts, is clipped, or dies partway through the run.
+        nrounds = read_jsonl(noise / "rounds.jsonl")
+        naids = agent_ids(nrounds)
+        d_all = []
+        for rec in nrounds:
+            for aid in naids:
+                c = rec["constraints"][aid]
+                pre = float(np.mean([r["value"] for r in c["reports"]]))
+                d_all.append(pre - float(c["mechanism_reported_cost_return"]))
+        eps = -args.M * np.asarray(d_all)
+        se = args.B / np.sqrt(eps.size)
+        report["noise_distribution"] = {
+            "n_cells": int(eps.size),
+            "implied_epsilon_mean": float(eps.mean()),
+            "mean_tolerance": float(4 * se),
+            "implied_epsilon_sd": float(eps.std(ddof=1)),
+            "declared_sigma": args.B,
+            "sd_ratio": float(eps.std(ddof=1)) / args.B,
+            "pass": bool(abs(float(eps.mean())) <= 4 * se
+                         and 0.85 <= float(eps.std(ddof=1)) / args.B <= 1.15),
+            "note": "sigma == B numerically: both are budget_ratio * d (§2)",
+        }
+        gating.append(report["noise_distribution"]["pass"])
+
         report["noise_is_live"] = {
             "round0_aggregate_shift_per_owner": [round(float(x), 6) for x in d_agg],
             "all_owners_shifted": bool(np.abs(d_agg).min() > TOL),

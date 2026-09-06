@@ -75,22 +75,50 @@ def verify(run: Path, allow_partial: bool) -> dict:
     results: list[dict] = []
 
     # ---- A1-S2/S3: injection point and magnitude, on every cell ----------
-    errs, src_errs = [], []
+    # The §7.1 identity is a CONSTANT only for conditions A (0) and B
+    # (+B/M). Condition D adds zero-mean i.i.d. Gaussian noise, so its
+    # difference is a fresh draw every (round, owner); asserting a constant
+    # there would fail a run behaving exactly as §2 declares. D is checked
+    # against its declared DISTRIBUTION instead.
+    diffs, src_errs = [], []
     for rec in rounds:
         for aid in aids:
             c = rec["constraints"][aid]
             vals = {r["source_id"]: float(r["value"]) for r in c["reports"]}
             post = float(c["mechanism_reported_cost_return"])
-            expected = (B_MAGNITUDE / M_SOURCES) if expect_shift else 0.0
-            errs.append(abs((float(np.mean(list(vals.values()))) - post) - expected))
+            diffs.append(float(np.mean(list(vals.values()))) - post)
             if expect_shift:
                 others = sum(v for s, v in vals.items() if s != attacked_sid)
                 src_errs.append(abs((M_SOURCES * post - others - vals[attacked_sid])
                                     + B_MAGNITUDE))
-    results.append(check(
-        "A1-S2/S3 mechanism identity", max(errs) <= TOL,
-        {"n_cells": len(errs), "max_abs_error": float(max(errs)),
-         "expected_pre_minus_post": (B_MAGNITUDE / M_SOURCES) if expect_shift else 0.0}))
+    diffs = np.asarray(diffs)
+
+    if cond in ("A", "B"):
+        expected = (B_MAGNITUDE / M_SOURCES) if expect_shift else 0.0
+        errs = np.abs(diffs - expected)
+        results.append(check(
+            "A1-S2/S3 mechanism identity", float(errs.max()) <= TOL,
+            {"kind": "constant identity", "n_cells": int(errs.size),
+             "max_abs_error": float(errs.max()), "expected_pre_minus_post": expected}))
+    else:
+        # implied per-source perturbation, from mean aggregation over M
+        eps = -M_SOURCES * diffs
+        n = eps.size
+        sigma = 0.5 * D_BUDGET                      # §2: sigma = budget_ratio * d
+        se = sigma / np.sqrt(n)
+        mean_ok = abs(float(eps.mean())) <= 4 * se  # ~1-in-16,000 false alarm
+        sd_ok = 0.85 <= float(eps.std(ddof=1)) / sigma <= 1.15
+        live = bool(np.abs(diffs).min() > TOL)
+        results.append(check(
+            "A1-S2/S3 perturbation matches its declared distribution",
+            mean_ok and sd_ok and live,
+            {"kind": "zero-mean perturbation", "n_cells": int(n),
+             "implied_epsilon_mean": float(eps.mean()),
+             "mean_tolerance": float(4 * se),
+             "implied_epsilon_sd": float(eps.std(ddof=1)),
+             "declared_sigma": sigma,
+             "sd_ratio": float(eps.std(ddof=1)) / sigma,
+             "live_on_every_cell": live}))
     if expect_shift:
         results.append(check(
             "A1-S3 named source shifted by -B", max(src_errs) <= TOL,
@@ -193,15 +221,29 @@ def verify(run: Path, allow_partial: bool) -> dict:
     md = run / "run_metadata.json"
     meta = json.loads(md.read_text(encoding="utf-8")) if md.exists() else {}
     steps, aud = meta.get("env_steps"), meta.get("source_seed_audit")
-    if steps:
-        results.append(check("A1-S4 PPO steps independent of source",
-                             steps.get("ppo") == 500_000,
-                             {"ppo": steps.get("ppo"), "source": steps.get("source"),
-                              "oracle": steps.get("oracle")}))
+
+    # A1-S4 is DERIVED from rounds.jsonl and the config, never taken from
+    # `env_steps`. A no-op resume rewrites that field with the resuming
+    # invocation's counts (observed on D_seed0: ppo=2,000 instead of
+    # 500,000) while rounds.jsonl, being append-only, stays correct.
+    rollout = int(meta.get("config_snapshot", {}).get("rollout_length", 0)) if meta else 0
+    derived_ppo = K * rollout
+    derived_src = sum(int((r.get("source_batch") or {}).get("env_steps", 0)) for r in rounds)
+    if rollout:
+        expected_ppo = EXPECTED_ROUNDS * rollout
+        ok_steps = (derived_ppo == expected_ppo) if not allow_partial else True
+        results.append({"gate": "A1-S4 PPO steps independent of source",
+                        "pass": ok_steps if not allow_partial else None,
+                        "derived_ppo_steps": derived_ppo,
+                        "derived_source_steps": derived_src,
+                        "expected_ppo_steps": expected_ppo,
+                        "metadata_env_steps": steps,
+                        "note": "derived from rounds.jsonl; metadata env_steps is "
+                                "reported only for comparison and is unreliable "
+                                "after a resume"})
     else:
         results.append({"gate": "A1-S4 PPO steps independent of source",
-                        "pass": None if allow_partial else False,
-                        "note": "env_steps is written at completion"})
+                        "pass": None, "note": "no config snapshot available"})
     if aud:
         results.append(check("A1-S5 seed audit (metadata)",
                              aud.get("duplicate_seed_events") == 0
