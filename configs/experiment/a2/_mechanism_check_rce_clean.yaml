@@ -1,0 +1,81 @@
+# A2 mechanism check -- condition E (clean + RCE) arm (docs/a2_rce_gates.md gates G1-ii, G2-ii, G7).
+#
+# configs/experiment/a1/_mechanism_check_clean.yaml with ONLY the defense
+# block changed to RCE. Its pair, results/a1_mechanism_check/mech_clean,
+# already exists and was produced by the no-RCE version of this same file,
+# so the two runs share seed 0, the seed-0 entropy, and therefore identical
+# underlying source draws. That is what lets the check separate "RCE changed
+# the aggregation" from "RCE changed the data".
+#
+# 4 rounds + 1 calibration round. Discarded after the check; NOT an A2 result.
+run_id: mech_rce_clean
+seed: 0
+
+env:
+  name: manyagent_ant
+  n_agents: 6
+  budget: 25.0
+  velocity_threshold: 0.75
+  cost_mode: per_agent_velocity
+
+topology:
+  name: ring
+  n_agents: 6
+
+sources:
+  sources:
+    - source_id: batch_1
+      source_type: trajectory_batch
+      independence_class: ic_batch1
+    - source_id: batch_2
+      source_type: trajectory_batch
+      independence_class: ic_batch2
+    - source_id: batch_3
+      source_type: trajectory_batch
+      independence_class: ic_batch3
+
+source_collection:
+  mode: parallel_trajectory_batch
+  M: 3
+  R_m: 30
+  seed_entropy: 286314957402113664887331205920951063913   # seed 0, the G9 constant
+  workers: 12
+  chunks_per_worker: 4
+  validation_rounds: [2]    # moved into range; production uses [25,75,125,175,225]
+  R_ref: 120
+
+attack:
+  name: none
+
+defense:
+  # A2 mechanism check: the shipped RCE defense, EXCEPT calibration_rounds,
+  # which is 1 here instead of the production 20. That knob feeds only the
+  # logged Boolean `guarantee_in_force`, and at M=3/f=1 every clean spread
+  # is exactly sigma_min, so `epsilon_offline` is the quantile of a constant
+  # vector and equals sigma_min for ANY round count. Lowering it here cannot
+  # change a number; it just stops a 4-round throwaway check from paying for
+  # 20 calibration rounds. Production C/E configs keep the default 20.
+  name: rce
+  f: 1
+  beta: 1.5
+  sigma_min: 0.001
+  min_retained: 3
+  calibration_rounds: 1
+  calibration_alpha: 0.05
+
+ppo:
+  clip: 0.2
+  gae_lambda: 0.95
+  gamma: 0.99
+  lr: 0.0003
+  epochs: 4
+  minibatches: 4
+  hidden_dim: 64
+
+dual:
+  eta_lambda: 0.035
+  lambda_max: 25.0
+
+total_steps: 8000     # 4 rounds
+rollout_length: 2000
+output_dir: results/a2_mechanism_check

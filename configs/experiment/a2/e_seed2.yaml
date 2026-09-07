@@ -1,0 +1,120 @@
+# A2 condition E -- CLEAN + RCE (docs/a2_rce_gates.md).
+#
+# This file is configs/experiment/g10_batch_clean_seed2.yaml -- the frozen clean condition-A config for seed 2 --
+# with EXACTLY these changes and no others:
+#
+#   run_id      -> E_seed2
+#   output_dir  -> results/runs_a2
+#   defense.*   -> RCE
+#
+# E is the condition that makes A2 interpretable. C - B alone confounds
+# RCE's GENERIC CONSERVATISM with ATTACK-SPECIFIC protection; E - A measures
+# the first, so that (C - E) - (B - A) can isolate the second. Without E
+# there is no way to tell a defense from a policy that merely became more
+# cautious.
+#
+# No attack: attack.name stays `none` and attack.f stays 0, so there is no
+# attacked source here. The pairing is E <-> A, at the same seed and the
+# same seed_entropy.
+run_id: E_seed2
+seed: 2
+
+env:
+  name: manyagent_ant   # [SPEC] main_iclr.tex 5.1
+  n_agents: 6           # [SPEC] N=6
+  budget: 25.0          # [SPEC] d=25 per agent -- UNCHANGED, not tuned by G9
+  velocity_threshold: 0.75   # identical to pilot_A_clean.yaml
+  cost_mode: per_agent_velocity
+
+topology:
+  name: ring            # identical to pilot_A_clean.yaml
+  n_agents: 6
+
+sources:
+  # G8's M=3. One independence class per replica: each is a separate
+  # environment instance driven by a separately spawned RNG stream in a
+  # separate OS process, which is a genuinely distinct failure domain in
+  # the sense docs/architecture.md's D10 accounting requires -- unlike the
+  # three same-process ensemble replicas of `default_m5_sources`, which
+  # deliberately share one class.
+  sources:
+    - source_id: batch_1
+      source_type: trajectory_batch
+      independence_class: ic_batch1
+    - source_id: batch_2
+      source_type: trajectory_batch
+      independence_class: ic_batch2
+    - source_id: batch_3
+      source_type: trajectory_batch
+      independence_class: ic_batch3
+
+source_collection:
+  mode: parallel_trajectory_batch
+  M: 3          # G8's operating point -- not tuned by G9
+  R_m: 30       # G8's operating point -- not tuned by G9
+  # docs/g10_gates.md section 2: distinct source RNG streams for this
+  # training seed. int(sha256(b'safelie/g10/source-entropy/seed=2')[:16]).
+  # Verified offline pre-launch: 0 env seeds shared with seed 0.
+  seed_entropy: 335268198726974212397240672597355197200
+  # Compute knobs only. Every trajectory's seeds are drawn in the main
+  # process, so neither can change a reported number: asserted by
+  # tests/unit/test_source_batch.py, and confirmed live -- collecting the
+  # same round at (9,3), (11,3) and (12,4) returned identical seeds AND
+  # identical source values. Chosen by measurement on the run machine
+  # (12 logical CPUs), two rounds each in a fresh process:
+  #   workers= 9, chunks_per_worker=1 -> 112-122 s per 90 trajectories
+  #   workers= 9, chunks_per_worker=3 -> 121.9 s
+  #   workers=12, chunks_per_worker=4 -> 101.4 s   <- selected
+  workers: 12
+  chunks_per_worker: 4
+  # docs/g9_gates.md step 3b: an independent R_ref=120 reference collected
+  # under the SAME pinned theta_k at these rounds. Written to
+  # validation_reference.jsonl, never to rounds.jsonl, and never fed to the
+  # dual update -- it exists to separate source-implementation failure from
+  # downstream policy-control failure.
+  validation_rounds: [25, 75, 125, 175, 225]
+  R_ref: 120
+
+attack:
+  name: none    # Condition E is clean. The attack hook still runs and is
+                # the identity map, so the plumbing is exercised, not
+                # bypassed -- identical to condition A for this seed.
+
+defense:
+  # A2 (docs/a2_rce_gates.md). THE ONLY BLOCK THAT DIFFERS from the frozen
+  # A1/G10 config this file is derived from. Shipped RCE defaults, unchanged:
+  # beta is [SPEC]; sigma_min/min_retained/calibration_* are the repository
+  # defaults (src/safelie/utils/config.py DefenseConfig).
+  #
+  # AUDITED BEHAVIOUR AT THIS OPERATING POINT (gates doc section 4). M=3,
+  # f=1 leaves |T| = M - 2f = 1 retained value, so:
+  #     point_estimate  == median(values)
+  #     MAD({1 point})  == 0  ->  spread floored to sigma_min = 1e-3
+  #     applied_margin  == beta * sigma_min == 1.5e-3   (a constant)
+  # i.e. this is median + 1.5e-3, and Algorithm 1's MAD/pessimism term is
+  # structurally inert. A2 tests RCE's TRIMMING, not its margin.
+  name: rce
+  f: 1
+  beta: 1.5           # [SPEC]
+  sigma_min: 0.001
+  min_retained: 3
+  calibration_rounds: 20
+  calibration_alpha: 0.05
+
+ppo:
+  # [SPEC] main_iclr.tex App. B -- identical to pilot_A_clean.yaml
+  clip: 0.2
+  gae_lambda: 0.95
+  gamma: 0.99
+  lr: 0.0003
+  epochs: 4
+  minibatches: 4
+  hidden_dim: 64
+
+dual:
+  eta_lambda: 0.035   # [SPEC] -- UNCHANGED
+  lambda_max: 25.0    # [SPEC] -- UNCHANGED
+
+total_steps: 500000    # 250 rounds at rollout_length 2000 -- UNCHANGED
+rollout_length: 2000
+output_dir: results/runs_a2
