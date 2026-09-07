@@ -64,6 +64,62 @@ class RceCalibration:
         return asdict(self)
 
 
+def calibration_clone(cfg: ExperimentConfig) -> ExperimentConfig:
+    """The attack-disabled, shortened clone of `cfg` the calibration phase
+    actually runs.
+
+    Split out of `run_clean_calibration` so the clone's VALIDITY can be
+    tested without paying for a training run: every defect fixed here was
+    invisible in the parent process (`model_copy` skips validators) and
+    surfaced only inside the source worker pool, hours into a queue.
+    """
+    n_rounds = cfg.defense.calibration_rounds
+    calib_cfg = cfg.model_copy(
+        update={
+            "run_id": f"calib_{cfg.run_id}",
+            # A2. `corrupted_source_ids` must be cleared alongside `f`, not
+            # left behind: `ExperimentConfig` requires len(ids) == attack.f,
+            # so an f=0 clone still naming one source is an invalid config.
+            # `model_copy` does not re-run validators, so this stayed
+            # invisible in the parent process and surfaced only inside the
+            # source workers, which DO re-validate (`_init_worker` calls
+            # `model_validate_json`). Every attacked RCE run therefore died
+            # in its calibration phase.
+            "attack": cfg.attack.model_copy(
+                update={"name": "none", "f": 0, "corrupted_source_ids": None}
+            ),
+            "total_steps": n_rounds * cfg.rollout_length,
+            # A2. The clone is SHORTER than the run it calibrates, so the
+            # parent's `validation_rounds` are generally outside its own
+            # 0..n_rounds-1 range and `ExperimentConfig`'s cross-field
+            # validator rejects the clone outright -- which made every RCE
+            # run under the G9/G10 architecture fail in
+            # `ExperimentRun.__init__` before round 0 (the frozen configs
+            # use validation_rounds [25, 75, 125, 175, 225] against
+            # calibration_rounds=20). The withheld R_ref reference exists to
+            # separate source-implementation failure from policy-control
+            # failure in a RUN; the calibration phase is neither -- it reads
+            # only `agg.spread` -- so it needs no reference at all. Emptying
+            # the list is what the clone actually wants, and it also stops
+            # the phase from paying for R_ref=120 collections it discards.
+            "source_collection": cfg.source_collection.model_copy(
+                update={"validation_rounds": []}
+            ),
+        }
+    )
+
+    # A2. `model_copy` does NOT re-run validators, but the source workers
+    # DO (`safelie.training.source_batch._init_worker` calls
+    # `model_validate_json` on the serialized config). An invalid clone
+    # therefore does not raise here -- it raises inside every worker, and a
+    # `multiprocessing.Pool` whose initializer raises respawns workers
+    # forever while the parent blocks on the first chunk. That is an
+    # unbounded hang, not a crash, which is the worst possible failure mode
+    # for a multi-day run queue. Re-validate in the parent so a bad clone is
+    # an immediate, readable error instead.
+    return ExperimentConfig.model_validate_json(calib_cfg.model_dump_json())
+
+
 def run_clean_calibration(cfg: ExperimentConfig) -> RceCalibration:
     """Run a dedicated, attack-disabled clone of `cfg` and calibrate
     `epsilon_offline` from its own observed source-disagreement (MAD)
@@ -76,17 +132,25 @@ def run_clean_calibration(cfg: ExperimentConfig) -> RceCalibration:
 
     n_rounds = cfg.defense.calibration_rounds
     alpha = cfg.defense.calibration_alpha
-    calib_cfg = cfg.model_copy(
-        update={
-            "run_id": f"calib_{cfg.run_id}",
-            "attack": cfg.attack.model_copy(update={"name": "none", "f": 0}),
-            "total_steps": n_rounds * cfg.rollout_length,
-        }
-    )
+    calib_cfg = calibration_clone(cfg)
+
     run = ExperimentRun(calib_cfg, _skip_calibration=True)
-    for _ in range(n_rounds):
-        run.run_round()
-    run.round_logger.close()
+    try:
+        for _ in range(n_rounds):
+            run.run_round()
+    finally:
+        # A2. Release the calibration run's worker pool before the real run
+        # starts. Under the G9 parallel trajectory-batch architecture this
+        # phase opens `source_collection.workers` (12) OS processes, each
+        # holding its own MuJoCo environment and policy copy; only
+        # `round_logger` was being closed, so those 12 stayed resident for
+        # the whole ~10 h run that follows and then spawned 12 more. This
+        # is resource cleanup only: `ExperimentRun.close` touches the pool
+        # and the JSONL loggers and nothing else, and in particular does
+        # not touch `clean_run_disagreements`, which is read below. No
+        # calibrated number changes (docs/a2_rce_gates.md A2-G1-v).
+        run.round_logger.close()
+        run.close()
 
     disagreements = np.asarray(run.clean_run_disagreements, dtype=float)
     if len(disagreements) < n_rounds:
