@@ -534,7 +534,20 @@ def main() -> int:
                             ("A2_G1_G2_structural", "A2_G6_learning_health",
                              "A2_G7_rce_mechanism") if k in gates)
         g5 = gates.get("A2_G5_interaction", {})
-        if not structural_ok:
+        if len(seeds) < len(SEEDS):
+            # The A2-G5 rule is stated over ALL THREE seeds ("I<0 in all 3
+            # seeds"). Evaluated on a subset it passes vacuously -- one
+            # negative seed satisfies "all of them" when the set has one
+            # element. Emitting a final verdict from partial data would put a
+            # PASS into an artifact that later reads as the A2 result, which
+            # is exactly the goalpost drift the pre-declaration exists to
+            # prevent. Report the provisional numbers, withhold the verdict.
+            report["verdict"] = f"PROVISIONAL -- {len(seeds)} of {len(SEEDS)} seeds complete"
+            report["verdict_note"] = (
+                "Not an A2 verdict. Contrasts below are per-seed differences with no "
+                "cross-seed CI; the A2-G5 decision rule requires all three seeds and is "
+                "not evaluated here.")
+        elif not structural_ok:
             report["verdict"] = "FAIL -- STRUCTURAL"
         elif g5.get("verdict") == "PASS":
             report["verdict"] = "PASS -- DEFENSE SUPPORTED"
