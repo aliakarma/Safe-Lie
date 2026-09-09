@@ -1,0 +1,157 @@
+# A3 WINDOWS SMOKE TEST -- attack + RCE arm. NOT AN A3 RESULT.
+#
+# ============================ READ THIS FIRST ============================
+# This file exists to answer one engineering question on the Windows laptop:
+#
+#     does the complete M=5, f=1 RCE path start, run and finish here,
+#     with five sources, a three-element retained set, a real MAD, and a
+#     beta*MAD margin that actually reaches the dual update?
+#
+# It is NOT a scientific run and nothing it produces may be reported as an
+# A3 number. Three rounds cannot estimate anything; the policy is still
+# essentially at initialisation, so source dispersion (and therefore the
+# MAD) is far larger here than the trained-policy value docs/a3_gates.md
+# section 2 predicts for a 250-round run. Read the magnitudes as "the
+# mechanism computed something finite and non-degenerate", never as
+# "the margin is 0.4".
+#
+# It writes to results/a3_smoke/, NOT results/runs_a3/, so no smoke artifact
+# can ever be picked up by scripts/analyze_a3.py or the A3 queue.
+# =========================================================================
+#
+# WHAT DIFFERS FROM THE PRODUCTION A3 CONFIG (configs/experiment/a3/c_seed0.yaml),
+# and why each one cannot change the code path being tested:
+#
+#   total_steps       500000 -> 6000    3 rounds instead of 250. This is the
+#                                       whole saving: 83x fewer rounds. Same
+#                                       loop, same round, executed fewer times.
+#   calibration_rounds    20 -> 2       the clean calibration phase feeds only
+#                                       the logged Boolean `guarantee_in_force`
+#                                       via `epsilon_offline`. Two rounds still
+#                                       exercises safelie.eval.calibration end
+#                                       to end; the resulting quantile is
+#                                       meaningless and is not read by any
+#                                       smoke check.
+#   validation_rounds [25,...] -> [1]   moved into range so the R_ref=120
+#                                       withheld-reference path is exercised
+#                                       rather than skipped. Same convention as
+#                                       the A2/A3 mechanism-check configs.
+#   seed_entropy                        a distinct value,
+#                                       int(sha256(b'safelie/a3/smoke-entropy')
+#                                       .digest()[:16]), so the smoke run shares
+#                                       no replica stream with any of A3's three
+#                                       production seeds and cannot correlate
+#                                       with them.
+#   run_id / output_dir                 quarantine, per the banner above.
+#
+# WHAT DELIBERATELY DOES **NOT** CHANGE, and why:
+#
+#   M: 5, R_m: 30, rollout_length: 2000, workers: 12
+#     Shrinking these is the obvious way to make a smoke test faster and it
+#     is the wrong trade here, for two reasons.
+#     (1) They change what is being measured. Fewer trajectories per source
+#         means a noisier source mean, hence a LARGER between-source spread
+#         and a larger MAD -- so a reduced-R_m smoke test would show a
+#         healthy-looking margin produced by sampling noise rather than by
+#         the mechanism. A shorter rollout rescales J_C outright.
+#     (2) Per-round cost at production volume is exactly the number needed to
+#         decide whether the full 12-run queue is safe to launch on this
+#         machine. A smoke test at reduced volume cannot answer that.
+#     Three rounds at full per-round volume costs minutes, so there is
+#     nothing to buy by degrading the check.
+#
+#   The attack block, the defense block, the environment, the topology, PPO,
+#   the dual, d, beta, sigma_min, min_retained: all identical to c_seed0.yaml.
+#
+# The attacked source is `batch_1`, which is the seed-0 mapping declared in
+# docs/a3_gates.md section 5, so "the attacked source is the predeclared
+# source" is a meaningful check rather than a tautology.
+run_id: smoke_m5_rce_attack
+seed: 0
+
+env:
+  name: manyagent_ant
+  n_agents: 6
+  budget: 25.0
+  velocity_threshold: 0.75
+  cost_mode: per_agent_velocity
+
+topology:
+  name: ring
+  n_agents: 6
+
+sources:
+  # M=5. Five independence classes, five separately spawned RNG streams,
+  # five separate environment instances in five separate OS processes.
+  # This is what lifts |T| from 1 to 3 and makes the MAD real.
+  sources:
+    - source_id: batch_1
+      source_type: trajectory_batch
+      independence_class: ic_batch1
+    - source_id: batch_2
+      source_type: trajectory_batch
+      independence_class: ic_batch2
+    - source_id: batch_3
+      source_type: trajectory_batch
+      independence_class: ic_batch3
+    - source_id: batch_4
+      source_type: trajectory_batch
+      independence_class: ic_batch4
+    - source_id: batch_5
+      source_type: trajectory_batch
+      independence_class: ic_batch5
+
+source_collection:
+  mode: parallel_trajectory_batch
+  M: 5
+  R_m: 30
+  # int(sha256(b'safelie/a3/smoke-entropy').digest()[:16]) -- distinct from
+  # all three A3 production entropies (section 5 of the gates doc).
+  seed_entropy: 125874161321982859772979905280660807349
+  workers: 12
+  chunks_per_worker: 4
+  validation_rounds: [1]    # in range; production uses [25,75,125,175,225]
+  R_ref: 120
+
+attack:
+  # Byte-identical to configs/experiment/a3/c_seed0.yaml.
+  name: primary
+  f: 1
+  budget_ratio: 0.5      # B = 0.5 * d = 12.5
+  direction: negative
+  support: persistent
+  adaptivity: static
+  consistency: consistent
+  corrupted_source_ids: [batch_1]   # the seed-0 mapping, gates doc section 5
+
+defense:
+  # Byte-identical to configs/experiment/a3/c_seed0.yaml EXCEPT
+  # calibration_rounds (20 -> 2, see the header).
+  #
+  # At M=5, f=1: |T| = M - 2f = 3 = min_retained, so `retained_n < min_retained`
+  # is `3 < 3` -> False, the floor is unreachable, `degenerate` stays False and
+  # `spread` is a real MAD over three retained values.
+  name: rce
+  f: 1
+  beta: 1.5
+  sigma_min: 0.001
+  min_retained: 3
+  calibration_rounds: 2
+  calibration_alpha: 0.05
+
+ppo:
+  clip: 0.2
+  gae_lambda: 0.95
+  gamma: 0.99
+  lr: 0.0003
+  epochs: 4
+  minibatches: 4
+  hidden_dim: 64
+
+dual:
+  eta_lambda: 0.035
+  lambda_max: 25.0
+
+total_steps: 6000      # 3 rounds at rollout_length 2000
+rollout_length: 2000
+output_dir: results/a3_smoke

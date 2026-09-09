@@ -1,0 +1,175 @@
+{
+  "run_id": "smoke_m5_rce_clean",
+  "seed": 0,
+  "status": "complete",
+  "written_at": "2026-09-09T14:02:20.434063+00:00",
+  "git": {
+    "sha": "a35974a9f54899b2d7d9b86161f20c9499704e5c",
+    "dirty": true,
+    "dirty_paths": [
+      "configs/experiment/a3/_smoke_m5_rce_attack.yaml",
+      "configs/experiment/a3/_smoke_m5_rce_clean.yaml",
+      "docs/a3_gates.md",
+      "ocs/a2_report.md",
+      "results/a3_smoke/",
+      "scripts/a3_smoke_verify.py",
+      "tests/property/test_aggregators.py"
+    ]
+  },
+  "python": "3.11.9 (tags/v3.11.9:de54cf5, Apr  2 2024, 10:12:12) [MSC v.1938 64 bit (AMD64)]",
+  "platform": "Windows-10-10.0.26200-SP0",
+  "num_rounds_planned": 3,
+  "config_snapshot": {
+    "run_id": "smoke_m5_rce_clean",
+    "seed": 0,
+    "env": {
+      "name": "manyagent_ant",
+      "n_agents": 6,
+      "budget": 25.0,
+      "horizon": 200,
+      "obs_dim": 8,
+      "action_dim": 2,
+      "agent_obsk": 1,
+      "cost_mode": "per_agent_velocity",
+      "velocity_threshold": 0.75
+    },
+    "topology": {
+      "name": "ring",
+      "n_agents": 6,
+      "p": null,
+      "graph_seed": 0
+    },
+    "sources": {
+      "sources": [
+        {
+          "source_id": "batch_1",
+          "source_type": "trajectory_batch",
+          "independence_class": "ic_batch1"
+        },
+        {
+          "source_id": "batch_2",
+          "source_type": "trajectory_batch",
+          "independence_class": "ic_batch2"
+        },
+        {
+          "source_id": "batch_3",
+          "source_type": "trajectory_batch",
+          "independence_class": "ic_batch3"
+        },
+        {
+          "source_id": "batch_4",
+          "source_type": "trajectory_batch",
+          "independence_class": "ic_batch4"
+        },
+        {
+          "source_id": "batch_5",
+          "source_type": "trajectory_batch",
+          "independence_class": "ic_batch5"
+        }
+      ]
+    },
+    "attack": {
+      "name": "none",
+      "f": 0,
+      "budget_ratio": 0.0,
+      "kappa": 1.0,
+      "nu_ratio": 0.05,
+      "direction": "negative",
+      "support": "persistent",
+      "adaptivity": "static",
+      "consistency": "consistent",
+      "corrupted_source_ids": null
+    },
+    "defense": {
+      "name": "rce",
+      "f": 1,
+      "beta": 1.5,
+      "sigma_min": 0.001,
+      "min_retained": 3,
+      "use_reliability_weights": false,
+      "calibration_rounds": 2,
+      "calibration_alpha": 0.05
+    },
+    "ppo": {
+      "clip": 0.2,
+      "gae_lambda": 0.95,
+      "gamma": 0.99,
+      "lr": 0.0003,
+      "epochs": 4,
+      "minibatches": 4,
+      "entropy_coef": 0.001,
+      "value_coef": 0.5,
+      "grad_clip": 0.5,
+      "hidden_dim": 64,
+      "critic_lr": null
+    },
+    "dual": {
+      "eta_lambda": 0.035,
+      "lambda_max": 25.0
+    },
+    "total_steps": 6000,
+    "rollout_length": 2000,
+    "output_dir": "results/a3_smoke",
+    "constraint_estimator": "mc_window",
+    "source_collection": {
+      "mode": "parallel_trajectory_batch",
+      "M": 5,
+      "R_m": 30,
+      "workers": 12,
+      "chunks_per_worker": 4,
+      "seed_entropy": 125874161321982859772979905280660807349,
+      "validation_rounds": [
+        1
+      ],
+      "R_ref": 120
+    }
+  },
+  "rounds_completed": 3,
+  "checkpoint": "checkpoint.pt",
+  "eval_every": 1,
+  "timing": {
+    "source_s": 591.0810990333557,
+    "oracle_s": 18.737204551696777,
+    "learner_total_s": 622.9368801116943,
+    "wall_clock_s": 641.7700846195221,
+    "s_per_round": 213.9233615398407,
+    "source_s_per_round": 197.02703301111856
+  },
+  "env_steps": {
+    "ppo": 6000,
+    "source": 900000,
+    "oracle": 6000
+  },
+  "source_seed_audit": {
+    "n_env_seeds_issued": 570,
+    "n_torch_seeds_issued": 570,
+    "duplicate_seed_events": 0,
+    "collisions": [],
+    "spawn_keys": [
+      [
+        125874161321982859772979905280660807349,
+        0
+      ],
+      [
+        125874161321982859772979905280660807349,
+        1
+      ],
+      [
+        125874161321982859772979905280660807349,
+        2
+      ],
+      [
+        125874161321982859772979905280660807349,
+        3
+      ],
+      [
+        125874161321982859772979905280660807349,
+        4
+      ],
+      [
+        125874161321982859772979905280660807349,
+        5
+      ]
+    ]
+  }
+}

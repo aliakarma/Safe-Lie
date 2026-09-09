@@ -1,0 +1,11 @@
+{
+  "epsilon_offline": 0.4776433503707308,
+  "n_rounds": 2,
+  "alpha": 0.05,
+  "disagreement_mean": 0.2059905427851246,
+  "disagreement_std": 0.14822486143046668,
+  "disagreement_min": 0.04070598053534269,
+  "disagreement_max": 0.6166597202332227,
+  "source_run_id": "calib_smoke_m5_rce_clean",
+  "source_config_run_id": "smoke_m5_rce_clean"
+}

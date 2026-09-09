@@ -25,8 +25,8 @@ is what makes the design paired rather than merely matched.
 **Frozen, not re-derived** — identical to A1/G10 in every field: M=3 parallel
 trajectory-batch sources under a pinned policy, R_m=30 trajectories per
 source, ring consensus topology, PPO+GAE, projected dual update, d=25,
-eta_lambda, lambda_max, 250 rounds, 500,000 PPO env-steps, 22,500,000 source
-env-steps. `scripts/a2_verify_frozen.py` asserts this field-by-field; only
+eta_lambda, lambda_max, 250 rounds, 500,000 PPO env-steps, 22,500 source
+trajectories = 45,000,000 source env-steps. `scripts/a2_verify_frozen.py` asserts this field-by-field; only
 `run_id`, `output_dir`, `attack` and `defense` may differ.
 
 **RCE block** (identical in C and E): `name: rce, f: 1, beta: 1.5,
@@ -104,13 +104,25 @@ and mean (C−E) ≤ 0.5 × (B−A)**. The original pilot's RCE gate was not reu
 | underlying source draws identical | true, all 6 |
 | duplicate source-seed events | **0**, all 6 |
 | derived PPO env-steps (250 × rollout) | 500,000 exact, all 6 |
-| derived source env-steps (from `rounds.jsonl`) | 22,500,000 exact, all 6 |
+| derived source trajectories (from `rounds.jsonl`) | 22,500 exact, all 6 (250 × 3 × 30) |
+| derived source env-steps (from `rounds.jsonl`) | 45,000,000 exact, all 6 (22,500 × 2,000) |
 | config frozen vs A1/G10 | PASS, field-by-field |
 | sign-convention check: B−A vs A1's published value | 3.98576 vs 3.9858, **agrees to 1e-3** |
 
 That last row matters: it proves the analyser re-derives A1's headline number
 from the reused runs, so A2's contrasts are on the same scale and sign
 convention as A1's.
+
+> **Correction on record (2026-09-09).** The two source-collection rows above
+> previously read as a single row, *"derived source env-steps — 22,500,000"*.
+> That was a mislabelling, not a miscount: 22,500 is the **trajectory** count
+> (250 × 3 × 30), and each trajectory is `rollout_length = 2,000` env-steps,
+> so the env-step figure is **45,000,000**. The run artifacts were always
+> right — every round's `source_batch.env_steps` is 180,000 and
+> `a2_report.json` records `source: 45000000` for all twelve runs — so only
+> this prose was wrong and no A2 conclusion depends on it. Found while
+> auditing A3's G1-iv derivation, which uses the correct convention
+> (`5 × 30 × 2000 × 250 = 75,000,000`) and is unaffected.
 
 ---
 

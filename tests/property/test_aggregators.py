@@ -5,6 +5,8 @@ Report reference: smoke tests S6, S7, S8, S21, S22, S23, S24.
 
 from __future__ import annotations
 
+import warnings
+
 import numpy as np
 import pytest
 
@@ -116,6 +118,158 @@ def test_rce_raises_at_m_le_2f_never_silently_degrades():
     values = np.arange(7, dtype=float)
     with pytest.raises(ValueError, match="M > 2f"):
         rce_aggregate(values, f=4, beta=1.5)
+
+
+# ---------------------------------------------------------------------------
+# A3 — the margin at M=5, f=1, where |T| = M - 2f = 3 = min_retained.
+#
+# docs/a3_gates.md section 6, A3-G3. A2 ran at M=3, f=1, where the retained
+# set holds ONE value, the MAD is identically zero, the floor always fires,
+# and the margin is the constant beta*sigma_min = 0.0015. The whole point of
+# A3 is that at M=5 the floor becomes UNREACHABLE and `spread` becomes a real
+# measurement. These tests fail loudly if that stops being true, because an
+# A3 run against a flooring implementation would silently be another A2 while
+# every log still said "M=5".
+#
+# The boundary is exact and therefore fragile. `rce_aggregate` floors on
+# `retained_n < min_retained`, so at retained_n == 3 == min_retained the
+# comparison is `3 < 3` -> False. Changing that to `<=`, or raising
+# min_retained to 4, would re-degenerate the mechanism without touching a
+# single field of any config. That is the regression these pin.
+# ---------------------------------------------------------------------------
+
+
+M5_F1 = dict(f=1, beta=1.5, sigma_min=1e-3, min_retained=3)
+
+
+def test_rce_at_m5_f1_retains_three_and_trims_one_min_and_one_max():
+    values = np.array([10.0, 20.0, 30.0, 40.0, 50.0])
+    result = rce_aggregate(values, **M5_F1)
+    assert result.retained_n == 3  # M - 2f
+    np.testing.assert_allclose(np.sort(result.retained_values), [20.0, 30.0, 40.0])
+    assert 10.0 not in result.retained_values  # the one minimum, trimmed
+    assert 50.0 not in result.retained_values  # the one maximum, trimmed
+
+
+def test_rce_at_m5_f1_is_not_degenerate_and_raises_no_floor_warning():
+    """A3-G3-i: `degenerate` is False and no floor warning fires."""
+    values = np.array([24.0, 24.5, 23.8, 24.2, 24.1])
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", RuntimeWarning)  # a floor warning fails the test
+        result = rce_aggregate(values, **M5_F1)
+    assert result.degenerate is False
+    assert result.retained_n == 3
+
+
+def test_rce_at_m5_f1_does_not_floor_even_when_the_true_mad_is_below_sigma_min():
+    """The load-bearing case.
+
+    Three honest sources can legitimately land within 1e-7 of each other, and
+    when they do the correct behaviour is to report that tiny MAD, not to
+    inflate it to `sigma_min`. The floor exists to refuse a confident-looking
+    margin over a retained set too small to *have* a dispersion (|T| = 1); it
+    is not a minimum-margin policy. If this test fails, `spread` at M=5 is no
+    longer a measurement and A3-G3-ii is measuring the floor.
+    """
+    values = np.array([0.0, 1.0, 1.0000001, 1.0000002, 5.0])
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", RuntimeWarning)
+        result = rce_aggregate(values, **M5_F1)
+    assert result.retained_n == 3
+    assert result.degenerate is False
+    assert result.spread == pytest.approx(1e-7, rel=1e-6)
+    assert result.spread < M5_F1["sigma_min"]  # below the floor, and un-floored
+    assert result.applied_margin == pytest.approx(1.5 * result.spread)
+
+
+def test_rce_at_m5_f1_reports_a_genuinely_zero_mad_without_flooring_it():
+    """Three exactly-tied retained values give MAD = 0 honestly.
+
+    This is what A3-G3-ii's ">= 99 % of cells" threshold exists for: three
+    honest values may coincide, and a coincidence is not a degeneracy. The
+    margin collapses to zero for that cell and `degenerate` stays False,
+    because the retained set was large enough to have a dispersion — it just
+    happened to have none.
+    """
+    values = np.array([0.0, 7.0, 7.0, 7.0, 9.0])
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", RuntimeWarning)
+        result = rce_aggregate(values, **M5_F1)
+    assert result.retained_n == 3
+    assert result.degenerate is False
+    assert result.spread == 0.0
+    assert result.applied_margin == 0.0
+
+
+def test_rce_at_m5_f1_margin_is_exactly_beta_times_the_retained_mad():
+    """A3 section 7's counterfactual: Y_RCE - Y_trim == beta * MAD, exactly.
+
+    Checked against `trimmed_mean_aggregator` rather than a reimplementation,
+    so this also pins that RCE's point estimate IS the trimmed mean and the
+    margin is the only difference between them.
+    """
+    rng = np.random.default_rng(20260909)
+    for _ in range(2000):
+        values = rng.normal(25.0, 1.053, size=5)
+        trim = trimmed_mean_aggregator(values, f=1)
+        rce = rce_aggregate(values, **M5_F1)
+        assert rce.point_estimate == pytest.approx(trim.point_estimate, abs=0.0)
+        assert rce.spread == pytest.approx(trim.spread, abs=0.0)
+        assert rce.applied_margin == pytest.approx(1.5 * trim.spread, abs=0.0)
+        assert rce.pessimistic_estimate == pytest.approx(
+            trim.point_estimate + 1.5 * trim.spread, abs=0.0
+        )
+
+
+def test_rce_at_m5_f1_mad_is_the_minimum_adjacent_gap_of_the_retained_three():
+    """Pins the statistic, not merely its non-degeneracy.
+
+    For a sorted retained triple a <= b <= c the unscaled MAD is
+    median{b-a, 0, c-b} = min(b-a, c-b) — the SMALLER of the two adjacent
+    gaps. Worth pinning because it is why the M=5 margin is modest: MAD over
+    three points is a minimum-gap statistic, not a range, so it reads well
+    below the sample's actual spread. A change of MAD convention (e.g.
+    adopting the 1.4826 consistency constant, docs/assumptions.md) would
+    rescale every A3 margin and must not pass silently.
+    """
+    rng = np.random.default_rng(7)
+    for _ in range(2000):
+        values = rng.normal(25.0, 1.053, size=5)
+        a, b, c = np.sort(trimmed_mean_aggregator(values, f=1).retained_values)
+        assert rce_aggregate(values, **M5_F1).spread == pytest.approx(
+            min(b - a, c - b), abs=1e-12
+        )
+
+
+@pytest.mark.parametrize(
+    "m,f,retained_n,floors",
+    [
+        (3, 1, 1, True),   # A2's operating point — the floor MUST fire
+        (5, 2, 1, True),   # |T| = 1 by a different route
+        (5, 1, 3, False),  # A3's operating point — the floor MUST NOT fire
+        (7, 2, 3, False),  # |T| = 3 = min_retained, the same boundary
+        (7, 1, 5, False),
+    ],
+)
+def test_rce_floor_fires_only_strictly_below_min_retained(m, f, retained_n, floors):
+    """The boundary itself, swept.
+
+    `min_retained` is a strict lower bound: |T| == min_retained is satisfied,
+    not violated. Flipping the comparison to `<=` would pass every other test
+    in this file and quietly turn A3 back into A2.
+    """
+    values = np.linspace(0.0, 100.0, m)
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        result = rce_aggregate(values, f=f, beta=1.5, sigma_min=1e-3, min_retained=3)
+    fired = any(issubclass(w.category, RuntimeWarning) for w in caught)
+    assert result.retained_n == retained_n
+    assert fired is floors
+    assert result.degenerate is floors
+    if floors:
+        assert result.spread == pytest.approx(1e-3)
+    else:
+        assert result.spread > 1e-3  # a real MAD over a linspace, nowhere near the floor
 
 
 # ---------------------------------------------------------------------------
