@@ -1,0 +1,265 @@
+G7a (analysis-time re-check): round-seed pools pairwise disjoint = True
+agent_0: sigma_hat=5.869, reference=19.832 +/- 0.349 (r=270)
+  S1 (M=1,R=90):  mean=20.628 z=1.07 [good]
+  S2 M=3: labels=['good', 'good', 'good']  |  S3 M=3: labels=['good', 'good', 'good']
+    theoretical corr: S2=0.000 S3=0.250  (M_eff S2=3.00, S3=2.67)
+  S2 M=5: labels=['good', 'good', 'good', 'mixed', 'good']  |  S3 M=5: labels=['good', 'good', 'good', 'good', 'good']
+    theoretical corr: S2=0.000 S3=0.167  (M_eff S2=5.00, S3=4.50)
+  S4 degenerate_as_expected=True (max_rel_diff=1.83e-16)
+agent_1: sigma_hat=5.939, reference=19.778 +/- 0.353 (r=270)
+  S1 (M=1,R=90):  mean=20.668 z=1.17 [good]
+  S2 M=3: labels=['good', 'good', 'good']  |  S3 M=3: labels=['good', 'good', 'good']
+    theoretical corr: S2=0.000 S3=0.250  (M_eff S2=3.00, S3=2.67)
+  S2 M=5: labels=['good', 'good', 'good', 'mixed', 'good']  |  S3 M=5: labels=['mixed', 'good', 'good', 'good', 'good']
+    theoretical corr: S2=0.000 S3=0.167  (M_eff S2=5.00, S3=4.50)
+  S4 degenerate_as_expected=True (max_rel_diff=1.83e-16)
+agent_2: sigma_hat=5.959, reference=20.288 +/- 0.352 (r=270)
+  S1 (M=1,R=90):  mean=21.182 z=1.19 [good]
+  S2 M=3: labels=['good', 'good', 'good']  |  S3 M=3: labels=['mixed', 'good', 'good']
+    theoretical corr: S2=0.000 S3=0.250  (M_eff S2=3.00, S3=2.67)
+  S2 M=5: labels=['good', 'good', 'good', 'mixed', 'good']  |  S3 M=5: labels=['mixed', 'good', 'good', 'good', 'mixed']
+    theoretical corr: S2=0.000 S3=0.167  (M_eff S2=5.00, S3=4.50)
+  S4 degenerate_as_expected=True (max_rel_diff=0.00e+00)
+agent_3: sigma_hat=6.149, reference=23.065 +/- 0.365 (r=270)
+  S1 (M=1,R=90):  mean=24.000 z=1.23 [good]
+  S2 M=3: labels=['good', 'good', 'good']  |  S3 M=3: labels=['mixed', 'mixed', 'good']
+    theoretical corr: S2=0.000 S3=0.250  (M_eff S2=3.00, S3=2.67)
+  S2 M=5: labels=['good', 'good', 'good', 'mixed', 'good']  |  S3 M=5: labels=['good', 'good', 'good', 'good', 'mixed']
+    theoretical corr: S2=0.000 S3=0.167  (M_eff S2=5.00, S3=4.50)
+  S4 degenerate_as_expected=True (max_rel_diff=1.58e-16)
+agent_4: sigma_hat=6.244, reference=27.968 +/- 0.371 (r=270)
+  S1 (M=1,R=90):  mean=28.792 z=1.05 [good]
+  S2 M=3: labels=['good', 'good', 'good']  |  S3 M=3: labels=['mixed', 'mixed', 'good']
+    theoretical corr: S2=0.000 S3=0.250  (M_eff S2=3.00, S3=2.67)
+  S2 M=5: labels=['good', 'good', 'good', 'good', 'good']  |  S3 M=5: labels=['good', 'good', 'good', 'good', 'good']
+    theoretical corr: S2=0.000 S3=0.167  (M_eff S2=5.00, S3=4.50)
+  S4 degenerate_as_expected=True (max_rel_diff=2.59e-16)
+agent_5: sigma_hat=6.265, reference=34.087 +/- 0.375 (r=270)
+  S1 (M=1,R=90):  mean=34.810 z=0.93 [good]
+  S2 M=3: labels=['good', 'good', 'good']  |  S3 M=3: labels=['good', 'good', 'good']
+    theoretical corr: S2=0.000 S3=0.250  (M_eff S2=3.00, S3=2.67)
+  S2 M=5: labels=['good', 'good', 'good', 'good', 'good']  |  S3 M=5: labels=['good', 'good', 'good', 'good', 'good']
+    theoretical corr: S2=0.000 S3=0.167  (M_eff S2=5.00, S3=4.50)
+  S4 degenerate_as_expected=True (max_rel_diff=2.11e-16)
+
+--- GATES ---
+{
+  "G7b": {
+    "S2_M3": {
+      "owners": [
+        {
+          "agent_id": "agent_0",
+          "all_good": true,
+          "labels": [
+            "good",
+            "good",
+            "good"
+          ]
+        },
+        {
+          "agent_id": "agent_1",
+          "all_good": true,
+          "labels": [
+            "good",
+            "good",
+            "good"
+          ]
+        },
+        {
+          "agent_id": "agent_2",
+          "all_good": true,
+          "labels": [
+            "good",
+            "good",
+            "good"
+          ]
+        },
+        {
+          "agent_id": "agent_3",
+          "all_good": true,
+          "labels": [
+            "good",
+            "good",
+            "good"
+          ]
+        },
+        {
+          "agent_id": "agent_4",
+          "all_good": true,
+          "labels": [
+            "good",
+            "good",
+            "good"
+          ]
+        },
+        {
+          "agent_id": "agent_5",
+          "all_good": true,
+          "labels": [
+            "good",
+            "good",
+            "good"
+          ]
+        }
+      ],
+      "n_owners_all_good": 6,
+      "of": 6
+    },
+    "S3_M3": {
+      "owners": [
+        {
+          "agent_id": "agent_0",
+          "all_good": true,
+          "labels": [
+            "good",
+            "good",
+            "good"
+          ]
+        },
+        {
+          "agent_id": "agent_1",
+          "all_good": true,
+          "labels": [
+            "good",
+            "good",
+            "good"
+          ]
+        },
+        {
+          "agent_id": "agent_2",
+          "all_good": false,
+          "labels": [
+            "mixed",
+            "good",
+            "good"
+          ]
+        },
+        {
+          "agent_id": "agent_3",
+          "all_good": false,
+          "labels": [
+            "mixed",
+            "mixed",
+            "good"
+          ]
+        },
+        {
+          "agent_id": "agent_4",
+          "all_good": false,
+          "labels": [
+            "mixed",
+            "mixed",
+            "good"
+          ]
+        },
+        {
+          "agent_id": "agent_5",
+          "all_good": true,
+          "labels": [
+            "good",
+            "good",
+            "good"
+          ]
+        }
+      ],
+      "n_owners_all_good": 3,
+      "of": 6
+    },
+    "S2_M5": {
+      "owners": [
+        {
+          "agent_id": "agent_0",
+          "all_good": false,
+          "labels": [
+            "good",
+            "good",
+            "good",
+            "mixed",
+            "good"
+          ]
+        },
+        {
+          "agent_id": "agent_1",
+          "all_good": false,
+          "labels": [
+            "good",
+            "good",
+            "good",
+            "mixed",
+            "good"
+          ]
+        },
+        {
+          "agent_id": "agent_2",
+          "all_good": false,
+          "labels": [
+            "good",
+            "good",
+            "good",
+            "mixed",
+            "good"
+          ]
+        },
+        {
+          "agent_id": "agent_3",
+          "all_good": false,
+          "labels": [
+            "good",
+            "good",
+            "good",
+            "mixed",
+            "good"
+          ]
+        },
+        {
+          "agent_id": "agent_4",
+          "all_good": true,
+          "labels": [
+            "good",
+            "good",
+            "good",
+            "good",
+            "good"
+          ]
+        },
+        {
+          "agent_id": "agent_5",
+          "all_good": true,
+          "labels": [
+            "good",
+            "good",
+            "good",
+            "good",
+            "good"
+          ]
+        }
+      ],
+      "n_owners_all_good": 2,
+      "of": 6
+    },
+    "S3_M5": {
+      "owners": [
+        {
+          "agent_id": "agent_0",
+          "all_good": true,
+          "labels": [
+            "good",
+            "good",
+            "good",
+            "good",
+            "good"
+          ]
+        },
+        {
+          "agent_id": "agent_1",
+          "all
+
+[pooled cross-owner empirical, n=6] S2 M=3: mean_off_diag_corr=-0.321 max=0.055 PR_empirical=2.01
+
+[pooled cross-owner empirical, n=6] S2 M=5: mean_off_diag_corr=-0.227 max=0.946 PR_empirical=1.31
+
+[pooled cross-owner empirical, n=6] S3 M=3: mean_off_diag_corr=0.184 max=0.826 PR_empirical=2.03
+
+[pooled cross-owner empirical, n=6] S3 M=5: mean_off_diag_corr=0.521 max=0.861 PR_empirical=1.93
+
+Wrote results\g7_estimand_source_diagnostic\g7_report.json

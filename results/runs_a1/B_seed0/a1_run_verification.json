@@ -1,0 +1,123 @@
+{
+  "run": "results\\runs_a1\\B_seed0",
+  "condition": "B",
+  "seed": 0,
+  "attacked_source": "batch_1",
+  "rounds": 250,
+  "partial": false,
+  "checks": [
+    {
+      "gate": "A1-S2/S3 mechanism identity",
+      "pass": true,
+      "n_cells": 1500,
+      "max_abs_error": 9.769962616701378e-15,
+      "expected_pre_minus_post": 4.166666666666667
+    },
+    {
+      "gate": "A1-S3 named source shifted by -B",
+      "pass": true,
+      "source": "batch_1",
+      "n_cells": 1500,
+      "max_abs_error": 2.1316282072803006e-14
+    },
+    {
+      "gate": "\u00a73 attacked-source mapping",
+      "pass": true,
+      "logged": [
+        "batch_1"
+      ],
+      "expected": [
+        "batch_1"
+      ]
+    },
+    {
+      "gate": "A1-S6 policy pinning",
+      "pass": true,
+      "worker_checksums_all_match": true,
+      "n_chunks_all_48": true,
+      "n_trajectories_all_90": true
+    },
+    {
+      "gate": "A1-S6 distinct theta per round",
+      "pass": true,
+      "distinct_checksums": 250,
+      "rounds": 250
+    },
+    {
+      "gate": "A1-S9 CRN: source seeds identical to clean pair",
+      "pass": true,
+      "rounds_compared": 250,
+      "seed_pairs_compared": 22500,
+      "clean_pair": "results\\runs_constraint_batch_g9\\g9_batch_clean",
+      "mismatches": []
+    },
+    {
+      "gate": "A1-S5 source streams disjoint within run",
+      "pass": true,
+      "duplicate_events": 0,
+      "unique_env_seeds": 22500,
+      "replica_pairwise_overlap": {
+        "batch_1|batch_2": 0,
+        "batch_1|batch_3": 0,
+        "batch_2|batch_3": 0
+      },
+      "replica_vs_reference_overlap": {
+        "batch_1": 0,
+        "batch_2": 0,
+        "batch_3": 0
+      }
+    },
+    {
+      "gate": "A1-S8 reference never saw the corruption",
+      "pass": true,
+      "rounds": [
+        25,
+        75,
+        125,
+        175,
+        225
+      ],
+      "n_cells": 90,
+      "max_abs_error": 0.0
+    },
+    {
+      "gate": "A1-S4 PPO steps independent of source",
+      "pass": true,
+      "ppo": 500000,
+      "source": 45000000,
+      "oracle": 500000
+    },
+    {
+      "gate": "A1-S5 seed audit (metadata)",
+      "pass": true,
+      "n_env_seeds_issued": 23100,
+      "duplicate_seed_events": 0
+    },
+    {
+      "gate": "timing (reported)",
+      "pass": null,
+      "wall_clock_h": 9.76,
+      "s_per_round": 140.6,
+      "source_s_per_round": 123.6
+    },
+    {
+      "gate": "A1-G6 learning health",
+      "pass": true,
+      "finite": true,
+      "lambda_frac_saturated": 0.0,
+      "lambda_max": 7.109625641629519,
+      "lambda_frac_positive": 0.87,
+      "kl_median": 0.0022464089310005875,
+      "kl_p95": 0.005197145613790521,
+      "entropy_first10": 3.6446047335863114,
+      "entropy_last10": 1.5999333477268616
+    },
+    {
+      "gate": "rounds complete",
+      "pass": true,
+      "rounds": 250,
+      "expected": 250
+    }
+  ],
+  "pass": true
+}

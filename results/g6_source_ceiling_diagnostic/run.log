@@ -1,0 +1,26 @@
+Resuming from results\g6_source_ceiling_diagnostic\g6_report_checkpoint.json: last_completed_stage='P2/F2_L8_C3', elapsed_at_checkpoint=11568.943352222443s -- already-completed stages are NOT recomputed.
+=== B. Target definition audit (already checkpointed, skipping) ===
+=== P1 (t0-eval) already checkpointed, skipping ===
+
+=== P2 (round-CV, general-t) ===
+  F1 L=16 already checkpointed for all of ['C1', 'C2', 'C3', 'ridge', 'ols'], skipping
+  F2 L=16 already checkpointed for all of ['C1', 'C2', 'C3', 'ridge', 'ols'], skipping
+  F3 L=16 already checkpointed for all of ['C1', 'C2', 'C3', 'ridge', 'ols'], skipping
+  F2_L4_C3 already checkpointed, skipping
+  F2_L8_C3 already checkpointed, skipping
+
+=== L. Nearest-neighbor local target dispersion ===
+  P1 (t=0, F1=o_0): {'agent_0': 0.701, 'agent_1': 0.733, 'agent_2': 0.813, 'agent_3': 0.774, 'agent_4': 0.741, 'agent_5': 0.901}
+  P2 general-t (F1=o_t): {'agent_0': 0.761, 'agent_1': 0.744, 'agent_2': 0.724, 'agent_3': 0.764, 'agent_4': 0.751, 'agent_5': 0.762}
+  P2 general-t (F3=rich): {'agent_0': 0.752, 'agent_1': 0.749, 'agent_2': 0.761, 'agent_3': 0.775, 'agent_4': 0.745, 'agent_5': 0.769}
+  [checkpoint saved: L_nn_dispersion, elapsed=3.2s -> results\g6_source_ceiling_diagnostic\g6_report_checkpoint.json]
+
+Full report written to results\g6_source_ceiling_diagnostic\g6_report.json
+
+=== VERDICT: MIXED | continuation decision: CONDITIONAL ===
+Comparison A (capacity): none (gain=-0.094)
+Comparison B (temporal): none (gain=-0.171)
+Comparison C (features): none (gain=0.096)
+Owners resolving under ANY condition: 6/6
+Ceiling flag (F3 NN ratio): set=False (pooled_f3_ratio=0.758)
+Wall clock: 3.2s

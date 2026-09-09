@@ -1,0 +1,240 @@
+{
+  "verdict": "FAIL",
+  "gates": {
+    "G2b": false,
+    "G2c": false,
+    "G2d": false,
+    "G2e": true,
+    "G2f": true,
+    "G2g": true,
+    "G2h": true,
+    "G2i": true
+  },
+  "failed": [
+    "G2b",
+    "G2c",
+    "G2d"
+  ],
+  "per_seed": {
+    "pilot_A_clean_seed0": {
+      "G2b-bias": {
+        "pass": false,
+        "detail": "|mean bias_peer|=10.261 <= 0.5*G1(7.897)=3.949"
+      },
+      "G2b-mae": {
+        "pass": false,
+        "detail": "mean MAE_peer=14.729 <= 0.75*G1(15.987)=11.990"
+      },
+      "G2c-bias": {
+        "pass": false,
+        "detail": "|mean bias_mech|=7.100 <= 5.0"
+      },
+      "G2c-mae": {
+        "pass": false,
+        "detail": "mech MAE=10.340 <= 0.75*G1(10.553)=7.915"
+      },
+      "G2c-rmse": {
+        "pass": false,
+        "detail": "mech RMSE=12.990 <= 0.75*G1(13.318)=9.989"
+      },
+      "G2d-relative": {
+        "pass": false,
+        "detail": "FSR=0.382 <= 0.5*G1(0.381)=0.191"
+      },
+      "G2d-absolute": {
+        "pass": false,
+        "detail": "FSR=0.382 <= 0.2"
+      },
+      "G2e-a": {
+        "pass": true,
+        "detail": "max|residual-(mech-d)|=0.000e+00 <= 1e-09"
+      },
+      "G2e-b": {
+        "pass": true,
+        "detail": "sign agreement on 1365 interior cells = 1.0000 >= 0.99"
+      },
+      "G2e-c": {
+        "pass": true,
+        "detail": "corr(residual_k, dlambda) = 0.722 > 0"
+      },
+      "G2g": {
+        "pass": true,
+        "detail": "true cost head=30.64 -> tail=30.97 (ratio 1.011 <= 1.15)"
+      },
+      "G2h-a": {
+        "pass": true,
+        "detail": "all logged fields finite"
+      },
+      "G2h-b": {
+        "pass": true,
+        "detail": "max lambda 6.104 < 22.5 (0.24x lambda_max), 0 saturated cells"
+      },
+      "G2h-c": {
+        "pass": true,
+        "detail": "tail mean KL 0.0028 <= 0.05, max KL 0.0743 <= 0.5"
+      },
+      "G2h-d": {
+        "pass": true,
+        "detail": "tail mean entropy 1.836 > 0.5"
+      },
+      "G2h-e": {
+        "pass": true,
+        "detail": "mean |delta lambda| 0.1136 <= 0.45"
+      }
+    },
+    "pilot_A_clean_seed1": {
+      "G2b-bias": {
+        "pass": false,
+        "detail": "|mean bias_peer|=11.416 <= 0.5*G1(7.865)=3.933"
+      },
+      "G2b-mae": {
+        "pass": false,
+        "detail": "mean MAE_peer=15.050 <= 0.75*G1(15.118)=11.338"
+      },
+      "G2c-bias": {
+        "pass": false,
+        "detail": "|mean bias_mech|=7.781 <= 5.0"
+      },
+      "G2c-mae": {
+        "pass": false,
+        "detail": "mech MAE=10.520 <= 0.75*G1(9.653)=7.240"
+      },
+      "G2c-rmse": {
+        "pass": false,
+        "detail": "mech RMSE=13.424 <= 0.75*G1(12.212)=9.159"
+      },
+      "G2d-relative": {
+        "pass": false,
+        "detail": "FSR=0.433 <= 0.5*G1(0.398)=0.199"
+      },
+      "G2d-absolute": {
+        "pass": false,
+        "detail": "FSR=0.433 <= 0.2"
+      },
+      "G2e-a": {
+        "pass": true,
+        "detail": "max|residual-(mech-d)|=0.000e+00 <= 1e-09"
+      },
+      "G2e-b": {
+        "pass": true,
+        "detail": "sign agreement on 1332 interior cells = 1.0000 >= 0.99"
+      },
+      "G2e-c": {
+        "pass": true,
+        "detail": "corr(residual_k, dlambda) = 0.720 > 0"
+      },
+      "G2g": {
+        "pass": true,
+        "detail": "true cost head=31.22 -> tail=31.50 (ratio 1.009 <= 1.15)"
+      },
+      "G2h-a": {
+        "pass": true,
+        "detail": "all logged fields finite"
+      },
+      "G2h-b": {
+        "pass": true,
+        "detail": "max lambda 4.846 < 22.5 (0.19x lambda_max), 0 saturated cells"
+      },
+      "G2h-c": {
+        "pass": true,
+        "detail": "tail mean KL 0.0026 <= 0.05, max KL 0.0800 <= 0.5"
+      },
+      "G2h-d": {
+        "pass": true,
+        "detail": "tail mean entropy 1.830 > 0.5"
+      },
+      "G2h-e": {
+        "pass": true,
+        "detail": "mean |delta lambda| 0.1187 <= 0.45"
+      }
+    },
+    "pilot_A_clean_seed2": {
+      "G2b-bias": {
+        "pass": false,
+        "detail": "|mean bias_peer|=8.520 <= 0.5*G1(3.272)=1.636"
+      },
+      "G2b-mae": {
+        "pass": false,
+        "detail": "mean MAE_peer=13.666 <= 0.75*G1(14.470)=10.853"
+      },
+      "G2c-bias": {
+        "pass": false,
+        "detail": "|mean bias_mech|=5.500 <= 5.0"
+      },
+      "G2c-mae": {
+        "pass": false,
+        "detail": "mech MAE=9.735 <= 0.75*G1(9.551)=7.163"
+      },
+      "G2c-rmse": {
+        "pass": false,
+        "detail": "mech RMSE=12.239 <= 0.75*G1(11.938)=8.954"
+      },
+      "G2d-relative": {
+        "pass": false,
+        "detail": "FSR=0.396 <= 0.5*G1(0.457)=0.229"
+      },
+      "G2d-absolute": {
+        "pass": false,
+        "detail": "FSR=0.396 <= 0.2"
+      },
+      "G2e-a": {
+        "pass": true,
+        "detail": "max|residual-(mech-d)|=0.000e+00 <= 1e-09"
+      },
+      "G2e-b": {
+        "pass": true,
+        "detail": "sign agreement on 1367 interior cells = 1.0000 >= 0.99"
+      },
+      "G2e-c": {
+        "pass": true,
+        "detail": "corr(residual_k, dlambda) = 0.749 > 0"
+      },
+      "G2g": {
+        "pass": true,
+        "detail": "true cost head=32.98 -> tail=29.59 (ratio 0.897 <= 1.15)"
+      },
+      "G2h-a": {
+        "pass": true,
+        "detail": "all logged fields finite"
+      },
+      "G2h-b": {
+        "pass": true,
+        "detail": "max lambda 7.012 < 22.5 (0.28x lambda_max), 0 saturated cells"
+      },
+      "G2h-c": {
+        "pass": true,
+        "detail": "tail mean KL 0.0026 <= 0.05, max KL 0.0804 <= 0.5"
+      },
+      "G2h-d": {
+        "pass": true,
+        "detail": "tail mean entropy 1.888 > 0.5"
+      },
+      "G2h-e": {
+        "pass": true,
+        "detail": "mean |delta lambda| 0.1136 <= 0.45"
+      }
+    }
+  },
+  "cross_seed": {
+    "G2f-a": {
+      "pass": true,
+      "detail": "per-seed improvement [142.8, 147.6, 138.7] all > 0"
+    },
+    "G2f-b": {
+      "pass": true,
+      "detail": "mean improvement 143.0 >= 1.0 x pooled sd 11.7"
+    },
+    "G2i-a": {
+      "pass": true,
+      "detail": "3/3 complete, round counts [250, 250, 250]"
+    },
+    "G2i-b": {
+      "pass": true,
+      "detail": "sha=7551e6f69e1a70d8dc543fc6a9c797a3ce66c070, dirty={False}, estimator={'mc_window'}"
+    },
+    "G2i-d": {
+      "pass": true,
+      "detail": "source_diversity.json present: True"
+    }
+  }
+}

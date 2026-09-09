@@ -1,0 +1,26 @@
+[2026-09-05T09:25:39+00:00] watchdog start: factor=5.0x median, poll=60.0s, idle-sleep blocked=True
+[2026-09-05T09:25:39+00:00] STALL  B_seed0 round 55: 9372 s = 120x median (78 s)
+[2026-09-05T09:25:52+00:00] watchdog start: factor=5.0x median, poll=60.0s, idle-sleep blocked=True
+[2026-09-05T09:25:52+00:00] STALL  B_seed0 round 55: 9372 s = 120x median (78 s)
+[2026-09-05T14:52:19+00:00] B_seed0 reached 250 rounds -- running full verification
+[2026-09-05T14:52:20+00:00] VERIFIED  B_seed0: all structural gates pass
+[2026-09-05T14:59:21+00:00] STALL IN PROGRESS  B_seed0: no new round for 422 s after round 249 (5x median) -- check the machine
+[2026-09-05T18:31:37+00:00] watchdog start: factor=5.0x median, poll=60.0s, idle-sleep blocked=True
+[2026-09-05T18:31:37+00:00] STALL  B_seed0 round 55: 9372 s = 116x median (81 s)
+[2026-09-05T18:32:02+00:00] watchdog start: factor=5.0x median, poll=60.0s, idle-sleep blocked=True
+[2026-09-05T18:32:02+00:00] STALL  B_seed0 round 55: 9372 s = 116x median (81 s)
+[2026-09-05T22:01:49+00:00] B_seed1 reached 250 rounds -- running full verification
+[2026-09-05T22:01:50+00:00] VERIFIED  B_seed1: all structural gates pass
+[2026-09-06T04:34:33+00:00] B_seed2 reached 250 rounds -- running full verification
+[2026-09-06T04:34:33+00:00] VERIFIED  B_seed2: all structural gates pass
+[2026-09-06T12:04:20+00:00] D_seed0 reached 250 rounds -- running full verification
+[2026-09-06T12:04:20+00:00] VERIFICATION FAILED  D_seed0: ['A1-S2/S3 mechanism identity']
+[2026-09-06T19:22:04+00:00] watchdog start: factor=5.0x median, poll=60.0s, idle-sleep blocked=True
+[2026-09-06T19:22:05+00:00] STALL  B_seed0 round 55: 9372 s = 116x median (81 s)
+[2026-09-06T19:22:05+00:00] D_seed0 reached 250 rounds -- running full verification
+[2026-09-06T19:22:06+00:00] VERIFIED  D_seed0: all structural gates pass
+[2026-09-06T19:54:25+00:00] D_seed1 reached 250 rounds -- running full verification
+[2026-09-06T19:54:26+00:00] VERIFIED  D_seed1: all structural gates pass
+[2026-09-07T03:04:20+00:00] D_seed2 reached 250 rounds -- running full verification
+[2026-09-07T03:04:21+00:00] VERIFIED  D_seed2: all structural gates pass
+[2026-09-07T03:04:21+00:00] all six runs verified -- watchdog exiting

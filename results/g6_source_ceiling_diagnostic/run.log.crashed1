@@ -1,0 +1,78 @@
+=== B. Target definition audit ===
+  agent_0: target_t0 var=40.23 (60 rounds), obs0/overall var ratio mean=3.11
+  agent_1: target_t0 var=39.95 (60 rounds), obs0/overall var ratio mean=2.92
+  agent_2: target_t0 var=41.30 (60 rounds), obs0/overall var ratio mean=2.92
+  agent_3: target_t0 var=41.04 (60 rounds), obs0/overall var ratio mean=4.99
+  agent_4: target_t0 var=40.01 (60 rounds), obs0/overall var ratio mean=4.06
+  agent_5: target_t0 var=37.89 (60 rounds), obs0/overall var ratio mean=3.02
+  [checkpoint saved: B_target_audit, elapsed=1.0s -> results\g6_source_ceiling_diagnostic\g6_report_checkpoint.json]
+
+=== P1 (t0-eval): F1 x C1/C2/C3 + ridge/OLS ===
+  F1,C1: pooled corr=0.781 MAE=3.825 [good]
+  F1,C2: pooled corr=0.781 MAE=4.055 [good]
+  F1,C3: pooled corr=0.720 MAE=4.612 [good]
+  F1,ridge: pooled corr=0.598 MAE=5.602 [good]
+  F1,ols: pooled corr=0.598 MAE=5.602 [good]
+  [checkpoint saved: P1_t0_eval, elapsed=276.6s -> results\g6_source_ceiling_diagnostic\g6_report_checkpoint.json]
+
+=== P2 (round-CV, general-t) ===
+  building F1 L=16 features (once, shared across C1/C2/C3/ridge/ols) ...
+    feature build took 0.2s
+  running F1_L16_C1 ...
+    pooled corr=0.710 MAE=4.299 R2=0.505 [good]
+  [checkpoint saved: P2/F1_L16_C1, elapsed=360.7s -> results\g6_source_ceiling_diagnostic\g6_report_checkpoint.json]
+  running F1_L16_C2 ...
+    pooled corr=0.710 MAE=4.308 R2=0.503 [good]
+  [checkpoint saved: P2/F1_L16_C2, elapsed=451.3s -> results\g6_source_ceiling_diagnostic\g6_report_checkpoint.json]
+  running F1_L16_C3 ...
+    pooled corr=0.616 MAE=4.994 R2=0.330 [good]
+  [checkpoint saved: P2/F1_L16_C3, elapsed=1569.4s -> results\g6_source_ceiling_diagnostic\g6_report_checkpoint.json]
+  running F1_L16_ridge ...
+    pooled corr=0.712 MAE=4.284 R2=0.507 [good]
+  [checkpoint saved: P2/F1_L16_ridge, elapsed=1571.2s -> results\g6_source_ceiling_diagnostic\g6_report_checkpoint.json]
+  running F1_L16_ols ...
+    pooled corr=0.712 MAE=4.284 R2=0.507 [good]
+  [checkpoint saved: P2/F1_L16_ols, elapsed=1573.1s -> results\g6_source_ceiling_diagnostic\g6_report_checkpoint.json]
+  building F2 L=16 features (once, shared across C1/C2/C3/ridge/ols) ...
+    feature build took 9.9s
+  running F2_L16_C1 ...
+    pooled corr=0.655 MAE=4.675 R2=0.412 [good]
+  [checkpoint saved: P2/F2_L16_C1, elapsed=1885.7s -> results\g6_source_ceiling_diagnostic\g6_report_checkpoint.json]
+  running F2_L16_C2 ...
+    pooled corr=0.612 MAE=5.043 R2=0.320 [good]
+  [checkpoint saved: P2/F2_L16_C2, elapsed=2237.3s -> results\g6_source_ceiling_diagnostic\g6_report_checkpoint.json]
+  running F2_L16_C3 ...
+    pooled corr=0.445 MAE=6.976 R2=-0.297 [mixed]
+  [checkpoint saved: P2/F2_L16_C3, elapsed=5844.8s -> results\g6_source_ceiling_diagnostic\g6_report_checkpoint.json]
+  running F2_L16_ridge ...
+    pooled corr=0.710 MAE=4.296 R2=0.505 [good]
+  [checkpoint saved: P2/F2_L16_ridge, elapsed=5889.3s -> results\g6_source_ceiling_diagnostic\g6_report_checkpoint.json]
+  running F2_L16_ols ...
+    pooled corr=0.710 MAE=4.296 R2=0.505 [good]
+  [checkpoint saved: P2/F2_L16_ols, elapsed=5919.8s -> results\g6_source_ceiling_diagnostic\g6_report_checkpoint.json]
+  building F3 L=16 features (once, shared across C1/C2/C3/ridge/ols) ...
+    feature build took 8.9s
+  running F3_L16_C1 ...
+    pooled corr=0.662 MAE=4.644 R2=0.423 [good]
+  [checkpoint saved: P2/F3_L16_C1, elapsed=6042.7s -> results\g6_source_ceiling_diagnostic\g6_report_checkpoint.json]
+  running F3_L16_C2 ...
+    pooled corr=0.633 MAE=4.853 R2=0.364 [good]
+  [checkpoint saved: P2/F3_L16_C2, elapsed=6165.1s -> results\g6_source_ceiling_diagnostic\g6_report_checkpoint.json]
+  running F3_L16_C3 ...
+    pooled corr=0.540 MAE=5.731 R2=0.125 [good]
+  [checkpoint saved: P2/F3_L16_C3, elapsed=7788.4s -> results\g6_source_ceiling_diagnostic\g6_report_checkpoint.json]
+  running F3_L16_ridge ...
+    pooled corr=0.713 MAE=4.289 R2=0.508 [good]
+  [checkpoint saved: P2/F3_L16_ridge, elapsed=7794.3s -> results\g6_source_ceiling_diagnostic\g6_report_checkpoint.json]
+  running F3_L16_ols ...
+    pooled corr=0.713 MAE=4.289 R2=0.508 [good]
+  [checkpoint saved: P2/F3_L16_ols, elapsed=7799.6s -> results\g6_source_ceiling_diagnostic\g6_report_checkpoint.json]
+  running F2_L4_C3 (secondary L check) ...
+    pooled corr=0.528 MAE=5.921 [good]
+  [checkpoint saved: P2/F2_L4_C3, elapsed=9329.0s -> results\g6_source_ceiling_diagnostic\g6_report_checkpoint.json]
+  running F2_L8_C3 (secondary L check) ...
+    pooled corr=0.458 MAE=6.769 [mixed]
+  [checkpoint saved: P2/F2_L8_C3, elapsed=11568.9s -> results\g6_source_ceiling_diagnostic\g6_report_checkpoint.json]
+
+=== L. Nearest-neighbor local target dispersion ===
+  P1 (t=0, F1=o_0): {'agent_0': 0.701, 'agent_1': 0.733, 'agent_2': 0.813, 'agent_3': 0.774, 'agent_4': 0.741, 'agent_5': 0.901}

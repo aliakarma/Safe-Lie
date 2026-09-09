@@ -1,0 +1,214 @@
+{
+  "runs_dir": "C:\\Users\\Ali Akarma\\Desktop\\Current Research\\ICLR\\Paper 1\\Safe-Lie\\results\\runs_g0",
+  "gates": {
+    "L": {
+      "per_seed": {
+        "0": {
+          "first20_mean": -172.14628725820685,
+          "first20_sd": 11.806713871111867,
+          "last20_mean": -52.59527125672897,
+          "improvement": 119.55101600147788
+        },
+        "1": {
+          "first20_mean": -162.80500318680205,
+          "first20_sd": 12.93911244228787,
+          "last20_mean": -34.66849864217397,
+          "improvement": 128.13650454462808
+        },
+        "2": {
+          "first20_mean": -166.36095002506428,
+          "first20_sd": 13.279530840936545,
+          "last20_mean": -52.32969798082566,
+          "improvement": 114.03125204423863
+        }
+      },
+      "pooled_first20_sd": 12.690745480911922,
+      "mean_improvement": 120.57292419678153,
+      "effect_sizes_sd": 9.500854333430182,
+      "L1": true,
+      "L2": true,
+      "pass": true
+    },
+    "C": {
+      "per_seed": {
+        "0": {
+          "whole_run_mean": 29.51637095064437,
+          "max_any_agent_round": 76.59519239198936,
+          "exceeds_d_somewhere": true,
+          "head20pct_mean": 33.65956349963669,
+          "tail20pct_mean": 30.60502034812397,
+          "delta": -3.0545431515127213,
+          "tail_below_d": false,
+          "violation_rate_whole_run": 0.5526666666666666,
+          "peak_violation": 1.0
+        },
+        "1": {
+          "whole_run_mean": 29.37551866898286,
+          "max_any_agent_round": 76.47619195247118,
+          "exceeds_d_somewhere": true,
+          "head20pct_mean": 33.19323608787104,
+          "tail20pct_mean": 28.856000819476314,
+          "delta": -4.337235268394728,
+          "tail_below_d": false,
+          "violation_rate_whole_run": 0.5546666666666666,
+          "peak_violation": 1.0
+        },
+        "2": {
+          "whole_run_mean": 29.84686459611412,
+          "max_any_agent_round": 70.6411606853719,
+          "exceeds_d_somewhere": true,
+          "head20pct_mean": 35.049114813325374,
+          "tail20pct_mean": 33.32231253885927,
+          "delta": -1.7268022744661025,
+          "tail_below_d": false,
+          "violation_rate_whole_run": 0.604,
+          "peak_violation": 1.0
+        }
+      },
+      "C1": true,
+      "C2": true,
+      "pass": true,
+      "trend_signs": [
+        -1,
+        -1,
+        -1
+      ]
+    },
+    "K": {
+      "per_seed": {
+        "0": {
+          "own_head_bias": -7.85099916580369,
+          "own_tail_bias": -7.359324845034715,
+          "own_tail_rmse": 14.853577931606825,
+          "own_improved": true,
+          "mechanism_head_bias": -4.676261036642809,
+          "mechanism_tail_bias": -7.438112882164606,
+          "mechanism_tail_rmse": 14.733373838363939,
+          "mechanism_improved": false
+        },
+        "1": {
+          "own_head_bias": -8.05406761782857,
+          "own_tail_bias": -7.056581031518614,
+          "own_tail_rmse": 14.00276785739909,
+          "own_improved": true,
+          "mechanism_head_bias": -4.065271950057161,
+          "mechanism_tail_bias": -5.58431031602744,
+          "mechanism_tail_rmse": 13.51945168318989,
+          "mechanism_improved": false
+        },
+        "2": {
+          "own_head_bias": -9.891236713568606,
+          "own_tail_bias": -7.2185309199500365,
+          "own_tail_rmse": 14.88612457647695,
+          "own_improved": true,
+          "mechanism_head_bias": -4.818890610102482,
+          "mechanism_tail_bias": -8.86561448202573,
+          "mechanism_tail_rmse": 14.361646398064817,
+          "mechanism_improved": false
+        }
+      },
+      "K1": false,
+      "K2": false,
+      "K3": false,
+      "pass": false
+    },
+    "D": {
+      "per_seed": {
+        "0": {
+          "activation_fraction": 0.7846666666666666,
+          "mean_lambda": 2.3336098991008187,
+          "max_lambda": 11.013022657545006,
+          "tail_mean_lambda": 0.8552954710575892,
+          "saturated_fraction": 0.0,
+          "per_agent_mean": [
+            2.167383912419807,
+            2.3811304441260663,
+            2.4598238070006304,
+            2.441244619031051,
+            2.353453798270668,
+            2.1986228137566903
+          ]
+        },
+        "1": {
+          "activation_fraction": 0.7013333333333334,
+          "mean_lambda": 2.412547552424041,
+          "max_lambda": 10.672043142931688,
+          "tail_mean_lambda": 1.053734218139527,
+          "saturated_fraction": 0.0,
+          "per_agent_mean": [
+            2.3504957411159517,
+            2.4718951585512134,
+            2.527220188541118,
+            2.482391337675905,
+            2.371460111555523,
+            2.2718227771045356
+          ]
+        },
+        "2": {
+          "activation_fraction": 0.8006666666666666,
+          "mean_lambda": 2.8743507400925647,
+          "max_lambda": 12.537166101700914,
+          "tail_mean_lambda": 0.6953334957282342,
+          "saturated_fraction": 0.0,
+          "per_agent_mean": [
+            2.8426246562848974,
+            2.9414498663208746,
+            2.9953775609338273,
+            2.9379405457411765,
+            2.816569806348741,
+            2.7121420049258727
+          ]
+        }
+      },
+      "D1": true,
+      "D2": true,
+      "pass": true
+    },
+    "R": {
+      "per_seed": {
+        "0": {
+          "status": "complete",
+          "rounds_records": 250,
+          "oracle_records": 250,
+          "complete": true,
+          "checkpoint": true,
+          "git_sha": "6df987178d61d5f3f5585b0b01dcee773bb5439d",
+          "git_dirty": true,
+          "seed_recorded": 0
+        },
+        "1": {
+          "status": "complete",
+          "rounds_records": 250,
+          "oracle_records": 250,
+          "complete": true,
+          "checkpoint": true,
+          "git_sha": "6df987178d61d5f3f5585b0b01dcee773bb5439d",
+          "git_dirty": true,
+          "seed_recorded": 1
+        },
+        "2": {
+          "status": "complete",
+          "rounds_records": 250,
+          "oracle_records": 250,
+          "complete": true,
+          "checkpoint": true,
+          "git_sha": "6df987178d61d5f3f5585b0b01dcee773bb5439d",
+          "git_dirty": true,
+          "seed_recorded": 2
+        }
+      },
+      "R1": true,
+      "R3": true,
+      "pass": true,
+      "note_R2": "integrity_check is scripts/analyze_matrix.py --runs-dir; run separately"
+    }
+  },
+  "summary": {
+    "L": true,
+    "C": true,
+    "K": false,
+    "D": true,
+    "R": true
+  },
+  "mechanical_verdict": "CONDITIONAL PASS (pending cause analysis)"
+}

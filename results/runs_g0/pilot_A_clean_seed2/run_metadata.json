@@ -1,0 +1,176 @@
+{
+  "run_id": "pilot_A_clean_seed2",
+  "seed": 2,
+  "status": "complete",
+  "written_at": "2026-09-01T21:28:22.400898+00:00",
+  "git": {
+    "sha": "6df987178d61d5f3f5585b0b01dcee773bb5439d",
+    "dirty": true,
+    "dirty_paths": [
+      "Dockerfile",
+      "HANGELOG.md",
+      "IMPLEMENTATION_STATUS.md",
+      "Makefile",
+      "README.md",
+      "SMOKE_TEST_REPORT.md",
+      "configs/experiment/pilot_A_clean.yaml",
+      "configs/experiment/pilot_B_attack.yaml",
+      "configs/experiment/pilot_C_rce.yaml",
+      "configs/experiment/pilot_D_benign.yaml",
+      "configs/experiment/pilot_E_clean_rce.yaml",
+      "docs/architecture.md",
+      "docs/assumptions.md",
+      "docs/decisions/README.md",
+      "docs/evaluation.md",
+      "docs/g0_gates.md",
+      "docs/inference.md",
+      "docs/paper_implementation_mapping.md",
+      "docs/reproducibility.md",
+      "docs/setup.md",
+      "docs/training.md",
+      "docs/troubleshooting.md",
+      "notebooks/colab_full_experiment.ipynb",
+      "pyproject.toml",
+      "scripts/analyze_g0.py",
+      "scripts/analyze_matrix.py",
+      "scripts/audit_source_independence.py",
+      "scripts/calibrate_cost.py",
+      "scripts/run_matrix.py",
+      "scripts/train.py",
+      "src/safelie/algos/networks.py",
+      "src/safelie/algos/normalization.py",
+      "src/safelie/analysis/tables.py",
+      "src/safelie/envs/__init__.py",
+      "src/safelie/envs/dual_cost.py",
+      "src/safelie/envs/factory.py",
+      "src/safelie/envs/mamujoco.py",
+      "src/safelie/eval/calibration.py",
+      "src/safelie/eval/harness.py",
+      "src/safelie/eval/oracle.py",
+      "src/safelie/experiment.py",
+      "src/safelie/governance/empirical_diversity.py",
+      "src/safelie/training/buffer.py",
+      "src/safelie/training/gae.py",
+      "src/safelie/training/loop.py",
+      "src/safelie/training/ppo.py",
+      "src/safelie/utils/config.py",
+      "tests/unit/test_agent_bundle_optimizers.py",
+      "tests/unit/test_empirical_diversity.py",
+      "tests/unit/test_env_factory.py",
+      "tests/unit/test_gae.py",
+      "tests/unit/test_guarantee_calibration.py",
+      "tests/unit/test_normalization.py",
+      "tests/unit/test_peer_critic_wiring.py",
+      "tests/unit/test_return_reporting.py",
+      "tests/unit/test_return_scale_consistency.py",
+      "tests/unit/test_terminal_handling.py"
+    ]
+  },
+  "python": "3.11.9 (tags/v3.11.9:de54cf5, Apr  2 2024, 10:12:12) [MSC v.1938 64 bit (AMD64)]",
+  "platform": "Windows-10-10.0.26200-SP0",
+  "num_rounds_planned": 250,
+  "config_snapshot": {
+    "run_id": "pilot_A_clean_seed2",
+    "seed": 2,
+    "env": {
+      "name": "manyagent_ant",
+      "n_agents": 6,
+      "budget": 25.0,
+      "horizon": 200,
+      "obs_dim": 8,
+      "action_dim": 2,
+      "agent_obsk": 1,
+      "cost_mode": "per_agent_velocity",
+      "velocity_threshold": 0.75
+    },
+    "topology": {
+      "name": "ring",
+      "n_agents": 6,
+      "p": null,
+      "graph_seed": 0
+    },
+    "sources": {
+      "sources": [
+        {
+          "source_id": "own_critic",
+          "source_type": "own_critic",
+          "independence_class": "ic_own"
+        },
+        {
+          "source_id": "peer_critic_1",
+          "source_type": "peer_critic",
+          "independence_class": "ic_peer1"
+        },
+        {
+          "source_id": "peer_critic_2",
+          "source_type": "peer_critic",
+          "independence_class": "ic_peer2"
+        },
+        {
+          "source_id": "peer_critic_3",
+          "source_type": "peer_critic",
+          "independence_class": "ic_peer3"
+        },
+        {
+          "source_id": "peer_critic_4",
+          "source_type": "peer_critic",
+          "independence_class": "ic_peer4"
+        },
+        {
+          "source_id": "monitor_1",
+          "source_type": "monitor",
+          "independence_class": "ic_mon1"
+        },
+        {
+          "source_id": "monitor_2",
+          "source_type": "monitor",
+          "independence_class": "ic_mon2"
+        }
+      ]
+    },
+    "attack": {
+      "name": "none",
+      "f": 0,
+      "budget_ratio": 0.0,
+      "kappa": 1.0,
+      "nu_ratio": 0.05,
+      "direction": "negative",
+      "support": "persistent",
+      "adaptivity": "static",
+      "consistency": "consistent"
+    },
+    "defense": {
+      "name": "mean",
+      "f": 0,
+      "beta": 1.5,
+      "sigma_min": 0.001,
+      "min_retained": 3,
+      "use_reliability_weights": false,
+      "calibration_rounds": 20,
+      "calibration_alpha": 0.05
+    },
+    "ppo": {
+      "clip": 0.2,
+      "gae_lambda": 0.95,
+      "gamma": 0.99,
+      "lr": 0.0003,
+      "epochs": 4,
+      "minibatches": 4,
+      "entropy_coef": 0.001,
+      "value_coef": 0.5,
+      "grad_clip": 0.5,
+      "hidden_dim": 64,
+      "critic_lr": null
+    },
+    "dual": {
+      "eta_lambda": 0.035,
+      "lambda_max": 25.0
+    },
+    "total_steps": 500000,
+    "rollout_length": 2000,
+    "output_dir": "results/runs_g0"
+  },
+  "rounds_completed": 250,
+  "checkpoint": "checkpoint.pt",
+  "eval_every": 1
+}

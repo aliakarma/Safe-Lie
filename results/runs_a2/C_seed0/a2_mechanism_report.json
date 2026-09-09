@@ -1,0 +1,102 @@
+{
+  "run": "C:\\Users\\Ali Akarma\\Desktop\\Current Research\\ICLR\\Paper 1\\Safe-Lie\\results\\runs_a2\\C_seed0",
+  "condition": "C",
+  "paired_reference": "C:\\Users\\Ali Akarma\\Desktop\\Current Research\\ICLR\\Paper 1\\Safe-Lie\\results\\runs_a1\\B_seed0",
+  "rounds": 250,
+  "agent_ids": [
+    "agent_0",
+    "agent_1",
+    "agent_2",
+    "agent_3",
+    "agent_4",
+    "agent_5"
+  ],
+  "source_ids": [
+    "batch_1",
+    "batch_2",
+    "batch_3"
+  ],
+  "attacked_source": "batch_1",
+  "corrupted_source_ids_in_log": [
+    "batch_1"
+  ],
+  "G2_map_identity": {
+    "n_cells": 1500,
+    "max_abs_error": {
+      "point_estimate": 0.0,
+      "spread": 0.0,
+      "retained_n": 0.0,
+      "applied_margin": 0.0,
+      "pessimistic_estimate": 0.0,
+      "mechanism_reported_cost_return": 0.0,
+      "constraint_residual": 0.0
+    },
+    "attack_applied": true,
+    "shift_applied": -12.5,
+    "pass": true
+  },
+  "G7_i_degenerate_structure": {
+    "frac_retained_n_eq_1": 1.0,
+    "frac_degenerate_true": 1.0,
+    "pass": true
+  },
+  "G7_ii_margin_is_constant": {
+    "frac_spread_eq_sigma_min": 1.0,
+    "frac_margin_eq_beta_sigma_min": 1.0,
+    "applied_margin_value": 0.0015,
+    "mad_ever_nonzero": false,
+    "epsilon_offline_unique": [
+      0.001
+    ],
+    "guarantee_in_force_frac_true": 1.0,
+    "theoretical_condition_ever_active": false,
+    "note": "MAD is structurally 0 at |T|=1, so the spread is always floored to sigma_min and the margin is the constant beta*sigma_min. The MAD condition is never active and guarantee_in_force is vacuous (docs/a2_rce_gates.md section 4).",
+    "pass": true
+  },
+  "G7_iii_source_set": {
+    "frac_attacked_source_trimmed": 1.0,
+    "frac_attacked_source_retained": 0.0,
+    "frac_attacked_source_is_global_min": 1.0,
+    "frac_retained_equals_min_of_two_honest": 1.0,
+    "interpretation": "RCE REMOVES the corrupted source rather than bounding its influence: with B = 12.5 = 11.9 sigma_src the corrupted report is the minimum, so trimming the extremes discards it and retains the SMALLER of the two honest sources.",
+    "pass": true
+  },
+  "G7_iv_within_run_counterfactual": {
+    "mean_rce_shift": -0.6278144767481991,
+    "median_rce_shift": -0.2789439187413212,
+    "sd_rce_shift": 0.8043679896783821,
+    "predicted": -0.59,
+    "band": [
+      -1.2,
+      -0.2
+    ],
+    "mean_aggregator_shift_for_comparison": -4.166666666666667,
+    "suppression_factor_vs_mean": 6.636780165134379,
+    "pass": true
+  },
+  "G7_v_source_ordering_stability": {
+    "frac_consecutive_rounds_same_order": 0.5046854082998661,
+    "descriptive_only": true
+  },
+  "G1_ii_crn_round0": {
+    "paired_run": "C:\\Users\\Ali Akarma\\Desktop\\Current Research\\ICLR\\Paper 1\\Safe-Lie\\results\\runs_a1\\B_seed0",
+    "max_abs_pre_attack_difference": 0.0,
+    "per_source_max_abs": {
+      "batch_1": 0.0,
+      "batch_2": 0.0,
+      "batch_3": 0.0
+    },
+    "underlying_draws_identical": true,
+    "pass": true
+  },
+  "finite": true,
+  "gates": {
+    "G2_map_identity": true,
+    "G7_i_degenerate_structure": true,
+    "G7_ii_margin_is_constant": true,
+    "G7_iii_source_set": true,
+    "G7_iv_within_run_counterfactual": true,
+    "G1_ii_crn_round0": true
+  },
+  "all_pass": true
+}

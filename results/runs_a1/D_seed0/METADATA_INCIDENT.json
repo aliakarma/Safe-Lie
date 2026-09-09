@@ -1,0 +1,58 @@
+{
+  "incident": "run_metadata.json clobbered by a no-op resume",
+  "when": "2026-09-06T12:06:01Z",
+  "cause": "scripts/a1_run_queue.py re-entered a run that already had 250 rounds. run_experiment_with_oracle resumed, executed zero rounds, and rewrote run_metadata.json with THIS invocation's counters. `env_steps` and `timing` in that file are therefore wrong for D_seed0.",
+  "scientific_impact": "none",
+  "evidence_untouched": {
+    "rounds.jsonl": {
+      "lines": 250,
+      "mtime_utc": "2026-09-06T12:03:22Z"
+    },
+    "oracle.jsonl": {
+      "lines": 250,
+      "mtime_utc": "2026-09-06T12:03:28Z"
+    },
+    "source_seeds.jsonl": {
+      "lines": 250,
+      "mtime_utc": "2026-09-06T12:03:22Z"
+    },
+    "validation_reference.jsonl": {
+      "lines": 5,
+      "mtime_utc": "2026-09-06T11:25:02Z"
+    },
+    "comment": "all four are append-only and predate the 12:06:01 rewrite; every A1 gate is evaluated from these, not from metadata"
+  },
+  "clobbered_fields": {
+    "env_steps": {
+      "ppo": 2000,
+      "source": 180000,
+      "oracle": 2000
+    },
+    "timing": {
+      "wall_clock_s": 0.1,
+      "source_s": 0.0,
+      "oracle_s": 0.0
+    }
+  },
+  "recovered_values": {
+    "env_steps": {
+      "ppo": 500000,
+      "source": 45000000,
+      "oracle": 500000
+    },
+    "timing": {
+      "wall_clock_s": 26961.0,
+      "wall_clock_h": 7.49,
+      "source_s": 22704.6,
+      "s_per_round": 107.84,
+      "source_s_per_round": 90.82
+    },
+    "derivation": "ppo/oracle = rounds x rollout_length (2000); source = sum of rounds.jsonl source_batch.env_steps; source_s = sum of source_batch.wall_clock_s + reference_wall_clock_s; wall_clock_s = the first queue driver log timestamps (launch 04:34:14Z, finish 12:03:35Z). NOT read from a1_queue_status.json, which the later gating-only restart overwrote with a 7.5 s no-op duration."
+  },
+  "policy": "run_metadata.json is deliberately NOT hand-edited. It is left exactly as the software wrote it; these recovered values live here, separately, marked as derived. Gates now read primary evidence instead.",
+  "fixes": [
+    "a1_run_queue.py: never re-enter a run with >= 250 rounds; gate only.",
+    "a1_run_queue.py + a1_verify_run.py: derive A1-S4 step counts from rounds.jsonl and the config snapshot, not from metadata env_steps."
+  ],
+  "upstream_bug_not_fixed_during_a1": "safelie.experiment.run_experiment_with_oracle does not accumulate env_steps or timing across a resume. Real defect, but experiment.py is part of the frozen training implementation; changing it mid-experiment would make the B runs and the remaining D runs products of different code, a \u00a722 stop condition. Fix after A1 completes."
+}

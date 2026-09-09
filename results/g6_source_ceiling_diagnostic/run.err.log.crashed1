@@ -1,0 +1,11 @@
+Traceback (most recent call last):
+  File "C:\Users\Ali Akarma\Desktop\Current Research\ICLR\Paper 1\Safe-Lie\scripts\g6_source_ceiling_diagnostic.py", line 713, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "C:\Users\Ali Akarma\Desktop\Current Research\ICLR\Paper 1\Safe-Lie\scripts\g6_source_ceiling_diagnostic.py", line 557, in main
+    nn_p2_f3[aid] = nn_local_dispersion(f3_x, y)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Ali Akarma\Desktop\Current Research\ICLR\Paper 1\Safe-Lie\scripts\g6_source_ceiling_diagnostic.py", line 274, in nn_local_dispersion
+    d2 = ((xs[:, None, :] - xs[None, :, :]) ** 2).sum(axis=2)
+          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^~~
+numpy._core._exceptions._ArrayMemoryError: Unable to allocate 18.1 GiB for an array with shape (3080, 3080, 256) and data type float64

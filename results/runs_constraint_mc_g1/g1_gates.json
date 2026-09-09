@@ -1,0 +1,240 @@
+{
+  "verdict": "FAIL",
+  "gates": {
+    "G1": false,
+    "G2": false,
+    "G3": true,
+    "G4": true,
+    "G5": false,
+    "G6": true,
+    "G7": false
+  },
+  "failed": [
+    "G1",
+    "G2",
+    "G5",
+    "G7"
+  ],
+  "per_seed": {
+    "pilot_A_clean_seed0": {
+      "G1a": {
+        "pass": true,
+        "detail": "|bias_mc|=1.026 <= 0.5*|bias_gae|=4.054"
+      },
+      "G1b": {
+        "pass": true,
+        "detail": "|bias_mc|=1.026 <= 5.0"
+      },
+      "G1c": {
+        "pass": true,
+        "detail": "MC better in 5/5 phases ['Y', 'Y', 'Y', 'Y', 'Y']"
+      },
+      "G1d": {
+        "pass": false,
+        "detail": "|bias_mechanism|=5.850 <= 5.0"
+      },
+      "G2a": {
+        "pass": true,
+        "detail": "max|reported-true| (same rollout) = 0.000e+00 <= 1e-09"
+      },
+      "G2c": {
+        "pass": false,
+        "detail": "corr(mc, true) = 0.514 >= 0.7"
+      },
+      "G3a": {
+        "pass": true,
+        "detail": "max|residual - (mech - d)| = 0.000e+00 <= 1e-09"
+      },
+      "G3b": {
+        "pass": true,
+        "detail": "sign agreement on 1316 interior cells = 1.0000 >= 0.99"
+      },
+      "G3c": {
+        "pass": true,
+        "detail": "corr(residual_k, dlambda) = 0.620 > 0"
+      },
+      "G5a": {
+        "pass": true,
+        "detail": "true cost exceeded d=25.0 in 219 rounds"
+      },
+      "G5b": {
+        "pass": false,
+        "detail": "true cost first 20% 28.77 -> last 20% 35.63"
+      },
+      "G6a": {
+        "pass": true,
+        "detail": "all logged fields finite"
+      },
+      "G6b": {
+        "pass": true,
+        "detail": "max lambda 7.508 < 22.5 (0.30x lambda_max), 0 saturated cells"
+      },
+      "G6c": {
+        "pass": true,
+        "detail": "tail mean KL 0.0027 <= 0.05, max KL 0.0744 <= 0.5"
+      },
+      "G6d": {
+        "pass": true,
+        "detail": "tail mean entropy 1.904 > 0.5"
+      },
+      "G6e": {
+        "pass": true,
+        "detail": "mean |delta lambda| 0.1007 <= 0.45"
+      }
+    },
+    "pilot_A_clean_seed1": {
+      "G1a": {
+        "pass": true,
+        "detail": "|bias_mc|=0.363 <= 0.5*|bias_gae|=4.189"
+      },
+      "G1b": {
+        "pass": true,
+        "detail": "|bias_mc|=0.363 <= 5.0"
+      },
+      "G1c": {
+        "pass": true,
+        "detail": "MC better in 5/5 phases ['Y', 'Y', 'Y', 'Y', 'Y']"
+      },
+      "G1d": {
+        "pass": false,
+        "detail": "|bias_mechanism|=5.415 <= 5.0"
+      },
+      "G2a": {
+        "pass": true,
+        "detail": "max|reported-true| (same rollout) = 0.000e+00 <= 1e-09"
+      },
+      "G2c": {
+        "pass": false,
+        "detail": "corr(mc, true) = 0.554 >= 0.7"
+      },
+      "G3a": {
+        "pass": true,
+        "detail": "max|residual - (mech - d)| = 0.000e+00 <= 1e-09"
+      },
+      "G3b": {
+        "pass": true,
+        "detail": "sign agreement on 1385 interior cells = 1.0000 >= 0.99"
+      },
+      "G3c": {
+        "pass": true,
+        "detail": "corr(residual_k, dlambda) = 0.618 > 0"
+      },
+      "G5a": {
+        "pass": true,
+        "detail": "true cost exceeded d=25.0 in 230 rounds"
+      },
+      "G5b": {
+        "pass": false,
+        "detail": "true cost first 20% 31.02 -> last 20% 34.24"
+      },
+      "G6a": {
+        "pass": true,
+        "detail": "all logged fields finite"
+      },
+      "G6b": {
+        "pass": true,
+        "detail": "max lambda 7.473 < 22.5 (0.30x lambda_max), 0 saturated cells"
+      },
+      "G6c": {
+        "pass": true,
+        "detail": "tail mean KL 0.0029 <= 0.05, max KL 0.0690 <= 0.5"
+      },
+      "G6d": {
+        "pass": true,
+        "detail": "tail mean entropy 1.915 > 0.5"
+      },
+      "G6e": {
+        "pass": true,
+        "detail": "mean |delta lambda| 0.1068 <= 0.45"
+      }
+    },
+    "pilot_A_clean_seed2": {
+      "G1a": {
+        "pass": true,
+        "detail": "|bias_mc|=1.162 <= 0.5*|bias_gae|=3.329"
+      },
+      "G1b": {
+        "pass": true,
+        "detail": "|bias_mc|=1.162 <= 5.0"
+      },
+      "G1c": {
+        "pass": true,
+        "detail": "MC better in 5/5 phases ['Y', 'Y', 'Y', 'Y', 'Y']"
+      },
+      "G1d": {
+        "pass": true,
+        "detail": "|bias_mechanism|=2.192 <= 5.0"
+      },
+      "G2a": {
+        "pass": true,
+        "detail": "max|reported-true| (same rollout) = 0.000e+00 <= 1e-09"
+      },
+      "G2c": {
+        "pass": false,
+        "detail": "corr(mc, true) = 0.625 >= 0.7"
+      },
+      "G3a": {
+        "pass": true,
+        "detail": "max|residual - (mech - d)| = 0.000e+00 <= 1e-09"
+      },
+      "G3b": {
+        "pass": true,
+        "detail": "sign agreement on 1277 interior cells = 1.0000 >= 0.99"
+      },
+      "G3c": {
+        "pass": true,
+        "detail": "corr(residual_k, dlambda) = 0.710 > 0"
+      },
+      "G5a": {
+        "pass": true,
+        "detail": "true cost exceeded d=25.0 in 202 rounds"
+      },
+      "G5b": {
+        "pass": true,
+        "detail": "true cost first 20% 31.58 -> last 20% 27.89"
+      },
+      "G6a": {
+        "pass": true,
+        "detail": "all logged fields finite"
+      },
+      "G6b": {
+        "pass": true,
+        "detail": "max lambda 11.058 < 22.5 (0.44x lambda_max), 0 saturated cells"
+      },
+      "G6c": {
+        "pass": true,
+        "detail": "tail mean KL 0.0027 <= 0.05, max KL 0.0583 <= 0.5"
+      },
+      "G6d": {
+        "pass": true,
+        "detail": "tail mean entropy 2.043 > 0.5"
+      },
+      "G6e": {
+        "pass": true,
+        "detail": "mean |delta lambda| 0.1328 <= 0.45"
+      }
+    }
+  },
+  "cross_seed": {
+    "G4a": {
+      "pass": true,
+      "detail": "per-seed improvement [143.4, 138.3, 128.5] all > 0"
+    },
+    "G4b": {
+      "pass": true,
+      "detail": "mean improvement 136.7 >= 1.0 x pooled sd 12.7"
+    },
+    "G7a": {
+      "pass": true,
+      "detail": "3/3 complete, round counts [250, 250, 250]"
+    },
+    "G7b": {
+      "pass": true,
+      "detail": "sha=ffee6ec58f8c10706def446fa173ef432af42f16, dirty={False}, estimator={'mc_window'}"
+    },
+    "G7d": {
+      "pass": false,
+      "detail": "true-cost trend signs ['up', 'up', 'down'], MC-improves-bias [np.True_, np.True_, np.True_]"
+    }
+  }
+}

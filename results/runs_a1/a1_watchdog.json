@@ -1,0 +1,194 @@
+{
+  "started": "2026-09-05T09:25:39+00:00",
+  "factor": 5.0,
+  "runs": {
+    "B_seed0": {
+      "rounds": 250,
+      "median_round_s": 81.1,
+      "verified": true,
+      "verification": {
+        "returncode": 0,
+        "pass": true,
+        "failed_gates": [],
+        "rounds": 250
+      }
+    },
+    "B_seed1": {
+      "rounds": 250,
+      "median_round_s": 79.9,
+      "verified": true,
+      "verification": {
+        "returncode": 0,
+        "pass": true,
+        "failed_gates": [],
+        "rounds": 250
+      }
+    },
+    "B_seed2": {
+      "rounds": 250,
+      "median_round_s": 76.6,
+      "verified": true,
+      "verification": {
+        "returncode": 0,
+        "pass": true,
+        "failed_gates": [],
+        "rounds": 250
+      }
+    },
+    "D_seed0": {
+      "rounds": 250,
+      "median_round_s": 81.1,
+      "reverify_reason": "first verification ran the pre-fix verifier, which applied the attack constant identity to a zero-mean condition-D run; cleared so the corrected verifier re-measures",
+      "verified": true,
+      "verification": {
+        "returncode": 0,
+        "pass": true,
+        "failed_gates": [],
+        "rounds": 250
+      }
+    },
+    "D_seed1": {
+      "rounds": 250,
+      "median_round_s": 91.1,
+      "verified": true,
+      "verification": {
+        "returncode": 0,
+        "pass": true,
+        "failed_gates": [],
+        "rounds": 250
+      }
+    },
+    "D_seed2": {
+      "rounds": 250,
+      "median_round_s": 81.0,
+      "verified": true,
+      "verification": {
+        "returncode": 0,
+        "pass": true,
+        "failed_gates": [],
+        "rounds": 250
+      }
+    }
+  },
+  "events": [
+    {
+      "kind": "stall",
+      "run": "B_seed0",
+      "round": 55,
+      "seconds": 9372.1,
+      "median": 77.9,
+      "factor": 120.3,
+      "at": "2026-09-05T09:25:39+00:00"
+    },
+    {
+      "kind": "stall",
+      "run": "B_seed0",
+      "round": 55,
+      "seconds": 9372.1,
+      "median": 77.9,
+      "factor": 120.3,
+      "at": "2026-09-05T09:25:52+00:00"
+    },
+    {
+      "kind": "verification",
+      "run": "B_seed0",
+      "at": "2026-09-05T14:52:20+00:00",
+      "returncode": 0,
+      "pass": true,
+      "failed_gates": [],
+      "rounds": 250
+    },
+    {
+      "kind": "stall_in_progress",
+      "run": "B_seed0",
+      "stuck_after_round": 249,
+      "waiting_s": 422,
+      "median": 81.1,
+      "at": "2026-09-05T14:59:21+00:00"
+    },
+    {
+      "kind": "stall",
+      "run": "B_seed0",
+      "round": 55,
+      "seconds": 9372.1,
+      "median": 81.1,
+      "factor": 115.5,
+      "at": "2026-09-05T18:31:37+00:00"
+    },
+    {
+      "kind": "stall",
+      "run": "B_seed0",
+      "round": 55,
+      "seconds": 9372.1,
+      "median": 81.1,
+      "factor": 115.5,
+      "at": "2026-09-05T18:32:02+00:00"
+    },
+    {
+      "kind": "verification",
+      "run": "B_seed1",
+      "at": "2026-09-05T22:01:50+00:00",
+      "returncode": 0,
+      "pass": true,
+      "failed_gates": [],
+      "rounds": 250
+    },
+    {
+      "kind": "verification",
+      "run": "B_seed2",
+      "at": "2026-09-06T04:34:33+00:00",
+      "returncode": 0,
+      "pass": true,
+      "failed_gates": [],
+      "rounds": 250
+    },
+    {
+      "kind": "verification",
+      "run": "D_seed0",
+      "at": "2026-09-06T12:04:20+00:00",
+      "returncode": 1,
+      "pass": false,
+      "failed_gates": [
+        "A1-S2/S3 mechanism identity"
+      ],
+      "rounds": 250
+    },
+    {
+      "kind": "stall",
+      "run": "B_seed0",
+      "round": 55,
+      "seconds": 9372.1,
+      "median": 81.1,
+      "factor": 115.5,
+      "at": "2026-09-06T19:22:05+00:00"
+    },
+    {
+      "kind": "verification",
+      "run": "D_seed0",
+      "at": "2026-09-06T19:22:06+00:00",
+      "returncode": 0,
+      "pass": true,
+      "failed_gates": [],
+      "rounds": 250
+    },
+    {
+      "kind": "verification",
+      "run": "D_seed1",
+      "at": "2026-09-06T19:54:26+00:00",
+      "returncode": 0,
+      "pass": true,
+      "failed_gates": [],
+      "rounds": 250
+    },
+    {
+      "kind": "verification",
+      "run": "D_seed2",
+      "at": "2026-09-07T03:04:21+00:00",
+      "returncode": 0,
+      "pass": true,
+      "failed_gates": [],
+      "rounds": 250
+    }
+  ],
+  "updated": "2026-09-07T03:04:21+00:00"
+}

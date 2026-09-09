@@ -1,0 +1,22 @@
+{
+  "note": "computed from committed G9 seed-0 data only, before seeds 1 and 2 existed; reports the operating characteristics of already-fixed bars, changes none of them",
+  "measured": {
+    "owner_correlation_mean": 0.9753471756060252,
+    "owner_correlation_min": 0.9478306589154707,
+    "rho_shared_reference": 0.2
+  },
+  "G9b_demoted": {
+    "p_fail_one_seed": 0.17303250000000003,
+    "p_g9_outcome_or_worse": 0.1730325,
+    "p_fail_in_three_seeds": 0.4344573974569782
+  },
+  "G10_A": {
+    "p_pass_i": 0.986435,
+    "p_pass_ii": 0.9827175,
+    "p_pass_seed": 0.9693575,
+    "p_pass_three_seeds": 0.9108606162509595,
+    "p_pass_meta": 0.9866025
+  },
+  "n_monte_carlo": 400000,
+  "rng_seed": 20260904
+}

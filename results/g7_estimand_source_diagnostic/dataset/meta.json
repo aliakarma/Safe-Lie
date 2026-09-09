@@ -1,0 +1,34 @@
+{
+  "checkpoint": "results/runs_constraint_mc_g2/pilot_A_clean_seed0/checkpoint.pt",
+  "config": "configs/experiment/pilot_A_clean.yaml",
+  "pools": {
+    "eval_pool_a": {
+      "seed": 8801,
+      "n_rounds": 90
+    },
+    "reference_pool": {
+      "seed": 8802,
+      "n_rounds": 270
+    },
+    "eval_pool_b": {
+      "seed": 8803,
+      "n_rounds": 90
+    }
+  },
+  "rollout_length": 2000,
+  "gamma": 0.99,
+  "obs_dim": 63,
+  "agent_ids": [
+    "agent_0",
+    "agent_1",
+    "agent_2",
+    "agent_3",
+    "agent_4",
+    "agent_5"
+  ],
+  "budget_d": 25.0,
+  "restored_round_index": 250,
+  "g7a_round_seed_disjoint": true,
+  "g7a_collisions": [],
+  "wall_clock_s": 2928.595016479492
+}

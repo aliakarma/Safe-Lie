@@ -1,0 +1,80 @@
+{
+  "derivation": "seed 0 = the G9 constant; seed k = int(sha256('safelie/g10/source-entropy/seed=<k>')[:16])",
+  "seeds": {
+    "0": {
+      "seed_entropy": 286314957402113664887331205920951063913,
+      "n_env_seeds": 23100,
+      "n_unique_env_seeds": 23100,
+      "within_run_env_duplicates": 0,
+      "within_run_torch_duplicates": 0,
+      "replica_pairwise_overlap": {
+        "0-1": 0,
+        "0-2": 0,
+        "1-2": 0
+      },
+      "replica_vs_reference_overlap": {
+        "0": 0,
+        "1": 0,
+        "2": 0
+      }
+    },
+    "1": {
+      "seed_entropy": 52021175099534868945312500562751741008,
+      "n_env_seeds": 23100,
+      "n_unique_env_seeds": 23100,
+      "within_run_env_duplicates": 0,
+      "within_run_torch_duplicates": 0,
+      "replica_pairwise_overlap": {
+        "0-1": 0,
+        "0-2": 0,
+        "1-2": 0
+      },
+      "replica_vs_reference_overlap": {
+        "0": 0,
+        "1": 0,
+        "2": 0
+      }
+    },
+    "2": {
+      "seed_entropy": 335268198726974212397240672597355197200,
+      "n_env_seeds": 23100,
+      "n_unique_env_seeds": 23100,
+      "within_run_env_duplicates": 0,
+      "within_run_torch_duplicates": 0,
+      "replica_pairwise_overlap": {
+        "0-1": 0,
+        "0-2": 0,
+        "1-2": 0
+      },
+      "replica_vs_reference_overlap": {
+        "0": 0,
+        "1": 0,
+        "2": 0
+      }
+    }
+  },
+  "cross_seed": {
+    "0-1": {
+      "n_shared_env_seeds": 0,
+      "expected_by_chance": 0.24848151963599097,
+      "sequences_identical": false,
+      "n_shared_with_recorded_g9": 0
+    },
+    "0-2": {
+      "n_shared_env_seeds": 0,
+      "expected_by_chance": 0.24848151963599097,
+      "sequences_identical": false,
+      "n_shared_with_recorded_g9": 0
+    },
+    "1-2": {
+      "n_shared_env_seeds": 0,
+      "expected_by_chance": 0.24848151963599097,
+      "sequences_identical": false
+    }
+  },
+  "replay_vs_recorded": {
+    "run_dir": "results\\runs_constraint_batch_g9\\g9_batch_clean",
+    "n_recorded_replica_env_seeds": 22500,
+    "replay_matches_recorded": true
+  }
+}

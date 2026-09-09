@@ -1,0 +1,125 @@
+==============================================================================
+G2-PEER SOURCE-LAYER REPAIR -- pre-declared gates (docs/g2_gates.md)
+==============================================================================
+
+## Seed-by-seed headline
+
+      seed  task(f20)  task(l20) trueC(f20) trueC(l20)       mech     b_mech   mae_mech  rmse_mech        FSR     lam_mu    lam_max       viol
+pilot_A_clean_seed0     -170.9      -28.1      30.64      30.97      24.61      -7.10      10.34      12.99      0.382      1.062      6.104      0.700
+pilot_A_clean_seed1     -172.1      -24.5      31.22      31.50      24.46      -7.78      10.52      13.42      0.433      1.075      4.846      0.712
+pilot_A_clean_seed2     -170.7      -32.0      32.98      29.59      24.57      -5.50       9.73      12.24      0.396      1.269      7.012      0.662
+
+## Per-source-type calibration (this run) vs G1 baseline
+
+  pilot_A_clean_seed0:
+    own_critic       n=  6 bias=  -0.774 mae=   7.982 rmse=  10.157 corr= 0.411
+    peer_critic      n= 24 bias= -10.261 mae=  14.729 rmse=  16.945 corr= 0.251
+    monitor          n= 12 bias=  -3.941 mae=   9.222 rmse=  11.244 corr= 0.484
+    statistical_effective_m_overall = 1.436 (nominal_effective_m=7)
+  pilot_A_clean_seed1:
+    own_critic       n=  6 bias=  -0.575 mae=   8.320 rmse=  10.609 corr= 0.301
+    peer_critic      n= 24 bias= -11.416 mae=  15.050 rmse=  17.168 corr= 0.237
+    monitor          n= 12 bias=  -4.114 mae=   9.089 rmse=  11.181 corr= 0.436
+    statistical_effective_m_overall = 1.351 (nominal_effective_m=7)
+  pilot_A_clean_seed2:
+    own_critic       n=  6 bias=   0.479 mae=   7.880 rmse=   9.874 corr= 0.398
+    peer_critic      n= 24 bias=  -8.520 mae=  13.666 rmse=  15.893 corr= 0.154
+    monitor          n= 12 bias=  -2.448 mae=   9.531 rmse=  11.626 corr= 0.447
+    statistical_effective_m_overall = 1.483 (nominal_effective_m=7)
+
+## Clean false-safe rate by phase (5 x 50-round blocks)
+
+  pilot_A_clean_seed0: phases=['0.44', '0.35', '0.36', '0.42', '0.33']  worst_agent=agent_0  best_agent=agent_1  overall_fsr=0.382
+  pilot_A_clean_seed1: phases=['0.52', '0.46', '0.36', '0.37', '0.48']  worst_agent=agent_0  best_agent=agent_1  overall_fsr=0.433
+  pilot_A_clean_seed2: phases=['0.39', '0.38', '0.40', '0.39', '0.41']  worst_agent=agent_5  best_agent=agent_1  overall_fsr=0.396
+
+## Dual dynamics
+
+  pilot_A_clean_seed0: mean_lambda=1.062 max_lambda=6.104 corr(residual,dlambda)=0.722
+  pilot_A_clean_seed1: mean_lambda=1.075 max_lambda=4.846 corr(residual,dlambda)=0.720
+  pilot_A_clean_seed2: mean_lambda=1.269 max_lambda=7.012 corr(residual,dlambda)=0.749
+
+==============================================================================
+GATE RESULTS
+==============================================================================
+
+pilot_A_clean_seed0:
+  [FAIL] G2b-bias: |mean bias_peer|=10.261 <= 0.5*G1(7.897)=3.949
+  [FAIL] G2b-mae: mean MAE_peer=14.729 <= 0.75*G1(15.987)=11.990
+  [FAIL] G2c-bias: |mean bias_mech|=7.100 <= 5.0
+  [FAIL] G2c-mae: mech MAE=10.340 <= 0.75*G1(10.553)=7.915
+  [FAIL] G2c-rmse: mech RMSE=12.990 <= 0.75*G1(13.318)=9.989
+  [FAIL] G2d-relative: FSR=0.382 <= 0.5*G1(0.381)=0.191
+  [FAIL] G2d-absolute: FSR=0.382 <= 0.2
+  [PASS] G2e-a: max|residual-(mech-d)|=0.000e+00 <= 1e-09
+  [PASS] G2e-b: sign agreement on 1365 interior cells = 1.0000 >= 0.99
+  [PASS] G2e-c: corr(residual_k, dlambda) = 0.722 > 0
+  [PASS] G2g: true cost head=30.64 -> tail=30.97 (ratio 1.011 <= 1.15)
+  [PASS] G2h-a: all logged fields finite
+  [PASS] G2h-b: max lambda 6.104 < 22.5 (0.24x lambda_max), 0 saturated cells
+  [PASS] G2h-c: tail mean KL 0.0028 <= 0.05, max KL 0.0743 <= 0.5
+  [PASS] G2h-d: tail mean entropy 1.836 > 0.5
+  [PASS] G2h-e: mean |delta lambda| 0.1136 <= 0.45
+
+pilot_A_clean_seed1:
+  [FAIL] G2b-bias: |mean bias_peer|=11.416 <= 0.5*G1(7.865)=3.933
+  [FAIL] G2b-mae: mean MAE_peer=15.050 <= 0.75*G1(15.118)=11.338
+  [FAIL] G2c-bias: |mean bias_mech|=7.781 <= 5.0
+  [FAIL] G2c-mae: mech MAE=10.520 <= 0.75*G1(9.653)=7.240
+  [FAIL] G2c-rmse: mech RMSE=13.424 <= 0.75*G1(12.212)=9.159
+  [FAIL] G2d-relative: FSR=0.433 <= 0.5*G1(0.398)=0.199
+  [FAIL] G2d-absolute: FSR=0.433 <= 0.2
+  [PASS] G2e-a: max|residual-(mech-d)|=0.000e+00 <= 1e-09
+  [PASS] G2e-b: sign agreement on 1332 interior cells = 1.0000 >= 0.99
+  [PASS] G2e-c: corr(residual_k, dlambda) = 0.720 > 0
+  [PASS] G2g: true cost head=31.22 -> tail=31.50 (ratio 1.009 <= 1.15)
+  [PASS] G2h-a: all logged fields finite
+  [PASS] G2h-b: max lambda 4.846 < 22.5 (0.19x lambda_max), 0 saturated cells
+  [PASS] G2h-c: tail mean KL 0.0026 <= 0.05, max KL 0.0800 <= 0.5
+  [PASS] G2h-d: tail mean entropy 1.830 > 0.5
+  [PASS] G2h-e: mean |delta lambda| 0.1187 <= 0.45
+
+pilot_A_clean_seed2:
+  [FAIL] G2b-bias: |mean bias_peer|=8.520 <= 0.5*G1(3.272)=1.636
+  [FAIL] G2b-mae: mean MAE_peer=13.666 <= 0.75*G1(14.470)=10.853
+  [FAIL] G2c-bias: |mean bias_mech|=5.500 <= 5.0
+  [FAIL] G2c-mae: mech MAE=9.735 <= 0.75*G1(9.551)=7.163
+  [FAIL] G2c-rmse: mech RMSE=12.239 <= 0.75*G1(11.938)=8.954
+  [FAIL] G2d-relative: FSR=0.396 <= 0.5*G1(0.457)=0.229
+  [FAIL] G2d-absolute: FSR=0.396 <= 0.2
+  [PASS] G2e-a: max|residual-(mech-d)|=0.000e+00 <= 1e-09
+  [PASS] G2e-b: sign agreement on 1367 interior cells = 1.0000 >= 0.99
+  [PASS] G2e-c: corr(residual_k, dlambda) = 0.749 > 0
+  [PASS] G2g: true cost head=32.98 -> tail=29.59 (ratio 0.897 <= 1.15)
+  [PASS] G2h-a: all logged fields finite
+  [PASS] G2h-b: max lambda 7.012 < 22.5 (0.28x lambda_max), 0 saturated cells
+  [PASS] G2h-c: tail mean KL 0.0026 <= 0.05, max KL 0.0804 <= 0.5
+  [PASS] G2h-d: tail mean entropy 1.888 > 0.5
+  [PASS] G2h-e: mean |delta lambda| 0.1136 <= 0.45
+
+cross-seed:
+  [PASS] G2f-a: per-seed improvement [142.8, 147.6, 138.7] all > 0
+  [PASS] G2f-b: mean improvement 143.0 >= 1.0 x pooled sd 11.7
+  [PASS] G2i-a: 3/3 complete, round counts [250, 250, 250]
+  [PASS] G2i-b: sha=7551e6f69e1a70d8dc543fc6a9c797a3ce66c070, dirty={False}, estimator={'mc_window'}
+  [PASS] G2i-d: source_diversity.json present: True
+
+==============================================================================
+  gate          pilot_A_clean_seed0          pilot_A_clean_seed1          pilot_A_clean_seed2    overall
+==============================================================================
+   G2b                         FAIL                         FAIL                         FAIL       FAIL
+   G2c                         FAIL                         FAIL                         FAIL       FAIL
+   G2d                         FAIL                         FAIL                         FAIL       FAIL
+   G2e                         PASS                         PASS                         PASS       PASS
+   G2f                         PASS                         PASS                         PASS       PASS
+   G2g                         PASS                         PASS                         PASS       PASS
+   G2h                         PASS                         PASS                         PASS       PASS
+   G2i                         PASS                         PASS                         PASS       PASS
+
+==============================================================================
+VERDICT (mechanical, per docs/g2_gates.md, gates G2b-G2i only): FAIL
+  failed gates: G2b, G2c, G2d
+  G2d (clean false-safe rate) failed -- per docs/g2_gates.md this is an automatic FAIL and the task's section 19 stop condition.
+==============================================================================
+
+Wrote results\runs_constraint_mc_g2\g2_gates.json

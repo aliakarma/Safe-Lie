@@ -1,0 +1,62 @@
+
+=== D_seed0 start 2026-09-06T04:34:14+00:00 ===
+AdroitHandRelocateDense-v1, AdroitHandHammerDense-v1, AdroitHandDoorDense-v1 environment's reward functions were updated in v1.2.1 without an environment version update. Therefore, use gymnasium-robotics==1.2.0 for v1 reproducibility or use v2 in gymnasium-robotics>=1.4.3. See https://github.com/Farama-Foundation/Gymnasium-Robotics/pull/220 for more details
+AdroitHandRelocateDense-v1, AdroitHandHammerDense-v1, AdroitHandDoorDense-v1 environment's reward functions were updated in v1.2.1 without an environment version update. Therefore, use gymnasium-robotics==1.2.0 for v1 reproducibility or use v2 in gymnasium-robotics>=1.4.3. See https://github.com/Farama-Foundation/Gymnasium-Robotics/pull/220 for more details
+AdroitHandRelocateDense-v1, AdroitHandHammerDense-v1, AdroitHandDoorDense-v1 environment's reward functions were updated in v1.2.1 without an environment version update. Therefore, use gymnasium-robotics==1.2.0 for v1 reproducibility or use v2 in gymnasium-robotics>=1.4.3. See https://github.com/Farama-Foundation/Gymnasium-Robotics/pull/220 for more details
+AdroitHandRelocateDense-v1, AdroitHandHammerDense-v1, AdroitHandDoorDense-v1 environment's reward functions were updated in v1.2.1 without an environment version update. Therefore, use gymnasium-robotics==1.2.0 for v1 reproducibility or use v2 in gymnasium-robotics>=1.4.3. See https://github.com/Farama-Foundation/Gymnasium-Robotics/pull/220 for more details
+AdroitHandRelocateDense-v1, AdroitHandHammerDense-v1, AdroitHandDoorDense-v1 environment's reward functions were updated in v1.2.1 without an environment version update. Therefore, use gymnasium-robotics==1.2.0 for v1 reproducibility or use v2 in gymnasium-robotics>=1.4.3. See https://github.com/Farama-Foundation/Gymnasium-Robotics/pull/220 for more details
+AdroitHandRelocateDense-v1, AdroitHandHammerDense-v1, AdroitHandDoorDense-v1 environment's reward functions were updated in v1.2.1 without an environment version update. Therefore, use gymnasium-robotics==1.2.0 for v1 reproducibility or use v2 in gymnasium-robotics>=1.4.3. See https://github.com/Farama-Foundation/Gymnasium-Robotics/pull/220 for more details
+AdroitHandRelocateDense-v1, AdroitHandHammerDense-v1, AdroitHandDoorDense-v1 environment's reward functions were updated in v1.2.1 without an environment version update. Therefore, use gymnasium-robotics==1.2.0 for v1 reproducibility or use v2 in gymnasium-robotics>=1.4.3. See https://github.com/Farama-Foundation/Gymnasium-Robotics/pull/220 for more details
+AdroitHandRelocateDense-v1, AdroitHandHammerDense-v1, AdroitHandDoorDense-v1 environment's reward functions were updated in v1.2.1 without an environment version update. Therefore, use gymnasium-robotics==1.2.0 for v1 reproducibility or use v2 in gymnasium-robotics>=1.4.3. See https://github.com/Farama-Foundation/Gymnasium-Robotics/pull/220 for more details
+AdroitHandRelocateDense-v1, AdroitHandHammerDense-v1, AdroitHandDoorDense-v1 environment's reward functions were updated in v1.2.1 without an environment version update. Therefore, use gymnasium-robotics==1.2.0 for v1 reproducibility or use v2 in gymnasium-robotics>=1.4.3. See https://github.com/Farama-Foundation/Gymnasium-Robotics/pull/220 for more details
+AdroitHandRelocateDense-v1, AdroitHandHammerDense-v1, AdroitHandDoorDense-v1 environment's reward functions were updated in v1.2.1 without an environment version update. Therefore, use gymnasium-robotics==1.2.0 for v1 reproducibility or use v2 in gymnasium-robotics>=1.4.3. See https://github.com/Farama-Foundation/Gymnasium-Robotics/pull/220 for more details
+AdroitHandRelocateDense-v1, AdroitHandHammerDense-v1, AdroitHandDoorDense-v1 environment's reward functions were updated in v1.2.1 without an environment version update. Therefore, use gymnasium-robotics==1.2.0 for v1 reproducibility or use v2 in gymnasium-robotics>=1.4.3. See https://github.com/Farama-Foundation/Gymnasium-Robotics/pull/220 for more details
+AdroitHandRelocateDense-v1, AdroitHandHammerDense-v1, AdroitHandDoorDense-v1 environment's reward functions were updated in v1.2.1 without an environment version update. Therefore, use gymnasium-robotics==1.2.0 for v1 reproducibility or use v2 in gymnasium-robotics>=1.4.3. See https://github.com/Farama-Foundation/Gymnasium-Robotics/pull/220 for more details
+AdroitHandRelocateDense-v1, AdroitHandHammerDense-v1, AdroitHandDoorDense-v1 environment's reward functions were updated in v1.2.1 without an environment version update. Therefore, use gymnasium-robotics==1.2.0 for v1 reproducibility or use v2 in gymnasium-robotics>=1.4.3. See https://github.com/Farama-Foundation/Gymnasium-Robotics/pull/220 for more details
+Output directory: results\runs_a1\D_seed0
+Loaded and validated config: run_id=D_seed0, seed=0, env=manyagent_ant, attack=benign_control, defense=mean, sources M=3 (effective_M=3)
+NOTE: env.name='manyagent_ant' runs on the Safe MAMuJoCo adapter (backend=mamujoco). Read safelie/envs/mamujoco.py's docstring before interpreting these numbers, and confirm the cost constraint binds with scripts/calibrate_cost.py.
+Run complete in 26957.7s. Artifacts written to: results\runs_a1\D_seed0
+
+=== gates D_seed0 2026-09-06T12:03:35+00:00 ===
+
+A1 mechanism validation  (B=12.5, M=3, B/M=4.16667)
+  [PASS] clean_in_run_identity
+  [FAIL] attack_in_run_identity
+  [FAIL] attack_vs_clean_round0
+  [PASS] attack_reference_unshifted
+  [PASS] noise_vs_clean_round0
+  [PASS] noise_reference_unshifted
+  [PASS] noise_is_live
+
+MECHANISM VALIDATION FAILS -> C:\Users\Ali Akarma\Desktop\Current Research\ICLR\Paper 1\Safe-Lie\results\runs_a1\D_seed0\a1_mechanism_report.json
+
+=== D_seed0 start 2026-09-06T12:05:54+00:00 ===
+AdroitHandRelocateDense-v1, AdroitHandHammerDense-v1, AdroitHandDoorDense-v1 environment's reward functions were updated in v1.2.1 without an environment version update. Therefore, use gymnasium-robotics==1.2.0 for v1 reproducibility or use v2 in gymnasium-robotics>=1.4.3. See https://github.com/Farama-Foundation/Gymnasium-Robotics/pull/220 for more details
+Output directory: results\runs_a1\D_seed0
+Loaded and validated config: run_id=D_seed0, seed=0, env=manyagent_ant, attack=benign_control, defense=mean, sources M=3 (effective_M=3)
+NOTE: env.name='manyagent_ant' runs on the Safe MAMuJoCo adapter (backend=mamujoco). Read safelie/envs/mamujoco.py's docstring before interpreting these numbers, and confirm the cost constraint binds with scripts/calibrate_cost.py.
+Resumed D_seed0 from round 250 via results\runs_a1\D_seed0\checkpoint.pt
+Run complete in 3.3s. Artifacts written to: results\runs_a1\D_seed0
+
+=== gates D_seed0 2026-09-06T12:06:02+00:00 ===
+
+A1 mechanism validation  (B=12.5, M=3, B/M=4.16667)
+  [PASS] clean_in_run_identity
+  [PASS] noise_vs_clean_round0
+  [PASS] noise_reference_unshifted
+  [PASS] noise_distribution
+  [PASS] noise_is_live
+
+MECHANISM VALIDATION PASSES -> C:\Users\Ali Akarma\Desktop\Current Research\ICLR\Paper 1\Safe-Lie\results\runs_a1\D_seed0\a1_mechanism_report.json
+
+=== gates D_seed0 2026-09-06T12:10:24+00:00 ===
+
+A1 mechanism validation  (B=12.5, M=3, B/M=4.16667)
+  [PASS] clean_in_run_identity
+  [PASS] noise_vs_clean_round0
+  [PASS] noise_reference_unshifted
+  [PASS] noise_distribution
+  [PASS] noise_is_live
+
+MECHANISM VALIDATION PASSES -> C:\Users\Ali Akarma\Desktop\Current Research\ICLR\Paper 1\Safe-Lie\results\runs_a1\D_seed0\a1_mechanism_report.json

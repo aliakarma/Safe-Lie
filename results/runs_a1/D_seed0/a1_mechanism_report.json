@@ -1,0 +1,133 @@
+{
+  "B": 12.5,
+  "M": 3,
+  "B_over_M": 4.166666666666667,
+  "attacked_source": "batch_1",
+  "tolerance": 1e-09,
+  "clean_in_run_identity": {
+    "n_cells": 1500,
+    "expected_pre_minus_post": 0.0,
+    "max_abs_error": 0.0,
+    "frac_cells_within_tol": 1.0,
+    "corrupted_source_ids_logged": [],
+    "pass": true
+  },
+  "noise_vs_clean_round0": {
+    "per_source_logged_value_shift": {
+      "batch_1": {
+        "mean": 0.0,
+        "max_abs": 0.0
+      },
+      "batch_2": {
+        "mean": 0.0,
+        "max_abs": 0.0
+      },
+      "batch_3": {
+        "mean": 0.0,
+        "max_abs": 0.0
+      }
+    },
+    "underlying_draws_identical": true,
+    "aggregate_shift": {
+      "per_owner": [
+        3.829549471,
+        4.279505831,
+        2.157337926,
+        -0.678774935,
+        -3.956064731,
+        5.474993217
+      ],
+      "mean": 1.85109112990506,
+      "expected": null,
+      "pass": null,
+      "note": "condition D is zero-mean i.i.d.; the round-0 shift is one realisation, not a predicted constant"
+    },
+    "attacked_source": "batch_1",
+    "pass": true
+  },
+  "noise_reference_unshifted": {
+    "rounds_checked": [
+      25,
+      75,
+      125,
+      175,
+      225
+    ],
+    "in_run_source_means_match_reports": {
+      "n_cells": 90,
+      "max_abs_error": 0.0,
+      "pass": true
+    },
+    "pass": true,
+    "cross_run_reference": {
+      "rows": [
+        {
+          "round_k": 25,
+          "mean_difference": -1.1738513272289852,
+          "max_abs_difference": 2.419951010121032,
+          "identity_required": false,
+          "identity_holds": false,
+          "far_from_corruption_magnitude": true
+        },
+        {
+          "round_k": 75,
+          "mean_difference": -2.5344815762020647,
+          "max_abs_difference": 2.872979270210287,
+          "identity_required": false,
+          "identity_holds": false,
+          "far_from_corruption_magnitude": true
+        },
+        {
+          "round_k": 125,
+          "mean_difference": -0.43010965636881043,
+          "max_abs_difference": 0.8353318966400067,
+          "identity_required": false,
+          "identity_holds": false,
+          "far_from_corruption_magnitude": true
+        },
+        {
+          "round_k": 175,
+          "mean_difference": 1.3305296863656757,
+          "max_abs_difference": 1.7568365694231929,
+          "identity_required": false,
+          "identity_holds": false,
+          "far_from_corruption_magnitude": true
+        },
+        {
+          "round_k": 225,
+          "mean_difference": -0.24835142864662055,
+          "max_abs_difference": 0.5165279702306549,
+          "identity_required": false,
+          "identity_holds": false,
+          "far_from_corruption_magnitude": true
+        }
+      ],
+      "note": "identity is required only at round 0; beyond it, a nonzero difference is policy divergence -- the attack working"
+    }
+  },
+  "noise_distribution": {
+    "n_cells": 1500,
+    "implied_epsilon_mean": 0.1272178025233563,
+    "mean_tolerance": 1.2909944487358056,
+    "implied_epsilon_sd": 12.848696013767787,
+    "declared_sigma": 12.5,
+    "sd_ratio": 1.027895681101423,
+    "pass": true,
+    "note": "sigma == B numerically: both are budget_ratio * d (\u00a72)"
+  },
+  "noise_is_live": {
+    "round0_aggregate_shift_per_owner": [
+      3.829549,
+      4.279506,
+      2.157338,
+      -0.678775,
+      -3.956065,
+      5.474993
+    ],
+    "all_owners_shifted": true,
+    "shifts_differ_across_owners": true,
+    "pass": true,
+    "note": "D draws one perturbation per (round, owner) -- \u00a75.3; a constant shift across owners would mean it was not i.i.d."
+  },
+  "pass": true
+}

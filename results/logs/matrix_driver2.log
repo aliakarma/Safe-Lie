@@ -1,0 +1,29 @@
+plan=overnight  workers=6
+20 jobs, 12 already complete, 8 to run
+  pilot_C_rce seed 3
+  pilot_D_benign seed 3
+  pilot_E_clean_rce seed 3
+  pilot_A_clean seed 4
+  pilot_B_attack seed 4
+  pilot_C_rce seed 4
+  pilot_D_benign seed 4
+  pilot_E_clean_rce seed 4
+[09:00:46] launched pilot_C_rce seed 3
+[09:00:46] launched pilot_D_benign seed 3
+[09:00:46] launched pilot_E_clean_rce seed 3
+[09:00:46] launched pilot_A_clean seed 4
+[09:00:46] launched pilot_B_attack seed 4
+[09:00:46] launched pilot_C_rce seed 4
+[10:01:26] pilot_D_benign seed 3 OK
+[10:01:26] launched pilot_D_benign seed 4
+[10:02:06] pilot_C_rce seed 3 OK
+[10:02:06] pilot_A_clean seed 4 OK
+[10:02:06] pilot_B_attack seed 4 OK
+[10:02:06] pilot_C_rce seed 4 OK
+[10:02:06] launched pilot_E_clean_rce seed 4
+[10:02:26] pilot_E_clean_rce seed 3 OK
+[11:07:47] pilot_D_benign seed 4 OK
+[11:08:27] pilot_E_clean_rce seed 4 OK
+
+matrix finished in 127.7 min
+  completed: 8   failed: 0

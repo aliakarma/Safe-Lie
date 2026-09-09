@@ -1,0 +1,88 @@
+{
+  "run": "C:\\Users\\Ali Akarma\\Desktop\\Current Research\\ICLR\\Paper 1\\Safe-Lie\\results\\runs_a2\\E_seed0",
+  "condition": "E",
+  "paired_reference": "C:\\Users\\Ali Akarma\\Desktop\\Current Research\\ICLR\\Paper 1\\Safe-Lie\\results\\runs_constraint_batch_g9\\g9_batch_clean",
+  "rounds": 250,
+  "agent_ids": [
+    "agent_0",
+    "agent_1",
+    "agent_2",
+    "agent_3",
+    "agent_4",
+    "agent_5"
+  ],
+  "source_ids": [
+    "batch_1",
+    "batch_2",
+    "batch_3"
+  ],
+  "attacked_source": null,
+  "corrupted_source_ids_in_log": [],
+  "G2_map_identity": {
+    "n_cells": 1500,
+    "max_abs_error": {
+      "point_estimate": 0.0,
+      "spread": 0.0,
+      "retained_n": 0.0,
+      "applied_margin": 0.0,
+      "pessimistic_estimate": 0.0,
+      "mechanism_reported_cost_return": 0.0,
+      "constraint_residual": 0.0
+    },
+    "attack_applied": false,
+    "shift_applied": 0.0,
+    "pass": true
+  },
+  "G7_i_degenerate_structure": {
+    "frac_retained_n_eq_1": 1.0,
+    "frac_degenerate_true": 1.0,
+    "pass": true
+  },
+  "G7_ii_margin_is_constant": {
+    "frac_spread_eq_sigma_min": 1.0,
+    "frac_margin_eq_beta_sigma_min": 1.0,
+    "applied_margin_value": 0.0015,
+    "mad_ever_nonzero": false,
+    "epsilon_offline_unique": [
+      0.001
+    ],
+    "guarantee_in_force_frac_true": 1.0,
+    "theoretical_condition_ever_active": false,
+    "note": "MAD is structurally 0 at |T|=1, so the spread is always floored to sigma_min and the margin is the constant beta*sigma_min. The MAD condition is never active and guarantee_in_force is vacuous (docs/a2_rce_gates.md section 4).",
+    "pass": true
+  },
+  "G7_iii_source_set": {
+    "note": "condition E carries no attack; nothing to trim adversarially",
+    "frac_retained_equals_median": 1.0,
+    "pass": true
+  },
+  "G7_iv_within_run_counterfactual": {
+    "note": "not applicable to a clean condition",
+    "pass": true
+  },
+  "G7_v_source_ordering_stability": {
+    "frac_consecutive_rounds_same_order": 0.1706827309236948,
+    "descriptive_only": true
+  },
+  "G1_ii_crn_round0": {
+    "paired_run": "C:\\Users\\Ali Akarma\\Desktop\\Current Research\\ICLR\\Paper 1\\Safe-Lie\\results\\runs_constraint_batch_g9\\g9_batch_clean",
+    "max_abs_pre_attack_difference": 0.0,
+    "per_source_max_abs": {
+      "batch_1": 0.0,
+      "batch_2": 0.0,
+      "batch_3": 0.0
+    },
+    "underlying_draws_identical": true,
+    "pass": true
+  },
+  "finite": true,
+  "gates": {
+    "G2_map_identity": true,
+    "G7_i_degenerate_structure": true,
+    "G7_ii_margin_is_constant": true,
+    "G7_iii_source_set": true,
+    "G7_iv_within_run_counterfactual": true,
+    "G1_ii_crn_round0": true
+  },
+  "all_pass": true
+}

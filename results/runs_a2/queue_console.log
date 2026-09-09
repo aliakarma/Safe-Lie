@@ -1,0 +1,14 @@
+[PASS] C_seed0  vs b_seed0.yaml
+        differs only in: ['defense.f', 'defense.name', 'output_dir', 'run_id']
+[PASS] C_seed1  vs b_seed1.yaml
+        differs only in: ['defense.f', 'defense.name', 'output_dir', 'run_id']
+[PASS] C_seed2  vs b_seed2.yaml
+        differs only in: ['defense.f', 'defense.name', 'output_dir', 'run_id']
+[PASS] E_seed0  vs g9_batch_clean.yaml
+        differs only in: ['defense.f', 'defense.name', 'output_dir', 'run_id']
+[PASS] E_seed1  vs g10_batch_clean_seed1.yaml
+        differs only in: ['defense.f', 'defense.name', 'output_dir', 'run_id']
+[PASS] E_seed2  vs g10_batch_clean_seed2.yaml
+        differs only in: ['defense.f', 'defense.name', 'output_dir', 'run_id']
+
+ALL CONFIGS PASS -> results\runs_a2\a2_frozen_verification.json

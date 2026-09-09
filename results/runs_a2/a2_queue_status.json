@@ -1,0 +1,84 @@
+{
+  "started": "2026-09-07T07:50:20+00:00",
+  "queue": [
+    "C_seed0",
+    "E_seed0",
+    "C_seed1",
+    "E_seed1",
+    "C_seed2",
+    "E_seed2"
+  ],
+  "runs": {
+    "C_seed0": {
+      "started": "2026-09-07T07:50:20+00:00",
+      "config": "configs\\experiment\\a2\\c_seed0.yaml",
+      "condition": "C",
+      "seed": 0,
+      "attacked_source": "batch_1",
+      "paired_no_rce_run": "results\\runs_a1\\B_seed0",
+      "resumed_from_round": 0,
+      "status": "complete",
+      "finished": "2026-09-07T19:52:33+00:00",
+      "wall_clock_s": 43333.1,
+      "returncode": 0,
+      "gates_pass": true,
+      "gate_note": "ok"
+    },
+    "E_seed0": {
+      "started": "2026-09-07T19:52:34+00:00",
+      "config": "configs\\experiment\\a2\\e_seed0.yaml",
+      "condition": "E",
+      "seed": 0,
+      "attacked_source": null,
+      "paired_no_rce_run": "results\\runs_constraint_batch_g9\\g9_batch_clean",
+      "resumed_from_round": 0,
+      "status": "complete",
+      "finished": "2026-09-08T04:06:30+00:00",
+      "wall_clock_s": 29636.0,
+      "returncode": 0,
+      "gates_pass": true,
+      "gate_note": "ok"
+    },
+    "C_seed1": {
+      "started": "2026-09-08T04:06:31+00:00",
+      "config": "configs\\experiment\\a2\\c_seed1.yaml",
+      "condition": "C",
+      "seed": 1,
+      "attacked_source": "batch_2",
+      "paired_no_rce_run": "results\\runs_a1\\B_seed1",
+      "resumed_from_round": 0,
+      "status": "complete",
+      "finished": "2026-09-08T12:13:22+00:00",
+      "wall_clock_s": 29211.1,
+      "returncode": 0,
+      "gates_pass": true,
+      "gate_note": "ok"
+    },
+    "E_seed1": {
+      "started": "2026-09-08T12:13:23+00:00",
+      "config": "configs\\experiment\\a2\\e_seed1.yaml",
+      "condition": "E",
+      "seed": 1,
+      "attacked_source": null,
+      "paired_no_rce_run": "results\\runs_constraint_batch_g10\\seed1",
+      "resumed_from_round": 0,
+      "status": "complete",
+      "finished": "2026-09-08T19:58:46+00:00",
+      "wall_clock_s": 27922.3,
+      "returncode": 0,
+      "gates_pass": true,
+      "gate_note": "ok"
+    },
+    "C_seed2": {
+      "started": "2026-09-08T19:58:46+00:00",
+      "config": "configs\\experiment\\a2\\c_seed2.yaml",
+      "condition": "C",
+      "seed": 2,
+      "attacked_source": "batch_3",
+      "paired_no_rce_run": "results\\runs_a1\\B_seed2",
+      "resumed_from_round": 0,
+      "status": "running"
+    }
+  },
+  "halted": null
+}

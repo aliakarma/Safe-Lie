@@ -1,0 +1,10 @@
+
+=== launched 2026-09-01 02:49:16 ===
+AdroitHandRelocateDense-v1, AdroitHandHammerDense-v1, AdroitHandDoorDense-v1 environment's reward functions were updated in v1.2.1 without an environment version update. Therefore, use gymnasium-robotics==1.2.0 for v1 reproducibility or use v2 in gymnasium-robotics>=1.4.3. See https://github.com/Farama-Foundation/Gymnasium-Robotics/pull/220 for more details
+
+=== launched 2026-09-01 09:00:46 ===
+AdroitHandRelocateDense-v1, AdroitHandHammerDense-v1, AdroitHandDoorDense-v1 environment's reward functions were updated in v1.2.1 without an environment version update. Therefore, use gymnasium-robotics==1.2.0 for v1 reproducibility or use v2 in gymnasium-robotics>=1.4.3. See https://github.com/Farama-Foundation/Gymnasium-Robotics/pull/220 for more details
+Loaded and validated config: run_id=pilot_A_clean_seed4, seed=4, env=manyagent_ant, attack=none, defense=mean, sources M=7 (effective_M=7)
+NOTE: env.name='manyagent_ant' runs on the Safe MAMuJoCo adapter (backend=mamujoco). Read safelie/envs/mamujoco.py's docstring before interpreting these numbers, and confirm the cost constraint binds with scripts/calibrate_cost.py.
+Resumed pilot_A_clean_seed4 from round 69 via results\runs\pilot_A_clean_seed4\checkpoint.pt
+Run complete in 3671.6s. Artifacts written to: results\runs\pilot_A_clean_seed4

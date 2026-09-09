@@ -1,0 +1,197 @@
+{
+  "pass": true,
+  "configs": {
+    "C_seed0": {
+      "config": "configs/experiment/a2/c_seed0.yaml",
+      "reference": "configs/experiment/a1/b_seed0.yaml",
+      "differing_keys": [
+        "defense.f",
+        "defense.name",
+        "output_dir",
+        "run_id"
+      ],
+      "illegal_differences": [],
+      "seed_equal": true,
+      "seed_entropy_equal": true,
+      "defense": {
+        "name": "rce",
+        "f": 1,
+        "beta": 1.5,
+        "sigma_min": 0.001,
+        "min_retained": 3,
+        "use_reliability_weights": false,
+        "calibration_rounds": 20,
+        "calibration_alpha": 0.05
+      },
+      "defense_matches_declared": true,
+      "M": 3,
+      "retained_size_M_minus_2f": 1,
+      "attack_identical_to_B": true,
+      "attacked_source": [
+        "batch_1"
+      ],
+      "expected_attacked_source": [
+        "batch_1"
+      ],
+      "budget_ratio": 0.5,
+      "pass": true
+    },
+    "C_seed1": {
+      "config": "configs/experiment/a2/c_seed1.yaml",
+      "reference": "configs/experiment/a1/b_seed1.yaml",
+      "differing_keys": [
+        "defense.f",
+        "defense.name",
+        "output_dir",
+        "run_id"
+      ],
+      "illegal_differences": [],
+      "seed_equal": true,
+      "seed_entropy_equal": true,
+      "defense": {
+        "name": "rce",
+        "f": 1,
+        "beta": 1.5,
+        "sigma_min": 0.001,
+        "min_retained": 3,
+        "use_reliability_weights": false,
+        "calibration_rounds": 20,
+        "calibration_alpha": 0.05
+      },
+      "defense_matches_declared": true,
+      "M": 3,
+      "retained_size_M_minus_2f": 1,
+      "attack_identical_to_B": true,
+      "attacked_source": [
+        "batch_2"
+      ],
+      "expected_attacked_source": [
+        "batch_2"
+      ],
+      "budget_ratio": 0.5,
+      "pass": true
+    },
+    "C_seed2": {
+      "config": "configs/experiment/a2/c_seed2.yaml",
+      "reference": "configs/experiment/a1/b_seed2.yaml",
+      "differing_keys": [
+        "defense.f",
+        "defense.name",
+        "output_dir",
+        "run_id"
+      ],
+      "illegal_differences": [],
+      "seed_equal": true,
+      "seed_entropy_equal": true,
+      "defense": {
+        "name": "rce",
+        "f": 1,
+        "beta": 1.5,
+        "sigma_min": 0.001,
+        "min_retained": 3,
+        "use_reliability_weights": false,
+        "calibration_rounds": 20,
+        "calibration_alpha": 0.05
+      },
+      "defense_matches_declared": true,
+      "M": 3,
+      "retained_size_M_minus_2f": 1,
+      "attack_identical_to_B": true,
+      "attacked_source": [
+        "batch_3"
+      ],
+      "expected_attacked_source": [
+        "batch_3"
+      ],
+      "budget_ratio": 0.5,
+      "pass": true
+    },
+    "E_seed0": {
+      "config": "configs/experiment/a2/e_seed0.yaml",
+      "reference": "configs/experiment/g9_batch_clean.yaml",
+      "differing_keys": [
+        "defense.f",
+        "defense.name",
+        "output_dir",
+        "run_id"
+      ],
+      "illegal_differences": [],
+      "seed_equal": true,
+      "seed_entropy_equal": true,
+      "defense": {
+        "name": "rce",
+        "f": 1,
+        "beta": 1.5,
+        "sigma_min": 0.001,
+        "min_retained": 3,
+        "use_reliability_weights": false,
+        "calibration_rounds": 20,
+        "calibration_alpha": 0.05
+      },
+      "defense_matches_declared": true,
+      "M": 3,
+      "retained_size_M_minus_2f": 1,
+      "attack_is_none": true,
+      "attacked_source": null,
+      "pass": true
+    },
+    "E_seed1": {
+      "config": "configs/experiment/a2/e_seed1.yaml",
+      "reference": "configs/experiment/g10_batch_clean_seed1.yaml",
+      "differing_keys": [
+        "defense.f",
+        "defense.name",
+        "output_dir",
+        "run_id"
+      ],
+      "illegal_differences": [],
+      "seed_equal": true,
+      "seed_entropy_equal": true,
+      "defense": {
+        "name": "rce",
+        "f": 1,
+        "beta": 1.5,
+        "sigma_min": 0.001,
+        "min_retained": 3,
+        "use_reliability_weights": false,
+        "calibration_rounds": 20,
+        "calibration_alpha": 0.05
+      },
+      "defense_matches_declared": true,
+      "M": 3,
+      "retained_size_M_minus_2f": 1,
+      "attack_is_none": true,
+      "attacked_source": null,
+      "pass": true
+    },
+    "E_seed2": {
+      "config": "configs/experiment/a2/e_seed2.yaml",
+      "reference": "configs/experiment/g10_batch_clean_seed2.yaml",
+      "differing_keys": [
+        "defense.f",
+        "defense.name",
+        "output_dir",
+        "run_id"
+      ],
+      "illegal_differences": [],
+      "seed_equal": true,
+      "seed_entropy_equal": true,
+      "defense": {
+        "name": "rce",
+        "f": 1,
+        "beta": 1.5,
+        "sigma_min": 0.001,
+        "min_retained": 3,
+        "use_reliability_weights": false,
+        "calibration_rounds": 20,
+        "calibration_alpha": 0.05
+      },
+      "defense_matches_declared": true,
+      "M": 3,
+      "retained_size_M_minus_2f": 1,
+      "attack_is_none": true,
+      "attacked_source": null,
+      "pass": true
+    }
+  }
+}

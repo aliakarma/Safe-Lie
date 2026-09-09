@@ -1,0 +1,149 @@
+{
+  "pass": true,
+  "configs": {
+    "B_seed0": {
+      "config": "configs/experiment/a1/b_seed0.yaml",
+      "clean_reference": "configs/experiment/g9_batch_clean.yaml",
+      "differing_keys": [
+        "attack.budget_ratio",
+        "attack.corrupted_source_ids",
+        "attack.f",
+        "attack.name",
+        "output_dir",
+        "run_id"
+      ],
+      "illegal_differences": [],
+      "seed_equal": true,
+      "seed_entropy_equal": true,
+      "attacked_source": [
+        "batch_1"
+      ],
+      "expected_attacked_source": [
+        "batch_1"
+      ],
+      "budget_ratio": 0.5,
+      "defense_is_undefended": true,
+      "pass": true
+    },
+    "B_seed1": {
+      "config": "configs/experiment/a1/b_seed1.yaml",
+      "clean_reference": "configs/experiment/g10_batch_clean_seed1.yaml",
+      "differing_keys": [
+        "attack.budget_ratio",
+        "attack.corrupted_source_ids",
+        "attack.f",
+        "attack.name",
+        "output_dir",
+        "run_id"
+      ],
+      "illegal_differences": [],
+      "seed_equal": true,
+      "seed_entropy_equal": true,
+      "attacked_source": [
+        "batch_2"
+      ],
+      "expected_attacked_source": [
+        "batch_2"
+      ],
+      "budget_ratio": 0.5,
+      "defense_is_undefended": true,
+      "pass": true
+    },
+    "B_seed2": {
+      "config": "configs/experiment/a1/b_seed2.yaml",
+      "clean_reference": "configs/experiment/g10_batch_clean_seed2.yaml",
+      "differing_keys": [
+        "attack.budget_ratio",
+        "attack.corrupted_source_ids",
+        "attack.f",
+        "attack.name",
+        "output_dir",
+        "run_id"
+      ],
+      "illegal_differences": [],
+      "seed_equal": true,
+      "seed_entropy_equal": true,
+      "attacked_source": [
+        "batch_3"
+      ],
+      "expected_attacked_source": [
+        "batch_3"
+      ],
+      "budget_ratio": 0.5,
+      "defense_is_undefended": true,
+      "pass": true
+    },
+    "D_seed0": {
+      "config": "configs/experiment/a1/d_seed0.yaml",
+      "clean_reference": "configs/experiment/g9_batch_clean.yaml",
+      "differing_keys": [
+        "attack.budget_ratio",
+        "attack.corrupted_source_ids",
+        "attack.f",
+        "attack.name",
+        "output_dir",
+        "run_id"
+      ],
+      "illegal_differences": [],
+      "seed_equal": true,
+      "seed_entropy_equal": true,
+      "attacked_source": [
+        "batch_1"
+      ],
+      "expected_attacked_source": [
+        "batch_1"
+      ],
+      "budget_ratio": 0.5,
+      "defense_is_undefended": true,
+      "pass": true
+    },
+    "D_seed1": {
+      "config": "configs/experiment/a1/d_seed1.yaml",
+      "clean_reference": "configs/experiment/g10_batch_clean_seed1.yaml",
+      "differing_keys": [
+        "attack.budget_ratio",
+        "attack.corrupted_source_ids",
+        "attack.f",
+        "attack.name",
+        "output_dir",
+        "run_id"
+      ],
+      "illegal_differences": [],
+      "seed_equal": true,
+      "seed_entropy_equal": true,
+      "attacked_source": [
+        "batch_2"
+      ],
+      "expected_attacked_source": [
+        "batch_2"
+      ],
+      "budget_ratio": 0.5,
+      "defense_is_undefended": true,
+      "pass": true
+    },
+    "D_seed2": {
+      "config": "configs/experiment/a1/d_seed2.yaml",
+      "clean_reference": "configs/experiment/g10_batch_clean_seed2.yaml",
+      "differing_keys": [
+        "attack.budget_ratio",
+        "attack.corrupted_source_ids",
+        "attack.f",
+        "attack.name",
+        "output_dir",
+        "run_id"
+      ],
+      "illegal_differences": [],
+      "seed_equal": true,
+      "seed_entropy_equal": true,
+      "attacked_source": [
+        "batch_3"
+      ],
+      "expected_attacked_source": [
+        "batch_3"
+      ],
+      "budget_ratio": 0.5,
+      "defense_is_undefended": true,
+      "pass": true
+    }
+  }
+}
