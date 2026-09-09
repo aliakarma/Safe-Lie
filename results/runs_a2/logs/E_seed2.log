@@ -1,5 +1,5 @@
 
-=== C_seed2 start 2026-09-08T19:58:46+00:00 ===
+=== E_seed2 start 2026-09-09T04:11:37+00:00 ===
 AdroitHandRelocateDense-v1, AdroitHandHammerDense-v1, AdroitHandDoorDense-v1 environment's reward functions were updated in v1.2.1 without an environment version update. Therefore, use gymnasium-robotics==1.2.0 for v1 reproducibility or use v2 in gymnasium-robotics>=1.4.3. See https://github.com/Farama-Foundation/Gymnasium-Robotics/pull/220 for more details
 AdroitHandRelocateDense-v1, AdroitHandHammerDense-v1, AdroitHandDoorDense-v1 environment's reward functions were updated in v1.2.1 without an environment version update. Therefore, use gymnasium-robotics==1.2.0 for v1 reproducibility or use v2 in gymnasium-robotics>=1.4.3. See https://github.com/Farama-Foundation/Gymnasium-Robotics/pull/220 for more details
 AdroitHandRelocateDense-v1, AdroitHandHammerDense-v1, AdroitHandDoorDense-v1 environment's reward functions were updated in v1.2.1 without an environment version update. Therefore, use gymnasium-robotics==1.2.0 for v1 reproducibility or use v2 in gymnasium-robotics>=1.4.3. See https://github.com/Farama-Foundation/Gymnasium-Robotics/pull/220 for more details
@@ -1647,13 +1647,13 @@ RCE: retained set size 1 < min_retained=3; MAD=0 is unreliable or exactly zero. 
 RCE: retained set size 1 < min_retained=3; MAD=0 is unreliable or exactly zero. Flooring spread at sigma_min=0.001 and marking guarantee_in_force=False for this round rather than silently returning a confident-looking margin (PROJECT_REPORT.md §13.2/§R10.2, smoke test S8).
 RCE: retained set size 1 < min_retained=3; MAD=0 is unreliable or exactly zero. Flooring spread at sigma_min=0.001 and marking guarantee_in_force=False for this round rather than silently returning a confident-looking margin (PROJECT_REPORT.md §13.2/§R10.2, smoke test S8).
 RCE: retained set size 1 < min_retained=3; MAD=0 is unreliable or exactly zero. Flooring spread at sigma_min=0.001 and marking guarantee_in_force=False for this round rather than silently returning a confident-looking margin (PROJECT_REPORT.md §13.2/§R10.2, smoke test S8).
-Output directory: results\runs_a2\C_seed2
-Loaded and validated config: run_id=C_seed2, seed=2, env=manyagent_ant, attack=primary, defense=rce, sources M=3 (effective_M=3)
+Output directory: results\runs_a2\E_seed2
+Loaded and validated config: run_id=E_seed2, seed=2, env=manyagent_ant, attack=none, defense=rce, sources M=3 (effective_M=3)
 NOTE: env.name='manyagent_ant' runs on the Safe MAMuJoCo adapter (backend=mamujoco). Read safelie/envs/mamujoco.py's docstring before interpreting these numbers, and confirm the cost constraint binds with scripts/calibrate_cost.py.
-Run complete in 29564.2s. Artifacts written to: results\runs_a2\C_seed2
+Run complete in 28212.2s. Artifacts written to: results\runs_a2\E_seed2
 
-=== gates C_seed2 2026-09-09T04:11:36+00:00 ===
-=== A2 RCE mechanism validation: C:\Users\Ali Akarma\Desktop\Current Research\ICLR\Paper 1\Safe-Lie\results\runs_a2\C_seed2 (condition C) ===
+=== gates E_seed2 2026-09-09T12:01:53+00:00 ===
+=== A2 RCE mechanism validation: C:\Users\Ali Akarma\Desktop\Current Research\ICLR\Paper 1\Safe-Lie\results\runs_a2\E_seed2 (condition E) ===
   [PASS] G2_map_identity
   [PASS] G7_i_degenerate_structure
   [PASS] G7_ii_margin_is_constant
@@ -1661,5 +1661,5 @@ Run complete in 29564.2s. Artifacts written to: results\runs_a2\C_seed2
   [PASS] G7_iv_within_run_counterfactual
   [PASS] G1_ii_crn_round0
   finite: True
--> C:\Users\Ali Akarma\Desktop\Current Research\ICLR\Paper 1\Safe-Lie\results\runs_a2\C_seed2\a2_mechanism_report.json
+-> C:\Users\Ali Akarma\Desktop\Current Research\ICLR\Paper 1\Safe-Lie\results\runs_a2\E_seed2\a2_mechanism_report.json
 ALL PASS

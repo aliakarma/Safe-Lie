@@ -1,21 +1,30 @@
 {
-  "run_id": "C_seed2",
+  "run_id": "E_seed2",
   "seed": 2,
   "status": "complete",
-  "written_at": "2026-09-09T04:11:32.187081+00:00",
+  "written_at": "2026-09-09T12:01:48.106547+00:00",
   "git": {
     "sha": "dcf48fae9d52f4dc726e27c9894835476c956698",
     "dirty": true,
     "dirty_paths": [
       "esults/runs_a2/C_seed2/oracle.jsonl",
-      "results/runs_a2/C_seed2/rounds.jsonl"
+      "results/runs_a2/C_seed2/a2_mechanism_report.json",
+      "results/runs_a2/C_seed2/rounds.jsonl",
+      "results/runs_a2/C_seed2/run_metadata.json",
+      "results/runs_a2/C_seed2/source_seeds.jsonl",
+      "results/runs_a2/C_seed2/validation_reference.jsonl",
+      "results/runs_a2/E_seed2/",
+      "results/runs_a2/a2_queue_status.json",
+      "results/runs_a2/calib_E_seed2/",
+      "results/runs_a2/logs/C_seed2.log",
+      "results/runs_a2/logs/E_seed2.log"
     ]
   },
   "python": "3.11.9 (tags/v3.11.9:de54cf5, Apr  2 2024, 10:12:12) [MSC v.1938 64 bit (AMD64)]",
   "platform": "Windows-10-10.0.26200-SP0",
   "num_rounds_planned": 250,
   "config_snapshot": {
-    "run_id": "C_seed2",
+    "run_id": "E_seed2",
     "seed": 2,
     "env": {
       "name": "manyagent_ant",
@@ -54,18 +63,16 @@
       ]
     },
     "attack": {
-      "name": "primary",
-      "f": 1,
-      "budget_ratio": 0.5,
+      "name": "none",
+      "f": 0,
+      "budget_ratio": 0.0,
       "kappa": 1.0,
       "nu_ratio": 0.05,
       "direction": "negative",
       "support": "persistent",
       "adaptivity": "static",
       "consistency": "consistent",
-      "corrupted_source_ids": [
-        "batch_3"
-      ]
+      "corrupted_source_ids": null
     },
     "defense": {
       "name": "rce",
@@ -119,12 +126,12 @@
   "checkpoint": "checkpoint.pt",
   "eval_every": 1,
   "timing": {
-    "source_s": 23092.87918114662,
-    "oracle_s": 1544.5745635032654,
-    "learner_total_s": 25615.850140094757,
-    "wall_clock_s": 27169.826765060425,
-    "s_per_round": 108.6793070602417,
-    "source_s_per_round": 92.37151672458648
+    "source_s": 22318.67136836052,
+    "oracle_s": 1499.6971783638,
+    "learner_total_s": 24784.11948466301,
+    "wall_clock_s": 26292.8305311203,
+    "s_per_round": 105.17132212448121,
+    "source_s_per_round": 89.27468547344208
   },
   "env_steps": {
     "ppo": 500000,

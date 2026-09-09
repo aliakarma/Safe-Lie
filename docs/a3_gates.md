@@ -528,3 +528,59 @@ structural constants at `M=3, f=1`, independent of the input values. They
 had never been checked on a second architecture. They survive one. This
 sharpens rather than changes the A2 finding: at M=3 the margin is so inert
 that it is invariant even to a change of CPU architecture.
+
+---
+
+## 13. Addendum — A2's final numbers correct one figure quoted in section 2
+
+**Added 2026-09-09, after A2 completed all three seeds and passed, and before
+any A3 run existed.** Sections 1-12 are unedited.
+
+Section 2 states, as motivation for A3's sharpest prediction, that *"A2
+measured `E − A = +0.437`"*. That figure was an interim read taken when only
+**two** of A2's three seeds had finished. A2's final three-seed value is:
+
+| | interim (2 seeds, quoted in section 2) | **final (3 seeds)** |
+|---|---|---|
+| `E − A` | +0.437 | **+0.122** |
+| per-seed | [+0.466, +0.409] | [+0.466, +0.409, **−0.508**] |
+| sign-consistent | yes | **no** |
+| 95% CI | — | [−1.236, +1.480] |
+
+The third seed came in negative and roughly cancelled the first two. **At
+M=3, clean RCE's effect on true cost is not distinguishable from zero**, and
+is not sign-consistent, which is exactly what the mechanism predicts once the
+margin is known to be a constant: trimming to a single retained value costs
+some precision but adds no systematic conservatism, so the net is small and
+seed-dependent.
+
+### What this does to A3's prediction
+
+The prediction itself is unchanged and remains as pre-declared: **`E' − A' <
+0`**, sign-consistent across seeds. What changes is the *claim that can be
+made if it holds*. Section 2 calls this a "sign FLIP" between A2 and A3. That
+framing is no longer available, because A2 established no sign to flip from.
+
+The correct statement, fixed here before any A3 data exists:
+
+- **If `E' − A' < 0` in all seeds:** A3 has shown clean RCE becomes
+  *systematically* safer once the margin is live — measured against an M=3
+  baseline that is indistinguishable from zero, not against a positive one.
+  This is a weaker headline than "the sign flips" and is the one that will be
+  reported.
+- **If `E' − A' ≈ 0`:** the margin is live (A3-G3) but does not move the
+  policy. That is a real and reportable negative result about `β = 1.5`, not
+  a failed run.
+- **If `E' − A' > 0`:** the prediction is refuted and will be reported as
+  refuted.
+
+This correction makes A3's prediction *harder* to claim credit for, not
+easier. It is recorded rather than silently fixed because section 2 was
+written before the data and its error was to quote an incomplete run as if it
+were final.
+
+### A2's headline, for the record
+
+Interaction `(C−E)−(B−A) = −3.202`, negative in all three seeds, 95% CI
+[−4.725, −1.680]; RCE removes **80.3 %** of the attack's effect on true cost.
+All six A2 gates pass. **A3's precondition is met.**
