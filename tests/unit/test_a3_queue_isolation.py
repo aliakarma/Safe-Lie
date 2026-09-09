@@ -15,6 +15,7 @@ status files, and starts no run. The scientific run order within a seed
 
 from __future__ import annotations
 
+import importlib.util
 import json
 import subprocess
 import sys
@@ -28,11 +29,36 @@ QUEUE = ROOT / "scripts" / "a3_run_queue.py"
 OUT = ROOT / "results" / "runs_a3"
 
 
-def run_queue(*args: str) -> subprocess.CompletedProcess:
-    return subprocess.run(
+def _load_queue_module():
+    """Import the queue script as a module, for the tests that exercise one of
+    its functions directly rather than through a subprocess."""
+    spec = importlib.util.spec_from_file_location("a3_run_queue", QUEUE)
+    mod = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def run_queue(*args: str, expect_ok: bool = True) -> subprocess.CompletedProcess:
+    """Run the queue and, by default, REQUIRE it to exit 0.
+
+    Checking the return code here rather than at each call site is deliberate.
+    An earlier version left it to the caller, and two tests did not check --
+    which let a crashed queue process pass as a success and hid an
+    intermittent `os.replace` failure that only showed up as a stray `.tmp`
+    file several tests later. A queue that dies is never an acceptable
+    outcome except where a test explicitly asks for one (`expect_ok=False`).
+    """
+    r = subprocess.run(
         [sys.executable, str(QUEUE), *args],
         cwd=str(ROOT), capture_output=True, text=True, timeout=300,
     )
+    if expect_ok:
+        assert r.returncode == 0, (
+            f"queue exited {r.returncode} for args {args}\n"
+            f"--- stdout ---\n{r.stdout}\n--- stderr ---\n{r.stderr}"
+        )
+    return r
 
 
 @pytest.fixture
@@ -42,7 +68,7 @@ def clean_status():
     def _paths():
         return [OUT / f"a3_queue_status_seed{s}.json" for s in (0, 1, 2)] + \
                [OUT / f".a3_queue_seed{s}.lock" for s in (0, 1, 2)] + \
-               [OUT / ".a3_queue.lock"]
+               [OUT / ".a3_queue.lock"] + list(OUT.glob("*.tmp"))
 
     for p in _paths():
         p.unlink(missing_ok=True)
@@ -110,6 +136,56 @@ def test_no_temp_files_are_left_behind(clean_status):
     assert not list(OUT.glob("*.tmp")), "atomic-rewrite temp file was not replaced"
 
 
+def test_write_status_survives_a_transient_replace_failure(tmp_path, monkeypatch):
+    """A bookkeeping write must not be able to end a multi-day campaign.
+
+    On Windows `os.replace` raises PermissionError if anything holds a
+    momentary handle to either path -- a virus scanner or the search indexer
+    is enough, and it happens under load. Unhandled, that kills the queue
+    process and halts a seed over a status write. This is the regression: two
+    failures then success, no exception, no stray temp file.
+    """
+    queue = _load_queue_module()
+    monkeypatch.setattr(queue, "OUT_ROOT", tmp_path)
+    target = tmp_path / "a3_queue_status_seed0.json"
+
+    real_replace = queue.os.replace
+    calls = {"n": 0}
+
+    def flaky(src, dst):
+        calls["n"] += 1
+        if calls["n"] <= 2:
+            raise PermissionError("simulated transient sharing violation")
+        return real_replace(src, dst)
+
+    monkeypatch.setattr(queue.os, "replace", flaky)
+    monkeypatch.setattr(queue.time, "sleep", lambda _s: None)   # no real delay
+
+    queue.write_status({"seed_scope": 0, "runs": {}}, target)
+
+    assert calls["n"] == 3                       # two failures, then success
+    assert json.loads(target.read_text())["seed_scope"] == 0
+    assert not list(tmp_path.glob("*.tmp"))
+
+
+def test_write_status_cleans_up_when_replace_never_succeeds(tmp_path, monkeypatch):
+    """If it genuinely cannot write, the error still propagates -- silently
+    losing the audit trail would be worse than failing -- but no temp file is
+    left behind for a later reader to mistake for status."""
+    queue = _load_queue_module()
+    monkeypatch.setattr(queue, "OUT_ROOT", tmp_path)
+    monkeypatch.setattr(queue.time, "sleep", lambda _s: None)
+
+    def always_fails(src, dst):
+        raise PermissionError("permanent")
+
+    monkeypatch.setattr(queue.os, "replace", always_fails)
+
+    with pytest.raises(PermissionError):
+        queue.write_status({"seed_scope": 0}, tmp_path / "a3_queue_status_seed0.json")
+    assert not list(tmp_path.glob("*.tmp"))
+
+
 # ---------------------------------------------------------------------------
 # Locking
 # ---------------------------------------------------------------------------
@@ -123,7 +199,7 @@ def test_a_second_process_on_the_same_seed_is_refused(clean_status):
     OUT.mkdir(parents=True, exist_ok=True)
     lock.write_text("pid=999999 started=test", encoding="utf-8")
     try:
-        r = run_queue("--seed", "0", "--dry-run")
+        r = run_queue("--seed", "0", "--dry-run", expect_ok=False)
         assert r.returncode != 0
         assert "already exists" in (r.stdout + r.stderr)
         assert "pid=999999" in (r.stdout + r.stderr)

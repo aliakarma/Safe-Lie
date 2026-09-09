@@ -125,17 +125,14 @@ instance 1.5x and slow all three.
 ### Monitoring
 
 ```bash
-for s in 0 1 2; do
-  echo "--- seed $s ---"
-  python - <<'PY'
-import json, glob
+python - <<'PY'
+import glob, json
 for p in sorted(glob.glob("results/runs_a3/a3_queue_status_seed*.json")):
     st = json.load(open(p))
-    print(p.split("_")[-1], "halted:", st.get("halted"))
+    print(f"--- {p} --- halted: {st.get('halted')}")
     for name, r in st.get("runs", {}).items():
-        print(f"   {name:10s} {r.get('status'):12s} gates={r.get('gates_pass')}")
+        print(f"   {name:10s} {str(r.get('status')):12s} gates={r.get('gates_pass')}")
 PY
-done
 ```
 
 Per-round progress: `wc -l results/runs_a3/*/rounds.jsonl` (250 = complete).

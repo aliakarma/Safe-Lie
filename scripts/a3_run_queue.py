@@ -94,17 +94,43 @@ def now() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
 
-def write_status(state: dict, path: Path) -> None:
+def write_status(state: dict, path: Path, _attempts: int = 5) -> None:
     """Atomic rewrite: write a temp file beside the target, then replace.
 
     `os.replace` is atomic on POSIX and on Windows, so a reader never sees a
     half-written document even if it polls while the queue is writing. The
     temp name carries the pid so two processes cannot collide on it either.
+
+    Two hardening details, both learned from an intermittent failure of
+    `tests/unit/test_a3_queue_isolation.py::test_no_temp_files_are_left_behind`
+    that appeared only under full-suite load:
+
+      - On Windows `os.replace` raises PermissionError if anything holds a
+        transient handle to either path -- a virus scanner or the search
+        indexer touching a file the queue just closed is enough. Left
+        unhandled that kills the queue process, and with it a seed of a
+        multi-day campaign, over a bookkeeping write. It is retried briefly.
+      - The temp file is removed in `finally`, so a failed write never leaves
+        a stray `.tmp` that a later reader might mistake for status.
+
+    Bookkeeping must not be able to end a run: if the replace genuinely
+    cannot succeed the exception still propagates, but only after the retries
+    and the cleanup.
     """
     OUT_ROOT.mkdir(parents=True, exist_ok=True)
     tmp = path.with_suffix(f".{os.getpid()}.tmp")
-    tmp.write_text(json.dumps(state, indent=2), encoding="utf-8")
-    os.replace(tmp, path)
+    try:
+        tmp.write_text(json.dumps(state, indent=2), encoding="utf-8")
+        for attempt in range(_attempts):
+            try:
+                os.replace(tmp, path)
+                return
+            except PermissionError:
+                if attempt == _attempts - 1:
+                    raise
+                time.sleep(0.1 * (attempt + 1))
+    finally:
+        tmp.unlink(missing_ok=True)
 
 
 class QueueLock:
