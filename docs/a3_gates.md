@@ -25,8 +25,10 @@ satisfied, nothing is floored, and `beta*MAD` becomes a real, data-dependent
 quantity. A3 is the smallest change to A2 that makes the margin live.
 
 **This is the only difference.** Same environment, same attack, same PPO,
-same dual, same topology, same `d`, same `R_m`, same horizon, same three
-seeds. `M` goes 3 -> 5 and nothing else moves.
+same dual, same topology, same `d`, same `R_m`, same horizon, same seed
+definitions. `M` goes 3 -> 5 and nothing else moves. (How many of those
+seeds are run, and on which machine, is the section-4 branch; it changes the
+scope of A3, never its design.)
 
 ## 2. What the margin does at M=5 — derived from the real code, before any run
 
@@ -77,8 +79,11 @@ Three consequences, all pre-registered:
 | **E'** | no | yes | RCE conservatism |
 
 **Nothing is reused from A2.** Changing `M` changes the source
-architecture, so A3 collects its own `A'` and `B'`. 4 conditions x 3 seeds
-= **12 runs**.
+architecture, so A3 collects its own `A'` and `B'`. All four conditions are
+load-bearing: at M=5 the margin makes clean conservatism real (section 2),
+so `C' − B'` is genuinely confounded and `E'` is what breaks the confound.
+No condition may be dropped to save time. **12 runs under BRANCH-A, 8 under
+BRANCH-B** (section 4).
 
 The decomposition is unchanged from A2 and is not renegotiable:
 
@@ -90,44 +95,94 @@ attack x RCE interaction  = (C' − E') − (B' − A')     <- primary
 RCE main effect (raw)     =  C' − B'                  <- reported, never primary
 ```
 
-## 4. Two machines — the assignment, and the rule that makes it valid
+## 4. Two machines — the assignment, chosen by measurement
 
-| machine | seeds | runs |
+A3's scope is **branched on a hardware property, measured before any A3 run
+exists**. Both branches are fixed here. The selector is the section-9 probe,
+which compares a 4-round run on the second machine against the copy this
+repository already carries from the first. It measures whether two computers
+agree on the same arithmetic; it cannot see an A3 result, so branching on it
+does not weaken the pre-declaration.
+
+### BRANCH-A — the probe shows bit-identity
+
+Cross-machine paired contrasts are valid, so the 12 runs balance evenly.
+
+| machine | assignment | runs |
 |---|---|---|
-| Windows (12 logical CPU) | **0 and 1** | 8 |
-| Mac mini | **2** | 4 |
+| Windows | conditions `A'` and `B'`, all 3 seeds | 6 |
+| Mac mini | conditions `C'` and `E'`, all 3 seeds | 6 |
 
-**The rule: every contrast must be computed within one machine.** Each
-machine runs *all four conditions* of the seeds it owns, so `B' − A'`,
-`E' − A'`, `C' − E'` and the interaction are always differences between two
-runs produced on the same hardware. A machine effect that shifts all four
-cells of a seed equally cancels exactly in every one of those differences.
+**3 seeds, ~3.25 days**, full `n = 3` parity with A1 and A2. No reduced-claim
+caveat is needed and none will be added.
 
-What this does **not** protect against is a machine x condition
-*interaction*. That would require the hardware to affect the conditions
-differently, which is implausible but not proven, so it is stated here as a
-known limitation rather than assumed away.
+### BRANCH-B — the probe shows any difference
 
-**Cross-machine bit-identity is NOT assumed.** Source *seeds* are pure
-integer arithmetic (`SeedSequence -> PCG64 -> integers`) and are identical
-on any architecture; source *trajectories* run through MuJoCo and PyTorch
-floats and may differ between x86-64 and ARM64. The A2-G1-ii style round-0
-CRN check is therefore applied **within a machine only** (each condition
-against its own-machine clean/attack partner), never across.
+Every contrast must then live entirely on one machine, so each machine runs
+*all four conditions* of the seeds it owns.
 
-If the cross-platform probe (section 9) shows bit-identity, this
-restriction can be lifted for future campaigns. It is not lifted for A3.
+| machine | assignment | runs |
+|---|---|---|
+| Windows | seed 0, conditions `A' B' C' E'` | 4 |
+| Mac mini | seed 1, conditions `A' B' C' E'` | 4 |
+
+**2 seeds, ~2.2 days.** The third seed is dropped, not because two is
+adequate, but because 12 runs split 8/4 under this branch and the third seed
+therefore costs **2.2 extra days of critical path, not 1.1**. A single-seed
+A3 is never chosen: it costs the same 2.2 days as two seeds, since the
+second machine runs four either way.
+
+Under BRANCH-B the claims split, and the split is declared now:
+
+* **Mechanism claims (A3-G3) are primary and fully powered.** They are
+  per-cell facts measured over ~1,500 aggregation cells per run — that the
+  retained set holds 3 values, that MAD is a real measurement rather than a
+  floor, that `beta*MAD` lands where section 2 predicts, and that it rises
+  under corruption. None of these depends on the seed count.
+* **The downstream interaction (A3-G5) is reported as DIRECTIONAL ONLY.** At
+  `n = 2` the minimum attainable sign-test p is 0.500 and the 95 % CI
+  halfwidth is 8.98 x sd. A3-G5's PASS/CONDITIONAL/FAIL labels are still
+  computed and reported, but under BRANCH-B they carry an explicit `n = 2,
+  directional` marker everywhere they appear, and no significance claim is
+  made for the interaction in the paper.
+
+### The rule both branches share
+
+Under BRANCH-B, a machine effect that shifts all four cells of a seed
+equally cancels exactly in `B' − A'`, `E' − A'`, `C' − E'` and the
+interaction, because each is a difference between two runs on the same
+hardware. What that does **not** protect against is a machine x condition
+*interaction* — implausible, but not proven, and therefore stated as a known
+limitation rather than assumed away. Under BRANCH-A the probe has already
+shown the machines agree bitwise, so the question does not arise.
+
+**Cross-machine bit-identity is never assumed, only measured.** Source
+*seeds* are pure integer arithmetic (`SeedSequence -> PCG64 -> integers`)
+and are identical on any architecture; source *trajectories* run through
+MuJoCo and PyTorch floats and may differ between x86-64 and ARM64. Under
+BRANCH-B the A2-G1-ii style round-0 CRN check is applied **within a machine
+only**, and a cross-machine mismatch is explicitly not a stop condition.
+
+Whichever branch fires, the seed assignment and the machine that produced
+each run are recorded in every results table, not only here.
 
 ## 5. Seed pairing and common random numbers
 
 Fresh source entropy per seed, by the G10 convention
 `int(sha256(b"safelie/a3/source-entropy/seed=<k>").digest()[:16])`:
 
-| seed | machine | attacked source (B' and C') | `seed_entropy` |
+| seed | attacked source (B' and C') | `seed_entropy` | used by |
 |---|---|---|---|
-| 0 | Windows | `batch_1` | 25873748826208450093657097358164192435 |
-| 1 | Windows | `batch_3` | 224463726283861287585842441982236519383 |
-| 2 | Mac mini | `batch_5` | 11901184105024366541245543018062542394 |
+| 0 | `batch_1` | 25873748826208450093657097358164192435 | both branches |
+| 1 | `batch_3` | 224463726283861287585842441982236519383 | both branches |
+| 2 | `batch_5` | 11901184105024366541245543018062542394 | BRANCH-A only |
+
+Which machine produces which run is set by the section-4 branch, not by this
+table. The seed -> entropy -> attacked-source mapping is identical under
+either branch; BRANCH-B simply does not run seed 2. Seed 2 is the one
+dropped (rather than seed 0 or 1) so that the two seeds retained are the
+same two under both branches, and a BRANCH-B result is a strict subset of
+what BRANCH-A would have produced.
 
 New entropy, not A2's: A3 spawns `M+1 = 6` streams where A2 spawned 4, and
 reusing A2's entropy would start A3's first three replicas at the same
@@ -183,8 +238,11 @@ Within a seed, all four conditions share `seed` and `seed_entropy`.
 * **G3-iii.** Mean `applied_margin` in `[0.25, 0.60]` in `E'` (predicted
   0.404) and in `[0.35, 0.80]` in `C'` (predicted 0.544).
 * **G3-iv.** The margin **responds to corruption**: mean `applied_margin`
-  in `C'` exceeds that in `E'` at the same seed, in all three seeds.
-  Predicted ratio 1.34; gate is the direction only.
+  in `C'` exceeds that in `E'` at the same seed, in **every seed run**
+  (3 under BRANCH-A, 2 under BRANCH-B). Predicted ratio 1.34; the gate is
+  the direction only. Note this gate is a within-seed comparison of two
+  per-cell means over ~1,500 cells each, so it is well determined at either
+  seed count.
 
 **If G3-i or G3-ii fails, A3 has not tested the margin and no conclusion
 about Theorem 2's condition may be drawn from it** — the same discipline
@@ -252,39 +310,95 @@ until the probe says otherwise, and no A3 gate depends on it.
 
 ## 8. Statistics
 
-`n = 3`, paired seed-level differences, exactly as A2. Primary is `I'`;
-secondary are `E' − A'`, `C' − E'`, `C' − B'`. Paired t-tests are emitted
-**labelled sensitivity-only** per decision D6; no significance claim is
-made at three seeds regardless of p-value. No seeds are added after seeing
-results. Seed 2 was produced on different hardware; that is disclosed in
-every table, not just in this document.
+Paired seed-level differences, exactly as A2. `n = 3` under BRANCH-A,
+`n = 2` under BRANCH-B. Primary is `I'`; secondary are `E' − A'`,
+`C' − E'`, `C' − B'`.
 
-## 9. Cross-platform probe (run once, on the Mac, before A3 starts there)
+Paired t-tests are emitted **labelled sensitivity-only** per decision D6
+(`MIN_SEEDS_FOR_INFERENCE = 5`); no significance claim is made at either
+seed count, regardless of p-value. The primary evidence is per-seed sign
+consistency, as in A1 and A2.
 
-Run `configs/experiment/a2/_mechanism_check_rce_clean.yaml` on the Mac and
-compare round-0 pre-attack source values against the committed Windows copy
-in `results/a2_mechanism_check/mech_rce_clean`.
+What the seed count changes, stated now so it is not argued later:
 
-* **Identical to <= 1e-9** — cross-machine pairing is viable. Record it;
-  future campaigns may split by condition instead of by seed. A3's
-  by-seed split still stands as declared.
-* **Not identical** — the by-seed split is load-bearing, exactly as
-  designed. Record the observed magnitude.
+| | BRANCH-A, `n = 3` | BRANCH-B, `n = 2` |
+|---|---|---|
+| min attainable sign-test p | 0.250 | 0.500 |
+| 95 % CI halfwidth | 2.48 x sd | 8.98 x sd |
+| interaction claim | same standing as A1/A2 | **directional only**, marked `n = 2` wherever it appears |
+| mechanism claims (G3) | unaffected — per-cell, ~1,500 cells per run | unaffected |
 
-Either way the probe is recorded in `results/a3_platform_probe.json`. It
-does not gate A3.
+**No seeds are added after seeing results**, under either branch — the same
+rule that made A1's `B − D` permanently descriptive. If BRANCH-B fires, A3
+stays at two seeds even if the interaction looks promising; wanting a third
+seed *because* the first two were encouraging is exactly the data-dependent
+inflation the pre-declaration exists to forbid.
+
+Which machine produced each run is disclosed in every results table, not
+only in this document.
+
+## 9. Cross-platform probe — the branch selector
+
+Run **once**, on the second machine, before any A3 run starts anywhere.
+
+```
+python scripts/train.py --config configs/experiment/a3/_platform_probe.yaml --eval-every 1
+python scripts/a3_platform_probe.py     --reference results/a2_mechanism_check/mech_rce_clean     --candidate results/a3_platform_probe/probe
+```
+
+`configs/experiment/a3/_platform_probe.yaml` is the A2 clean mechanism-check
+config with **only** `run_id` and `output_dir` changed — verified
+field-by-field on the resolved model. Neither can affect a number (seeding
+derives from `cfg.seed` and `seed_entropy` alone); they are changed only so
+the second machine does not overwrite the reference it is compared against.
+About 15 minutes.
+
+The probe reports three levels separately, because they fail for different
+reasons:
+
+| level | what it tests | if it differs |
+|---|---|---|
+| 1. source seeds | `SeedSequence -> PCG64 -> integers` | **INVALID** — pure integer arithmetic, so this is a config problem, not hardware. Fix and re-run. |
+| 2. policy checksum | `torch.manual_seed` -> network init | PyTorch differs across the architectures |
+| 3. source values | the full MuJoCo + PyTorch float path | trajectories differ; round 0 is decisive, being the only round where both runs are still under the same policy |
+
+**BRANCH-A** iff levels 1, 2 and round-0 level 3 all match to <= 1e-9.
+**BRANCH-B** otherwise. Written to
+`results/a3_platform_probe/a3_platform_probe.json`, which records the
+selected branch, the observed magnitudes, and both machines' platform and
+library versions.
+
+The probe does not gate A3 and cannot fail it — "not identical" is an
+expected outcome across x86-64 and ARM64, and is the case the by-seed split
+was designed for. Under BRANCH-A, record the result: it also frees future
+campaigns from the by-seed restriction.
 
 ## 10. Compute
 
-12 runs x 250 rounds. `M=5, R_m=30` collects 150 trajectories per round
-against A2's 90, so source cost is 1.67x: **75,000,000 source env steps per
-run** against A2's 45,000,000. From A2's measured 8.03 h/run, expect
-**~13 h/run**.
+12 runs (BRANCH-A) or 8 runs (BRANCH-B) x 250 rounds. `M=5, R_m=30` collects
+150 trajectories per round against A2's 90, so source cost is 1.67x:
+**75,000,000 source env steps per run** against A2's 45,000,000. From A2's
+measured 8.03 h/run, expect **~13 h/run**.
 
-| machine | runs | estimate |
-|---|---|---|
-| Windows | 8 (seeds 0, 1) | ~104 h, ~4.3 days |
-| Mac mini | 4 (seed 2) | ~52 h, ~2.2 days |
+| branch | seeds | Windows | Mac mini | critical path |
+|---|---|---|---|---|
+| **A** (bit-identical) | 3 | 6 runs, ~78 h | 6 runs, ~78 h | **~3.25 days** |
+| **B** (not identical) | 2 | 4 runs, ~52 h | 4 runs, ~52 h | **~2.2 days** |
+
+Both branches balance the machines evenly; that is why BRANCH-A can afford
+three seeds in only one extra day. The rejected 8/4 arrangement — three
+seeds under the by-seed rule — would have cost 4.3 days, and buys nothing
+BRANCH-A does not buy more cheaply.
 
 Plus the disclosed 20-round calibration phase per RCE run (~1 h each at
-M=5), which at M=5 does real work rather than recomputing a constant.
+M=5), which unlike A2 does real work rather than recomputing a constant.
+
+## 11. What A3 cannot establish, under either branch
+
+Theorem 2's numerical bound. A3 makes the theorem's MAD condition
+*exercisable* and measures what the margin does; it does not verify the
+bound, which depends on a sub-Gaussian parameter the deployment cannot
+observe. Also out of scope, unchanged from A2: `f > 1`, topology
+generality, a second environment, dose response in `B`, over-reporting
+liveness, and superiority over other robust aggregators. Under BRANCH-B,
+additionally: any seed-level significance claim about the interaction.
