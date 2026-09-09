@@ -12,9 +12,11 @@ the A1/G10/A2 architecture, and the internal pairing that makes CRN work.
 
   2. AGAINST A2, each config may differ only in the declared A3 changes:
      `run_id`, `output_dir`, `attack`, `defense`, `sources` (3 -> 5 entries),
-     and inside `source_collection` ONLY `M` and `seed_entropy`. Every other
-     source_collection field -- R_m, workers, chunks_per_worker,
-     validation_rounds, R_ref, mode -- must be untouched.
+     and inside `source_collection` only `M`, `seed_entropy` and `workers`.
+     Every other source_collection field -- R_m, chunks_per_worker,
+     validation_rounds, R_ref, mode -- must be untouched. See
+     PERMITTED_SOURCE_COLLECTION for why `workers` is in that set and the
+     others are not.
 
   3. THE OPERATING POINT: M=5 with defense.f=1 gives |T| = M - 2f = 3, which
      is exactly `min_retained`. That equality is the entire point of A3 --
@@ -56,7 +58,36 @@ A2_ENTROPY = {286314957402113664887331205920951063913,
 # check 1 enforces it where it actually matters, WITHIN a seed, which is what
 # the CRN pairing depends on.
 PERMITTED_VS_A2 = {"run_id", "output_dir", "attack", "defense", "sources", "seed"}
-PERMITTED_SOURCE_COLLECTION = {"M", "seed_entropy"}
+
+# `workers` is a COMPUTE-ONLY parameter and is permitted to differ from A2.
+#
+# Worker count is scientifically invariant because trajectory seeds are
+# generated in the parent process and each worker is a pure function of the
+# same `(policy, env_seed, torch_seed)` tuple.
+#
+# Concretely (`safelie.training.source_batch`): `ParallelBatchSourceCollector.
+# _draw_seeds` draws every `(env_seed, torch_seed)` pair in the MAIN process
+# from M+1 spawned PCG64 streams, before any work is dispatched.
+# `collect_one_trajectory` then calls `env.reset(seed=env_seed)` and
+# `torch.manual_seed(torch_seed)` at the top of every trajectory, so nothing
+# carries between trajectories and no value depends on which process ran
+# which trajectory, or in what order. `workers` selects only the chunk
+# partition, which is a scheduling decision.
+#
+# Measured, not assumed (2026-09-09, at A3's own operating point M=5, f=1):
+#   workers in {1, 2, 4, 5, 6, 8, 12}, both dispatch paths (workers=1 bypasses
+#   the pool and runs in-process; workers>=2 goes through mp.Pool), four
+#   distinct chunk partitions, at R_m=8 AND at production R_m=30 -- all 30
+#   source means (5 sources x 6 owners) bitwise identical, max abs difference
+#   exactly 0.0. Pinned by tests/unit/test_a3_verify_frozen_workers.py and
+#   tests/unit/test_source_batch.py.
+#
+# R_m, chunks_per_worker, validation_rounds, R_ref and mode stay frozen:
+# R_m and R_ref change the estimator's variance, validation_rounds changes
+# when the withheld reference is collected, and mode changes the source
+# architecture outright. None of those is a compute knob.
+PERMITTED_SOURCE_COLLECTION = {"M", "seed_entropy", "workers"}
+
 PERMITTED_WITHIN_SEED = {"run_id", "attack", "defense"}
 
 EXPECTED_RCE = {"name": "rce", "f": 1, "beta": 1.5, "sigma_min": 0.001,
@@ -75,6 +106,25 @@ def flatten(d, prefix=""):
             out.update(flatten(v, key + "."))
         else:
             out[key] = json.dumps(v, sort_keys=True, default=str)
+    return out
+
+
+def illegal_keys(differing: list[str]) -> list[str]:
+    """Which of `differing` (flattened, dotted config keys) A3 does NOT permit
+    to differ from the frozen A2 architecture.
+
+    Extracted from `main` so the permission policy can be tested directly
+    rather than only through a twelve-config end-to-end run --
+    `tests/unit/test_a3_verify_frozen_workers.py` sweeps it.
+    """
+    out = []
+    for k in differing:
+        top = k.split(".")[0]
+        if top == "source_collection":
+            if k.split(".", 1)[1] not in PERMITTED_SOURCE_COLLECTION:
+                out.append(k)
+        elif top not in PERMITTED_VS_A2:
+            out.append(k)
     return out
 
 
@@ -118,14 +168,7 @@ def main() -> int:
         f3 = flatten(cfg)
         keys = set(fa2) | set(f3)
         differing = sorted(k for k in keys if fa2.get(k) != f3.get(k))
-        illegal = []
-        for k in differing:
-            top = k.split(".")[0]
-            if top == "source_collection":
-                if k.split(".", 1)[1] not in PERMITTED_SOURCE_COLLECTION:
-                    illegal.append(k)
-            elif top not in PERMITTED_VS_A2:
-                illegal.append(k)
+        illegal = illegal_keys(differing)
         entry = {"differing_keys": differing, "illegal": illegal,
                  "R_m": cfg["source_collection"]["R_m"],
                  "workers": cfg["source_collection"]["workers"],
