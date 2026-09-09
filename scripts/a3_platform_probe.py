@@ -146,9 +146,24 @@ def main() -> int:
         "all_rounds_identical": bool(np.abs(d).max() <= TOL),
         "per_round_max_abs_diff": [float(np.abs(d[k]).max()) for k in range(K)],
         "tolerance": TOL,
-        "note": ("Round 0 is the one that matters: it is the only round where "
-                 "both runs are still under the same policy, so a difference "
-                 "there is pure numerics rather than accumulated divergence."),
+        # CORRECTED after the first real probe (Mac mini, 2026-09-09). The
+        # original note claimed a round-0 difference is "pure numerics rather
+        # than accumulated divergence" because both runs are still under the
+        # same policy. That reasoning silently assumed level 2 passes. It did
+        # NOT: torch initialises different weights on arm64 than on AMD64, so
+        # the two runs are under DIFFERENT policies from round 0 and the
+        # round-0 value difference confounds the initial weights with the
+        # float path. The two cannot be separated from this probe's outputs.
+        # The BRANCH decision is unaffected -- either cause invalidates a
+        # cross-machine paired contrast, and level 1 passing already rules
+        # out a config error -- but the interpretation is not what was
+        # written, so it is not left standing.
+        "note": ("Round 0 is decisive for the BRANCH decision, but it is only "
+                 "attributable to numerics alone when level 2 also passes. If "
+                 "level 2 fails, the round-0 difference confounds a different "
+                 "initial policy with the float path, and this probe cannot "
+                 "separate them."),
+        "round0_attributable_to_numerics_alone": bool(round0_ck_match),
     }
 
     # ---- the pre-declared branch

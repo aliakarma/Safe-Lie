@@ -97,6 +97,14 @@ RCE main effect (raw)     =  C' − B'                  <- reported, never prima
 
 ## 4. Two machines — the assignment, chosen by measurement
 
+> **SUPERSEDED IN PART — see section 12.** The probe ran on 2026-09-09 and
+> selected BRANCH-B, but also measured a ~2.9x speed asymmetry between the
+> two machines that this section did not anticipate. Section 12 records the
+> resulting amendment (**BRANCH-B'**), made after the probe and before any
+> A3 run existed. The text below is left unchanged as the original
+> pre-declaration.
+
+
 A3's scope is **branched on a hardware property, measured before any A3 run
 exists**. Both branches are fixed here. The selector is the section-9 probe,
 which compares a 4-round run on the second machine against the copy this
@@ -402,3 +410,121 @@ observe. Also out of scope, unchanged from A2: `f > 1`, topology
 generality, a second environment, dose response in `B`, over-reporting
 liveness, and superiority over other robust aggregators. Under BRANCH-B,
 additionally: any seed-level significance claim about the interaction.
+
+---
+
+## 12. Addendum — probe result and the BRANCH-B' amendment
+
+**Added 2026-09-09, after the cross-platform probe, before any A3 run existed
+on either machine.** Sections 1-11 above are the original pre-declaration and
+are unedited. This section records what the probe measured and the one design
+change it forced.
+
+### 12.1 Probe result: BRANCH-B
+
+Run on the Mac mini (Apple M4, 4P+6E cores, macOS 26.5, arm64) against the
+committed Windows reference `results/a2_mechanism_check/mech_rce_clean`:
+
+| level | result |
+|---|---|
+| 0. same experiment | PASS |
+| 1. source seeds | **identical, all 4 rounds** |
+| 2. policy checksum | **DIFFERS at round 0 and every round** |
+| 3. source values | **DIFFERS**, `round0_max_abs_diff = 0.8856` |
+
+Level 1 passing is what makes the branch decision meaningful: the integer
+seed path agrees, so the configs agree and the differences are a property of
+the hardware, not the setup. **BRANCH-B is selected.**
+
+### 12.2 A correction to section 9's interpretation
+
+Section 9 and the probe script both asserted that a round-0 level-3
+difference is "pure numerics rather than accumulated divergence", because
+both runs are still under the same policy at round 0. **That reasoning
+silently assumed level 2 passes, and it does not.** PyTorch initialises
+different weights on arm64 than on AMD64, so the two runs are under
+*different policies from round 0*, and the round-0 value difference
+confounds the initial weights with the float path. This probe cannot
+separate them.
+
+The branch decision is unaffected — either cause invalidates a cross-machine
+paired contrast, and level 1 already rules out a config error — but the
+claim as written was wrong and is not left standing. `scripts/a3_platform_probe.py`
+now reports `round0_attributable_to_numerics_alone` alongside the difference,
+and states the condition explicitly. Section 9's original text is preserved
+above rather than rewritten.
+
+The stronger conclusion this licenses: cross-machine CRN is not merely
+degraded by float drift, it is **unavailable at the first step**, because
+`torch.manual_seed` does not produce portable weights across these
+architectures. A shared `seed_entropy` buys identical source *seeds* and
+nothing downstream of them.
+
+### 12.3 The measured speed asymmetry
+
+Like-for-like on source collection (both 90 trajectories/round, and verified
+flat across a full 250-round run — median s/round by 50-round block varies
+only 85-92 s in the four completed A2 runs, so a 4-round basis extrapolates
+soundly):
+
+| | Windows | Mac mini | ratio |
+|---|---|---|---|
+| source s/round at M=3 | ~87 | **30.2** | **2.88x** |
+| implied M=5 per-run | ~11.5 h | **~3.8 h** | |
+
+### 12.4 BRANCH-B' — the amendment
+
+Section 4's BRANCH-B assumed two comparably fast machines and therefore
+split 1 seed each. At a 2.9x asymmetry that split is dominated:
+
+| plan | Windows | Mac | critical path | seeds |
+|---|---|---|---|---|
+| BRANCH-B as declared: 1 seed each | 45.8 h | 15.1 h | 1.91 d | 2 |
+| Mac 2 seeds + Windows 1 seed | 45.8 h | 30.3 h | 1.91 d | 3 |
+| **BRANCH-B': all 12 runs on the Mac** | **0** | **45.4 h** | **1.89 d** | **3** |
+
+**BRANCH-B' is adopted: A3 runs entirely on the Mac mini, all four
+conditions, all three seeds, 12 runs, ~1.9 days.**
+
+It is strictly stronger than BRANCH-B on every axis, at the same wall clock:
+
+* **3 seeds, not 2.** `n = 3` parity with A1 and A2 is restored. The minimum
+  attainable sign-test p returns to 0.250 from 0.500, and the 95 % CI
+  halfwidth to 2.48 x sd from 8.98 x sd.
+* **The machine confound disappears entirely.** Section 4 flagged a possible
+  machine x condition interaction as a known-but-unproven limitation of
+  BRANCH-B. With every run on one machine there is no machine factor at all,
+  so that limitation is removed rather than merely bounded.
+* **Section 8's `n = 2, directional` marker is withdrawn**, because it was
+  conditioned on BRANCH-B and BRANCH-B is not what runs. A3-G5 is evaluated
+  at `n = 3` under the section-6 rule exactly as written, unchanged.
+
+**Why this is not goalpost-moving.** No A3 run exists on any machine. The
+change is driven by a measured property of the hardware — the same class of
+input section 4 already delegated the split to — and it moves the design
+toward more evidence and fewer confounds, not fewer bars. No threshold in
+sections 6-8 is altered, added, or relaxed. The A3-G5 decision rule, the
+G3 margin bands, and the G7 mechanism bands are exactly as committed in
+`c256f84` and `98da8ee`.
+
+**What this costs.** The Mac must be available for ~2 continuous days, and
+A3 loses the resilience of being spread over two machines: if the Mac is
+reclaimed mid-campaign, A3 stalls rather than half-completing. The runs are
+checkpointed and resumable, so a pause costs wall clock and not data.
+
+**The Windows machine is freed** once A2 completes. What it runs next is a
+separate decision and is not pre-declared here; nothing in A3 depends on it.
+
+### 12.5 One incidental cross-platform confirmation
+
+Over all 24 aggregation cells of the probe, both machines produced bitwise
+identical RCE mechanism quantities —
+`(spread, retained_n, applied_margin, degenerate) = (0.001, 1, 0.0015, True)`
+— and identical `guarantee_calibration.json` with
+`epsilon_offline = 0.001`, despite every underlying float differing.
+
+Section 4 of `docs/a2_rce_gates.md` proves algebraically that these are
+structural constants at `M=3, f=1`, independent of the input values. They
+had never been checked on a second architecture. They survive one. This
+sharpens rather than changes the A2 finding: at M=3 the margin is so inert
+that it is invariant even to a change of CPU architecture.

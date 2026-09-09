@@ -1,0 +1,109 @@
+# A3 condition A' -- CLEAN / NO RCE (docs/a3_gates.md). Training seed 1.
+#
+# The clean reference at m=5.
+#
+# This is the FROZEN A1/G10/A2 architecture with EXACTLY ONE scientific
+# change: M goes 3 -> 5. Everything else is inherited verbatim --
+# manyagent_ant N=6, ring topology, d=25, velocity_threshold=0.75,
+# cost_mode=per_agent_velocity, R_m=30, pinned-policy parallel
+# trajectory-batch collection, constraint_estimator=mc_window, every PPO
+# hyperparameter, eta_lambda=0.035, lambda_max=25, 250 rounds at
+# rollout_length 2000, and the R_ref=120 withheld reference at rounds
+# {25,75,125,175,225}.
+#
+# MACHINE: A3 runs ENTIRELY on the Mac mini (BRANCH-B', gates doc section
+# 12.4). The cross-platform probe showed the two machines do not agree
+# bitwise -- torch initialises different weights on arm64 -- so every
+# contrast must live on one machine. Putting all 12 runs on the faster
+# machine gives 3 seeds for the same wall clock as 2 split across both, and
+# removes the machine factor entirely rather than bounding it.
+#
+# `workers: 12` is left at A2's value even though the Mac has 10 cores. It
+# is a compute knob, proven bitwise-invariant
+# (tests/unit/test_source_batch.py::test_one_worker_and_three_workers_agree_bitwise),
+# and the ~30 s/round the timing estimate rests on was MEASURED at 12
+# workers on this machine. Tuning it could only help; changing it would
+# invalidate the measured basis.
+#
+# COMMON RANDOM NUMBERS: all four conditions of seed 1 share `seed: 1` and
+# this `seed_entropy`, so at round 0 the pre-attack source draws are
+# bit-identical across A'/B'/C'/E' and the only difference is the mechanism.
+# The entropy is NEW, not A2's: A3 spawns M+1 = 6 streams where A2 spawned
+# 4, and reusing A2's would start A3's first three replicas at the same
+# points, correlating two campaigns that must be independent.
+run_id: A_seed1
+seed: 1
+
+env:
+  name: manyagent_ant   # [SPEC] main_iclr.tex 5.1
+  n_agents: 6           # [SPEC] N=6
+  budget: 25.0          # [SPEC] d=25 per agent
+  velocity_threshold: 0.75
+  cost_mode: per_agent_velocity
+
+topology:
+  name: ring
+  n_agents: 6
+
+sources:
+  # M=5. One independence class per replica: each is a separate environment
+  # instance driven by a separately spawned RNG stream in a separate OS
+  # process. THE ONLY SCIENTIFIC CHANGE FROM A2 -- two more sources, which
+  # is what lifts |T| from 1 to 3 and makes the MAD real.
+  sources:
+    - source_id: batch_1
+      source_type: trajectory_batch
+      independence_class: ic_batch1
+    - source_id: batch_2
+      source_type: trajectory_batch
+      independence_class: ic_batch2
+    - source_id: batch_3
+      source_type: trajectory_batch
+      independence_class: ic_batch3
+    - source_id: batch_4
+      source_type: trajectory_batch
+      independence_class: ic_batch4
+    - source_id: batch_5
+      source_type: trajectory_batch
+      independence_class: ic_batch5
+
+source_collection:
+  mode: parallel_trajectory_batch
+  M: 5          # A2 used 3
+  R_m: 30       # UNCHANGED from G8/G9/G10/A1/A2
+  # docs/a3_gates.md section 5:
+  # int(sha256(b'safelie/a3/source-entropy/seed=1').digest()[:16])
+  seed_entropy: 224463726283861287585842441982236519383
+  workers: 12
+  chunks_per_worker: 4
+  validation_rounds: [25, 75, 125, 175, 225]
+  R_ref: 120
+
+attack:
+  name: none    # Conditions A' and E' are clean. The attack hook still runs
+                # and is the identity map, so the plumbing is exercised.
+
+defense:
+  # A3 conditions A' and B' are UNDEFENDED, exactly as A1/A2's A and B were:
+  # plain mean aggregation with f=0. They are the references the defense is
+  # measured against, not a defense.
+  name: mean
+  f: 0
+
+ppo:
+  # [SPEC] main_iclr.tex App. B -- identical to A1/A2
+  clip: 0.2
+  gae_lambda: 0.95
+  gamma: 0.99
+  lr: 0.0003
+  epochs: 4
+  minibatches: 4
+  hidden_dim: 64
+
+dual:
+  eta_lambda: 0.035   # [SPEC] -- UNCHANGED
+  lambda_max: 25.0    # [SPEC] -- UNCHANGED
+
+total_steps: 500000    # 250 rounds at rollout_length 2000 -- UNCHANGED
+rollout_length: 2000
+output_dir: results/runs_a3
