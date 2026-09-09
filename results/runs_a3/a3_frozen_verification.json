@@ -1,0 +1,662 @@
+{
+  "checks": {
+    "within_seed0_B'_vs_A'": {
+      "differing_keys": [
+        "attack.budget_ratio",
+        "attack.corrupted_source_ids",
+        "attack.f",
+        "attack.name",
+        "run_id"
+      ],
+      "illegal": [],
+      "seed_equal": true,
+      "entropy_equal": true,
+      "pass": true
+    },
+    "within_seed0_C'_vs_A'": {
+      "differing_keys": [
+        "attack.budget_ratio",
+        "attack.corrupted_source_ids",
+        "attack.f",
+        "attack.name",
+        "defense.f",
+        "defense.name",
+        "run_id"
+      ],
+      "illegal": [],
+      "seed_equal": true,
+      "entropy_equal": true,
+      "pass": true
+    },
+    "within_seed0_E'_vs_A'": {
+      "differing_keys": [
+        "defense.f",
+        "defense.name",
+        "run_id"
+      ],
+      "illegal": [],
+      "seed_equal": true,
+      "entropy_equal": true,
+      "pass": true
+    },
+    "within_seed1_B'_vs_A'": {
+      "differing_keys": [
+        "attack.budget_ratio",
+        "attack.corrupted_source_ids",
+        "attack.f",
+        "attack.name",
+        "run_id"
+      ],
+      "illegal": [],
+      "seed_equal": true,
+      "entropy_equal": true,
+      "pass": true
+    },
+    "within_seed1_C'_vs_A'": {
+      "differing_keys": [
+        "attack.budget_ratio",
+        "attack.corrupted_source_ids",
+        "attack.f",
+        "attack.name",
+        "defense.f",
+        "defense.name",
+        "run_id"
+      ],
+      "illegal": [],
+      "seed_equal": true,
+      "entropy_equal": true,
+      "pass": true
+    },
+    "within_seed1_E'_vs_A'": {
+      "differing_keys": [
+        "defense.f",
+        "defense.name",
+        "run_id"
+      ],
+      "illegal": [],
+      "seed_equal": true,
+      "entropy_equal": true,
+      "pass": true
+    },
+    "within_seed2_B'_vs_A'": {
+      "differing_keys": [
+        "attack.budget_ratio",
+        "attack.corrupted_source_ids",
+        "attack.f",
+        "attack.name",
+        "run_id"
+      ],
+      "illegal": [],
+      "seed_equal": true,
+      "entropy_equal": true,
+      "pass": true
+    },
+    "within_seed2_C'_vs_A'": {
+      "differing_keys": [
+        "attack.budget_ratio",
+        "attack.corrupted_source_ids",
+        "attack.f",
+        "attack.name",
+        "defense.f",
+        "defense.name",
+        "run_id"
+      ],
+      "illegal": [],
+      "seed_equal": true,
+      "entropy_equal": true,
+      "pass": true
+    },
+    "within_seed2_E'_vs_A'": {
+      "differing_keys": [
+        "defense.f",
+        "defense.name",
+        "run_id"
+      ],
+      "illegal": [],
+      "seed_equal": true,
+      "entropy_equal": true,
+      "pass": true
+    },
+    "vs_a2_A'_seed0": {
+      "differing_keys": [
+        "attack.budget_ratio",
+        "attack.corrupted_source_ids",
+        "attack.f",
+        "attack.name",
+        "defense.f",
+        "defense.name",
+        "output_dir",
+        "run_id",
+        "source_collection.M",
+        "source_collection.seed_entropy",
+        "sources.sources"
+      ],
+      "illegal": [],
+      "R_m": 30,
+      "workers": 12,
+      "validation_rounds": [
+        25,
+        75,
+        125,
+        175,
+        225
+      ],
+      "R_ref": 120,
+      "rollout_length": 2000,
+      "total_steps": 500000,
+      "pass": true
+    },
+    "vs_a2_A'_seed1": {
+      "differing_keys": [
+        "attack.budget_ratio",
+        "attack.corrupted_source_ids",
+        "attack.f",
+        "attack.name",
+        "defense.f",
+        "defense.name",
+        "output_dir",
+        "run_id",
+        "seed",
+        "source_collection.M",
+        "source_collection.seed_entropy",
+        "sources.sources"
+      ],
+      "illegal": [],
+      "R_m": 30,
+      "workers": 12,
+      "validation_rounds": [
+        25,
+        75,
+        125,
+        175,
+        225
+      ],
+      "R_ref": 120,
+      "rollout_length": 2000,
+      "total_steps": 500000,
+      "pass": true
+    },
+    "vs_a2_A'_seed2": {
+      "differing_keys": [
+        "attack.budget_ratio",
+        "attack.corrupted_source_ids",
+        "attack.f",
+        "attack.name",
+        "defense.f",
+        "defense.name",
+        "output_dir",
+        "run_id",
+        "seed",
+        "source_collection.M",
+        "source_collection.seed_entropy",
+        "sources.sources"
+      ],
+      "illegal": [],
+      "R_m": 30,
+      "workers": 12,
+      "validation_rounds": [
+        25,
+        75,
+        125,
+        175,
+        225
+      ],
+      "R_ref": 120,
+      "rollout_length": 2000,
+      "total_steps": 500000,
+      "pass": true
+    },
+    "vs_a2_B'_seed0": {
+      "differing_keys": [
+        "defense.f",
+        "defense.name",
+        "output_dir",
+        "run_id",
+        "source_collection.M",
+        "source_collection.seed_entropy",
+        "sources.sources"
+      ],
+      "illegal": [],
+      "R_m": 30,
+      "workers": 12,
+      "validation_rounds": [
+        25,
+        75,
+        125,
+        175,
+        225
+      ],
+      "R_ref": 120,
+      "rollout_length": 2000,
+      "total_steps": 500000,
+      "pass": true
+    },
+    "vs_a2_B'_seed1": {
+      "differing_keys": [
+        "attack.corrupted_source_ids",
+        "defense.f",
+        "defense.name",
+        "output_dir",
+        "run_id",
+        "seed",
+        "source_collection.M",
+        "source_collection.seed_entropy",
+        "sources.sources"
+      ],
+      "illegal": [],
+      "R_m": 30,
+      "workers": 12,
+      "validation_rounds": [
+        25,
+        75,
+        125,
+        175,
+        225
+      ],
+      "R_ref": 120,
+      "rollout_length": 2000,
+      "total_steps": 500000,
+      "pass": true
+    },
+    "vs_a2_B'_seed2": {
+      "differing_keys": [
+        "attack.corrupted_source_ids",
+        "defense.f",
+        "defense.name",
+        "output_dir",
+        "run_id",
+        "seed",
+        "source_collection.M",
+        "source_collection.seed_entropy",
+        "sources.sources"
+      ],
+      "illegal": [],
+      "R_m": 30,
+      "workers": 12,
+      "validation_rounds": [
+        25,
+        75,
+        125,
+        175,
+        225
+      ],
+      "R_ref": 120,
+      "rollout_length": 2000,
+      "total_steps": 500000,
+      "pass": true
+    },
+    "vs_a2_C'_seed0": {
+      "differing_keys": [
+        "output_dir",
+        "source_collection.M",
+        "source_collection.seed_entropy",
+        "sources.sources"
+      ],
+      "illegal": [],
+      "R_m": 30,
+      "workers": 12,
+      "validation_rounds": [
+        25,
+        75,
+        125,
+        175,
+        225
+      ],
+      "R_ref": 120,
+      "rollout_length": 2000,
+      "total_steps": 500000,
+      "pass": true
+    },
+    "vs_a2_C'_seed1": {
+      "differing_keys": [
+        "attack.corrupted_source_ids",
+        "output_dir",
+        "run_id",
+        "seed",
+        "source_collection.M",
+        "source_collection.seed_entropy",
+        "sources.sources"
+      ],
+      "illegal": [],
+      "R_m": 30,
+      "workers": 12,
+      "validation_rounds": [
+        25,
+        75,
+        125,
+        175,
+        225
+      ],
+      "R_ref": 120,
+      "rollout_length": 2000,
+      "total_steps": 500000,
+      "pass": true
+    },
+    "vs_a2_C'_seed2": {
+      "differing_keys": [
+        "attack.corrupted_source_ids",
+        "output_dir",
+        "run_id",
+        "seed",
+        "source_collection.M",
+        "source_collection.seed_entropy",
+        "sources.sources"
+      ],
+      "illegal": [],
+      "R_m": 30,
+      "workers": 12,
+      "validation_rounds": [
+        25,
+        75,
+        125,
+        175,
+        225
+      ],
+      "R_ref": 120,
+      "rollout_length": 2000,
+      "total_steps": 500000,
+      "pass": true
+    },
+    "vs_a2_E'_seed0": {
+      "differing_keys": [
+        "attack.budget_ratio",
+        "attack.corrupted_source_ids",
+        "attack.f",
+        "attack.name",
+        "output_dir",
+        "run_id",
+        "source_collection.M",
+        "source_collection.seed_entropy",
+        "sources.sources"
+      ],
+      "illegal": [],
+      "R_m": 30,
+      "workers": 12,
+      "validation_rounds": [
+        25,
+        75,
+        125,
+        175,
+        225
+      ],
+      "R_ref": 120,
+      "rollout_length": 2000,
+      "total_steps": 500000,
+      "pass": true
+    },
+    "vs_a2_E'_seed1": {
+      "differing_keys": [
+        "attack.budget_ratio",
+        "attack.corrupted_source_ids",
+        "attack.f",
+        "attack.name",
+        "output_dir",
+        "run_id",
+        "seed",
+        "source_collection.M",
+        "source_collection.seed_entropy",
+        "sources.sources"
+      ],
+      "illegal": [],
+      "R_m": 30,
+      "workers": 12,
+      "validation_rounds": [
+        25,
+        75,
+        125,
+        175,
+        225
+      ],
+      "R_ref": 120,
+      "rollout_length": 2000,
+      "total_steps": 500000,
+      "pass": true
+    },
+    "vs_a2_E'_seed2": {
+      "differing_keys": [
+        "attack.budget_ratio",
+        "attack.corrupted_source_ids",
+        "attack.f",
+        "attack.name",
+        "output_dir",
+        "run_id",
+        "seed",
+        "source_collection.M",
+        "source_collection.seed_entropy",
+        "sources.sources"
+      ],
+      "illegal": [],
+      "R_m": 30,
+      "workers": 12,
+      "validation_rounds": [
+        25,
+        75,
+        125,
+        175,
+        225
+      ],
+      "R_ref": 120,
+      "rollout_length": 2000,
+      "total_steps": 500000,
+      "pass": true
+    },
+    "operating_point_A'_seed0": {
+      "M": 5,
+      "defense_f": 0,
+      "n_sources": 5,
+      "n_independence_classes": 5,
+      "retained_set_size": 5,
+      "min_retained": 3,
+      "margin_is_live": false,
+      "defense_matches_declared": true,
+      "seed_entropy": 25873748826208450093657097358164192435,
+      "entropy_matches_declared": true,
+      "entropy_not_reused_from_a2": true,
+      "attacked": null,
+      "attack_mapping_ok": true,
+      "attack_is_primary": true,
+      "pass": true
+    },
+    "operating_point_A'_seed1": {
+      "M": 5,
+      "defense_f": 0,
+      "n_sources": 5,
+      "n_independence_classes": 5,
+      "retained_set_size": 5,
+      "min_retained": 3,
+      "margin_is_live": false,
+      "defense_matches_declared": true,
+      "seed_entropy": 224463726283861287585842441982236519383,
+      "entropy_matches_declared": true,
+      "entropy_not_reused_from_a2": true,
+      "attacked": null,
+      "attack_mapping_ok": true,
+      "attack_is_primary": true,
+      "pass": true
+    },
+    "operating_point_A'_seed2": {
+      "M": 5,
+      "defense_f": 0,
+      "n_sources": 5,
+      "n_independence_classes": 5,
+      "retained_set_size": 5,
+      "min_retained": 3,
+      "margin_is_live": false,
+      "defense_matches_declared": true,
+      "seed_entropy": 11901184105024366541245543018062542394,
+      "entropy_matches_declared": true,
+      "entropy_not_reused_from_a2": true,
+      "attacked": null,
+      "attack_mapping_ok": true,
+      "attack_is_primary": true,
+      "pass": true
+    },
+    "operating_point_B'_seed0": {
+      "M": 5,
+      "defense_f": 0,
+      "n_sources": 5,
+      "n_independence_classes": 5,
+      "retained_set_size": 5,
+      "min_retained": 3,
+      "margin_is_live": false,
+      "defense_matches_declared": true,
+      "seed_entropy": 25873748826208450093657097358164192435,
+      "entropy_matches_declared": true,
+      "entropy_not_reused_from_a2": true,
+      "attacked": [
+        "batch_1"
+      ],
+      "attack_mapping_ok": true,
+      "attack_is_primary": true,
+      "pass": true
+    },
+    "operating_point_B'_seed1": {
+      "M": 5,
+      "defense_f": 0,
+      "n_sources": 5,
+      "n_independence_classes": 5,
+      "retained_set_size": 5,
+      "min_retained": 3,
+      "margin_is_live": false,
+      "defense_matches_declared": true,
+      "seed_entropy": 224463726283861287585842441982236519383,
+      "entropy_matches_declared": true,
+      "entropy_not_reused_from_a2": true,
+      "attacked": [
+        "batch_3"
+      ],
+      "attack_mapping_ok": true,
+      "attack_is_primary": true,
+      "pass": true
+    },
+    "operating_point_B'_seed2": {
+      "M": 5,
+      "defense_f": 0,
+      "n_sources": 5,
+      "n_independence_classes": 5,
+      "retained_set_size": 5,
+      "min_retained": 3,
+      "margin_is_live": false,
+      "defense_matches_declared": true,
+      "seed_entropy": 11901184105024366541245543018062542394,
+      "entropy_matches_declared": true,
+      "entropy_not_reused_from_a2": true,
+      "attacked": [
+        "batch_5"
+      ],
+      "attack_mapping_ok": true,
+      "attack_is_primary": true,
+      "pass": true
+    },
+    "operating_point_C'_seed0": {
+      "M": 5,
+      "defense_f": 1,
+      "n_sources": 5,
+      "n_independence_classes": 5,
+      "retained_set_size": 3,
+      "min_retained": 3,
+      "margin_is_live": true,
+      "defense_matches_declared": true,
+      "seed_entropy": 25873748826208450093657097358164192435,
+      "entropy_matches_declared": true,
+      "entropy_not_reused_from_a2": true,
+      "attacked": [
+        "batch_1"
+      ],
+      "attack_mapping_ok": true,
+      "attack_is_primary": true,
+      "pass": true
+    },
+    "operating_point_C'_seed1": {
+      "M": 5,
+      "defense_f": 1,
+      "n_sources": 5,
+      "n_independence_classes": 5,
+      "retained_set_size": 3,
+      "min_retained": 3,
+      "margin_is_live": true,
+      "defense_matches_declared": true,
+      "seed_entropy": 224463726283861287585842441982236519383,
+      "entropy_matches_declared": true,
+      "entropy_not_reused_from_a2": true,
+      "attacked": [
+        "batch_3"
+      ],
+      "attack_mapping_ok": true,
+      "attack_is_primary": true,
+      "pass": true
+    },
+    "operating_point_C'_seed2": {
+      "M": 5,
+      "defense_f": 1,
+      "n_sources": 5,
+      "n_independence_classes": 5,
+      "retained_set_size": 3,
+      "min_retained": 3,
+      "margin_is_live": true,
+      "defense_matches_declared": true,
+      "seed_entropy": 11901184105024366541245543018062542394,
+      "entropy_matches_declared": true,
+      "entropy_not_reused_from_a2": true,
+      "attacked": [
+        "batch_5"
+      ],
+      "attack_mapping_ok": true,
+      "attack_is_primary": true,
+      "pass": true
+    },
+    "operating_point_E'_seed0": {
+      "M": 5,
+      "defense_f": 1,
+      "n_sources": 5,
+      "n_independence_classes": 5,
+      "retained_set_size": 3,
+      "min_retained": 3,
+      "margin_is_live": true,
+      "defense_matches_declared": true,
+      "seed_entropy": 25873748826208450093657097358164192435,
+      "entropy_matches_declared": true,
+      "entropy_not_reused_from_a2": true,
+      "attacked": null,
+      "attack_mapping_ok": true,
+      "attack_is_primary": true,
+      "pass": true
+    },
+    "operating_point_E'_seed1": {
+      "M": 5,
+      "defense_f": 1,
+      "n_sources": 5,
+      "n_independence_classes": 5,
+      "retained_set_size": 3,
+      "min_retained": 3,
+      "margin_is_live": true,
+      "defense_matches_declared": true,
+      "seed_entropy": 224463726283861287585842441982236519383,
+      "entropy_matches_declared": true,
+      "entropy_not_reused_from_a2": true,
+      "attacked": null,
+      "attack_mapping_ok": true,
+      "attack_is_primary": true,
+      "pass": true
+    },
+    "operating_point_E'_seed2": {
+      "M": 5,
+      "defense_f": 1,
+      "n_sources": 5,
+      "n_independence_classes": 5,
+      "retained_set_size": 3,
+      "min_retained": 3,
+      "margin_is_live": true,
+      "defense_matches_declared": true,
+      "seed_entropy": 11901184105024366541245543018062542394,
+      "entropy_matches_declared": true,
+      "entropy_not_reused_from_a2": true,
+      "attacked": null,
+      "attack_mapping_ok": true,
+      "attack_is_primary": true,
+      "pass": true
+    }
+  },
+  "entropies_distinct_across_seeds": true,
+  "pass": true
+}
