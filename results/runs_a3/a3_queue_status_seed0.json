@@ -1,0 +1,51 @@
+{
+  "started": "2026-09-12T09:28:33+00:00",
+  "machine": "gcp t2d-standard-60 (AMD Milan, x86-64) -- gates doc section 15",
+  "seed_scope": 0,
+  "queue": [
+    "A_seed0",
+    "B_seed0",
+    "C_seed0",
+    "E_seed0"
+  ],
+  "runs": {
+    "A_seed0": {
+      "started": "2026-09-12T09:28:33+00:00",
+      "config": "configs\\experiment\\a3\\a_seed0.yaml",
+      "condition": "A'",
+      "seed": 0,
+      "attacked_source": null,
+      "resumed_from_round": 0,
+      "status": "dry-run"
+    },
+    "B_seed0": {
+      "started": "2026-09-12T09:28:33+00:00",
+      "config": "configs\\experiment\\a3\\b_seed0.yaml",
+      "condition": "B'",
+      "seed": 0,
+      "attacked_source": "batch_1",
+      "resumed_from_round": 0,
+      "status": "dry-run"
+    },
+    "C_seed0": {
+      "started": "2026-09-12T09:28:33+00:00",
+      "config": "configs\\experiment\\a3\\c_seed0.yaml",
+      "condition": "C'",
+      "seed": 0,
+      "attacked_source": "batch_1",
+      "resumed_from_round": 0,
+      "status": "dry-run"
+    },
+    "E_seed0": {
+      "started": "2026-09-12T09:28:33+00:00",
+      "config": "configs\\experiment\\a3\\e_seed0.yaml",
+      "condition": "E'",
+      "seed": 0,
+      "attacked_source": null,
+      "resumed_from_round": 0,
+      "status": "dry-run"
+    }
+  },
+  "halted": null,
+  "finished": "2026-09-12T09:28:33+00:00"
+}

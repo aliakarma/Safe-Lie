@@ -1,0 +1,11 @@
+{
+  "epsilon_offline": 0.5056466138121065,
+  "n_rounds": 2,
+  "alpha": 0.05,
+  "disagreement_mean": 0.2550284909196421,
+  "disagreement_std": 0.15883752334238116,
+  "disagreement_min": 0.054249850925202736,
+  "disagreement_max": 0.6166597202332227,
+  "source_run_id": "calib_smoke_pid_lagrangian",
+  "source_config_run_id": "smoke_pid_lagrangian"
+}

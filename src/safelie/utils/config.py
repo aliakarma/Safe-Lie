@@ -223,6 +223,76 @@ class DualConfig(BaseModel):
     eta_lambda: float = 0.035  # [SPEC]
     lambda_max: float = 25.0  # [SPEC]
 
+    # Which multiplier controller drives the dual update.
+    #
+    # `lagrangian` is the paper's Eq. 2 and the default, so every config
+    # written before this field existed -- A1's, A2's, A3's twelve --
+    # selects it by omission and runs a code path that did not change.
+    #
+    # `pid` is the PID-Lagrangian baseline (Stooke et al., 2020), which
+    # main_iclr.tex sec. 2 designates "a baseline rather than an
+    # afterthought" because it changes how cost error propagates into the
+    # multiplier and therefore alters the attack's transfer function. See
+    # `safelie.training.dual.pid_dual_update` for the recursion and for
+    # where the consensus mixing applies.
+    controller: Literal["lagrangian", "pid"] = "lagrangian"
+
+    # PID gains. Deliberately `None` by default and REQUIRED on the `pid`
+    # path: this repository does not invent [SPEC] numbers, and no
+    # pre-declaration has yet fixed a gain triple for the PID baseline.
+    # Choosing them is a scientific decision belonging to that document,
+    # not a default hidden in a schema. The validator below therefore
+    # refuses both a `pid` config with gains missing and a `lagrangian`
+    # config carrying gains that nothing will read.
+    k_p: float | None = None
+    k_i: float | None = None
+    k_d: float | None = None
+
+    def resolved_gains(self) -> tuple[float, float, float]:
+        """`(k_p, k_i, k_d)` as plain floats, for the `pid` path.
+
+        The validator below already guarantees all three are set whenever
+        `controller == "pid"`, but it cannot say so in the type. Reading them
+        through here keeps that guarantee in one place instead of scattering
+        `assert ... is not None` through the training loop, and re-raises
+        rather than silently substituting a default if the invariant is ever
+        bypassed (`DualConfig.model_construct`, say).
+        """
+        if self.k_p is None or self.k_i is None or self.k_d is None:
+            raise ValueError(
+                "resolved_gains() requires all three PID gains to be set; got "
+                f"k_p={self.k_p}, k_i={self.k_i}, k_d={self.k_d}. This is only "
+                "reachable on a DualConfig that bypassed validation."
+            )
+        return float(self.k_p), float(self.k_i), float(self.k_d)
+
+    @model_validator(mode="after")
+    def _check_controller_gains(self) -> DualConfig:
+        gains = {"k_p": self.k_p, "k_i": self.k_i, "k_d": self.k_d}
+        if self.controller == "pid":
+            missing = sorted(k for k, v in gains.items() if v is None)
+            if missing:
+                raise ValueError(
+                    f"dual.controller='pid' requires explicit gains; missing: {missing}. "
+                    "There is no default gain triple by design -- see DualConfig."
+                )
+            negative = sorted(k for k, v in gains.items() if v is not None and v < 0.0)
+            if negative:
+                raise ValueError(
+                    f"dual gains must be non-negative; got negative: {negative}. "
+                    "A negative gain inverts the controller's sign and would drive the "
+                    "multiplier away from feasibility."
+                )
+        else:
+            present = sorted(k for k, v in gains.items() if v is not None)
+            if present:
+                raise ValueError(
+                    f"dual.controller='{self.controller}' does not read {present}. "
+                    "Set controller='pid' or remove the gains -- a config must not carry "
+                    "tuning values that silently do nothing."
+                )
+        return self
+
 
 class ExperimentConfig(BaseModel):
     run_id: str

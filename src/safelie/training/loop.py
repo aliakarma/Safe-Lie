@@ -49,7 +49,7 @@ from safelie.eval.margin import compute_guarantee_in_force
 from safelie.sources.estimators import DiversifiedReplica
 from safelie.sources.registry import SourceRegistry
 from safelie.training.buffer import AgentRollout
-from safelie.training.dual import dual_update
+from safelie.training.dual import dual_update, pid_dual_update
 from safelie.training.ppo import ppo_lagrangian_update
 from safelie.training.source_batch import (
     BatchSourceResult,
@@ -127,6 +127,26 @@ class ExperimentRun:
             for aid in self.env.agent_ids
         }
         self.lam = np.zeros(cfg.env.n_agents)
+        # PID-Lagrangian state. Both are unused on the default
+        # `controller="lagrangian"` path and are carried regardless so that
+        # checkpoint/restore has one shape, not two.
+        #
+        # `pid_integral` starts at zero, matching `lam`: at k_p = k_d = 0 and
+        # k_i = eta_lambda the integral IS the multiplier, so a zero start is
+        # what makes the reduction to Eq. 2 exact from round 0 rather than
+        # only asymptotically.
+        #
+        # `pid_prev_residual` starts as None because Delta_0 is not knowable
+        # before round 0 runs. On the first round it is seeded with Delta_0
+        # itself, so the one-sided derivative max(0, Delta_0 - Delta_0) is
+        # exactly 0 -- the round-0 convention in Stooke et al., and the only
+        # one that does not invent a spurious first-round derivative kick out
+        # of the arbitrary choice of initial value. This is a one-time state
+        # initialisation, not a Proposition 3 gate: it branches on whether a
+        # previous round exists, never on the magnitude of any residual, and
+        # the dual update below it runs unconditionally either way.
+        self.pid_integral = np.zeros(cfg.env.n_agents)
+        self.pid_prev_residual: np.ndarray | None = None
         self.W = build_topology(
             cfg.topology.name, cfg.topology.n_agents, p=cfg.topology.p, graph_seed=cfg.topology.graph_seed
         )
@@ -634,7 +654,36 @@ class ExperimentRun:
         # record the two inputs the identity needs: the pre-update mixed
         # multiplier `W @ lambda_k` and the residual the dual consumed.
         mixed_lam = self.W @ self.lam
-        self.lam = dual_update(self.lam, self.W, cfg.dual.eta_lambda, residual_vec, cfg.dual.lambda_max)
+        # `W @ I_k`, the PID analogue of `mixed_lam`. Computed before the
+        # update for the same reason: it is the left-hand side of the only
+        # exact identity the PID path has, and re-deriving it afterwards from
+        # `I_{k+1}` is impossible once the projection has clipped.
+        mixed_integral = self.W @ self.pid_integral
+        pid_derivative: np.ndarray = np.zeros_like(self.lam)
+        pid_k_p = pid_k_d = 0.0
+        if cfg.dual.controller == "pid":
+            # Selecting a controller is a configuration choice resolved once
+            # per run from a Literal field; it is not a gate on the residual.
+            # Proposition 3's requirement is that nothing may branch on the
+            # *magnitude* of the constraint error and thereby skip an update,
+            # and neither arm of this branch can: both call an unconditional,
+            # branch-free update, exactly one of which runs every round.
+            prev_residual = residual_vec if self.pid_prev_residual is None else self.pid_prev_residual
+            pid_k_p, pid_k_i, pid_k_d = cfg.dual.resolved_gains()
+            self.lam, self.pid_integral = pid_dual_update(
+                self.pid_integral,
+                prev_residual,
+                self.W,
+                pid_k_p,
+                pid_k_i,
+                pid_k_d,
+                residual_vec,
+                cfg.dual.lambda_max,
+            )
+            pid_derivative = np.maximum(residual_vec - prev_residual, 0.0)
+            self.pid_prev_residual = np.asarray(residual_vec, dtype=float).copy()
+        else:
+            self.lam = dual_update(self.lam, self.W, cfg.dual.eta_lambda, residual_vec, cfg.dual.lambda_max)
 
         # G9h-iii, extended to cover steps 4-6: the attack hook, the
         # aggregation and the dual update must not have moved theta
@@ -677,7 +726,26 @@ class ExperimentRun:
             # G9d-i: `lambda_after - lambda_mixed_before == eta * residual`
             # on every unclipped cell, checkable directly from the log
             # without re-deriving `W @ lambda_k` from six other fields.
+            #
+            # NOTE: that identity is specific to `controller="lagrangian"`.
+            # Under PID the multiplier is not a mixed-plus-step recursion at
+            # all, so `lambda_after - lambda_mixed_before` is not `eta *
+            # residual` and nothing is wrong when it differs. The exact
+            # identity on the PID path lives on the INTEGRAL instead --
+            # `pid_integral_after - pid_integral_mixed_before == k_i *
+            # residual` on every unclipped cell -- and the three terms below
+            # reconstruct `lambda_after` itself. Both fields are written only
+            # on the PID path, so no existing artifact's schema changes.
             round_record["constraints"][aid]["lambda_mixed_before"] = float(mixed_lam[i])
+            if cfg.dual.controller == "pid":
+                round_record["constraints"][aid]["pid"] = {
+                    "integral_after": float(self.pid_integral[i]),
+                    "integral_mixed_before": float(mixed_integral[i]),
+                    "p_term": pid_k_p * float(residual_vec[i]),
+                    "i_term": float(self.pid_integral[i]),
+                    "d_term": pid_k_d * float(pid_derivative[i]),
+                    "derivative_raw": float(pid_derivative[i]),
+                }
             round_record["constraints"][aid]["ppo"] = {
                 "policy_loss": ppo_stats.policy_loss,
                 "value_loss": ppo_stats.value_loss,
@@ -724,6 +792,12 @@ class ExperimentRun:
                 aid: h.state_dict() for aid, h in self.constraint_report_heads.items()
             },
             "lam": self.lam,
+            # S14 (bitwise-identical resume) covers the PID controller's own
+            # state too: without these a resumed PID run would restart its
+            # integral from zero and lose the derivative's reference point,
+            # so the multiplier would visibly jump at the resume boundary.
+            "pid_integral": self.pid_integral,
+            "pid_prev_residual": self.pid_prev_residual,
             "round_index": self.round_index,
             "clean_run_disagreements": list(self.clean_run_disagreements),
             "rng_state": {
@@ -755,6 +829,11 @@ class ExperimentRun:
         for aid, sd in state.get("constraint_report_heads", {}).items():
             self.constraint_report_heads[aid].load_state_dict(sd)
         self.lam = state["lam"]
+        # `.get` with the constructed default, so a checkpoint written before
+        # the PID controller existed still restores. Such a checkpoint can only
+        # belong to a `controller="lagrangian"` run, which reads neither field.
+        self.pid_integral = state.get("pid_integral", self.pid_integral)
+        self.pid_prev_residual = state.get("pid_prev_residual", None)
         self.round_index = state["round_index"]
         self.clean_run_disagreements = list(state["clean_run_disagreements"])
         self.env_rng.bit_generator.state = state["rng_state"]["env"]

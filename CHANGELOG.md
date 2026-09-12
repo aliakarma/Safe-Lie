@@ -5,6 +5,61 @@ follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### PID-Lagrangian: a second multiplier controller, A3's path untouched
+
+`safelie.training.dual.pid_dual_update` adds the Stooke et al. (2020)
+multiplier controller, selected with `dual.controller: pid`. It is the
+baseline `paper/main_iclr.tex` sec. 2 calls "a baseline rather than an
+afterthought", on the grounds that changing how cost error propagates into
+the multiplier alters the attack's transfer function.
+
+**Consensus mixes the integral term**, not the controller output:
+
+    Delta_k   = residual (= J_bar - d, per agent)
+    d_k       = max(0, Delta_k - Delta_{k-1})       one-sided, elementwise
+    I_{k+1}   = Proj( W @ I_k + k_i * Delta_k )
+    lambda_k  = Proj( k_p * Delta_k + I_{k+1} + k_d * d_k )
+
+Two consequences, and they are the reason for that placement. First, at
+`k_p = k_d = 0, k_i = eta_lambda` the recursion is `dual_update` term for
+term, so **every config written before this change -- A1's, A2's, A3's
+twelve -- selects `lagrangian` by omission and runs an unchanged code
+path**. `tests/unit/test_pid_dual.py::test_pid_reduces_to_lagrangian_bitwise`
+pins that against `dual_update` itself rather than a transcription of it.
+Second, Theorem 1's `1^T e_K = eta * sum_k 1^T delta_k` carries over to the
+integral verbatim (its proof uses only `1^T W = 1^T`), while the
+proportional and derivative terms contribute a bias that does *not*
+accumulate in K -- which is the transfer-function change itself, and is
+pinned as a test rather than left as a claim.
+
+**The gains are deliberately undeclared.** `k_p`, `k_i`, `k_d` have no
+defaults and are required on the `pid` path; a `lagrangian` config
+carrying them is rejected outright, so no run can quietly hold tuning
+values nothing reads. No pre-declaration has fixed an operating point for
+this baseline, and choosing one belongs in that document, not in a schema
+default.
+
+Liveness (Proposition 3) is preserved on the same structural argument as
+`dual_update`: the update is elementwise arithmetic with no branch at all,
+checked on the compiled bytecode. The controller-selection `if` in
+`ExperimentRun.run_round` branches on a config Literal, never on the
+magnitude of a residual, and both arms call an unconditional update.
+
+Also added: `pid_integral` and `pid_prev_residual` to the checkpoint (S14
+bitwise resume covers the controller's own state); a `pid` diagnostic block
+in the round record on the PID path only, carrying the term decomposition
+and the integral's pre-mixing value, so the integral recursion is
+checkable from the artifact the way G9d-i is for the Lagrangian path;
+`scripts/pid_smoke_verify.py`; `scripts/compare_runs_identical.py`; and
+`configs/experiment/a3/_smoke_pid_lagrangian.yaml` (smoke gains, explicitly
+not a declaration).
+
+Note for readers of existing artifacts: G9d-i's identity
+`lambda_after - lambda_mixed_before == eta * residual` is specific to
+`controller="lagrangian"`. Under PID the multiplier is not a
+mixed-plus-step recursion and that difference is expected; the exact
+identity there lives on the integral instead.
+
 ### G2-peer: the peer-critic source's underlying function (post-G1)
 
 G1's verdict was FAIL. The own-critic repair itself was vindicated

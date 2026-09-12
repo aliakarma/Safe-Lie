@@ -34,6 +34,18 @@ executed to verify each claim below.
   PyTorch actor-critic-critic implementation — PPO clip, GAE (same gamma
   for reward and cost, per the paper's own warning), the unconditional
   dual update, checkpointing with full RNG-state capture.
+- **PID-Lagrangian** (`safelie.training.dual.pid_dual_update`): the
+  Stooke et al. (2020) multiplier controller, selected with
+  `dual.controller: pid`. Consensus mixes the *integral* term, which is
+  what makes `k_p = k_d = 0, k_i = eta_lambda` reduce to Eq. 2 bit for bit
+  (pinned against `dual_update` itself in
+  `tests/unit/test_pid_dual.py`) and what preserves Theorem 1's
+  mass-conservation identity on the integral path. The derivative is taken
+  on the cost and one-sided, as in the source. **The gains are
+  deliberately undeclared**: they have no defaults and are required on the
+  `pid` path, because no pre-declaration has fixed an operating point and
+  a gain triple must always be someone's stated choice rather than a
+  schema fallback.
 - **Withheld oracle** (`safelie.eval.oracle`, `safelie.envs.guards`):
   structural isolation (no `true_cost` field reaches the learner at all,
   not merely a guarded one), verified by a grep-level AST test that no
@@ -62,7 +74,7 @@ executed to verify each claim below.
 | Component | Why | What's needed |
 |---|---|---|
 | Safety-Gymnasium multi-agent *navigation* tasks | Goal-conditioned, with a different agent/observation structure than a MuJoCo factorization | A separate adapter; the Safe MAMuJoCo one does not generalize to them |
-| MACPO, Dec-PDO, PID-Lagrangian, unconstrained MAPPO baselines | Report's own compact-study scope (§R2.1) designates MAPPO-Lagrangian as the sole Stage-2 victim; the rest are Stage-3 | Port from a reference implementation once Stage-2 is running |
+| MACPO, Dec-PDO, unconstrained MAPPO baselines | Report's own compact-study scope (§R2.1) designates MAPPO-Lagrangian as the sole Stage-2 victim; the rest are Stage-3 | Port from a reference implementation once Stage-2 is running |
 | Reliability weights (Algorithm 1 lines 2, 10) | The paper declares and initializes them but no line of its own pseudocode reads them (`[GAP]` G1) | A specified update rule from the paper's authors, or a documented invented one — deliberately not fabricated here |
 | Adaptive (stealth) and Byzantine attack axes in the default training loop | Both are implemented as standalone functions (`safelie.attacks.adaptive`, `safelie.attacks.byzantine`) but not wired into `safelie.training.loop`; the compact study's scope (decisions D5, and `[GAP]` G15) explicitly defers both to Stage 3 | Wire `stealth_attack`/`byzantine_attack` into `safelie.attacks.apply_attack`'s dispatch and `ExperimentRun.run_round` |
 | Cumulative corruption budget (`Delta`, §3.2) enforcement | Declared in the paper, never used in its own evaluation protocol (`[GAP]` G14) | `AttackLedger.total_mass()` already tracks it; enforcing it as a constraint would be a small addition |

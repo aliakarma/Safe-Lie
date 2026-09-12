@@ -1,0 +1,194 @@
+{
+  "run_id": "smoke_m5_rce_clean",
+  "seed": 0,
+  "status": "complete",
+  "written_at": "2026-09-12T08:33:56.426715+00:00",
+  "git": {
+    "sha": "8fa653c4ad22ff3a95c1bebbc454957699e36974",
+    "dirty": true,
+    "dirty_paths": [
+      "results/a3_smoke_rerun/",
+      "results/runs_a3/a3_queue_status_seed0.json",
+      "results/runs_a3/a3_queue_status_seed1.json",
+      "results/runs_a3/a3_queue_status_seed2.json"
+    ]
+  },
+  "python": "3.11.9 (tags/v3.11.9:de54cf5, Apr  2 2024, 10:12:12) [MSC v.1938 64 bit (AMD64)]",
+  "platform": "Windows-10-10.0.26200-SP0",
+  "provenance": {
+    "machine_type": null,
+    "os": "Windows-10-10.0.26200-SP0",
+    "system": "Windows",
+    "architecture": "AMD64",
+    "cpu_model": "AMD64 Family 25 Model 80 Stepping 0, AuthenticAMD",
+    "cpu_count_logical": 12,
+    "workers": 12,
+    "libraries": {
+      "torch": "2.12.1+cpu",
+      "numpy": "2.2.6",
+      "mujoco": "3.12.0",
+      "gymnasium": "1.3.0",
+      "gymnasium_robotics": "1.4.2"
+    },
+    "config_sha256": "393807fd3490ab11e3485c76961496da9fc95ebbd3be13d26821974c2d26fbcc",
+    "thread_env": {
+      "OMP_NUM_THREADS": "1",
+      "MKL_NUM_THREADS": "1",
+      "OPENBLAS_NUM_THREADS": "1"
+    }
+  },
+  "num_rounds_planned": 3,
+  "config_snapshot": {
+    "run_id": "smoke_m5_rce_clean",
+    "seed": 0,
+    "env": {
+      "name": "manyagent_ant",
+      "n_agents": 6,
+      "budget": 25.0,
+      "horizon": 200,
+      "obs_dim": 8,
+      "action_dim": 2,
+      "agent_obsk": 1,
+      "cost_mode": "per_agent_velocity",
+      "velocity_threshold": 0.75
+    },
+    "topology": {
+      "name": "ring",
+      "n_agents": 6,
+      "p": null,
+      "graph_seed": 0
+    },
+    "sources": {
+      "sources": [
+        {
+          "source_id": "batch_1",
+          "source_type": "trajectory_batch",
+          "independence_class": "ic_batch1"
+        },
+        {
+          "source_id": "batch_2",
+          "source_type": "trajectory_batch",
+          "independence_class": "ic_batch2"
+        },
+        {
+          "source_id": "batch_3",
+          "source_type": "trajectory_batch",
+          "independence_class": "ic_batch3"
+        },
+        {
+          "source_id": "batch_4",
+          "source_type": "trajectory_batch",
+          "independence_class": "ic_batch4"
+        },
+        {
+          "source_id": "batch_5",
+          "source_type": "trajectory_batch",
+          "independence_class": "ic_batch5"
+        }
+      ]
+    },
+    "attack": {
+      "name": "none",
+      "f": 0,
+      "budget_ratio": 0.0,
+      "kappa": 1.0,
+      "nu_ratio": 0.05,
+      "direction": "negative",
+      "support": "persistent",
+      "adaptivity": "static",
+      "consistency": "consistent",
+      "corrupted_source_ids": null
+    },
+    "defense": {
+      "name": "rce",
+      "f": 1,
+      "beta": 1.5,
+      "sigma_min": 0.001,
+      "min_retained": 3,
+      "use_reliability_weights": false,
+      "calibration_rounds": 2,
+      "calibration_alpha": 0.05
+    },
+    "ppo": {
+      "clip": 0.2,
+      "gae_lambda": 0.95,
+      "gamma": 0.99,
+      "lr": 0.0003,
+      "epochs": 4,
+      "minibatches": 4,
+      "entropy_coef": 0.001,
+      "value_coef": 0.5,
+      "grad_clip": 0.5,
+      "hidden_dim": 64,
+      "critic_lr": null
+    },
+    "dual": {
+      "eta_lambda": 0.035,
+      "lambda_max": 25.0
+    },
+    "total_steps": 6000,
+    "rollout_length": 2000,
+    "output_dir": "results/a3_smoke_rerun",
+    "constraint_estimator": "mc_window",
+    "source_collection": {
+      "mode": "parallel_trajectory_batch",
+      "M": 5,
+      "R_m": 30,
+      "workers": 12,
+      "chunks_per_worker": 4,
+      "seed_entropy": 125874161321982859772979905280660807349,
+      "validation_rounds": [
+        1
+      ],
+      "R_ref": 120
+    }
+  },
+  "rounds_completed": 3,
+  "checkpoint": "checkpoint.pt",
+  "eval_every": 1,
+  "timing": {
+    "source_s": 629.7781240940094,
+    "oracle_s": 19.2142596244812,
+    "learner_total_s": 661.9760212898254,
+    "wall_clock_s": 681.2813732624054,
+    "s_per_round": 227.09379108746847,
+    "source_s_per_round": 209.9260413646698
+  },
+  "env_steps": {
+    "ppo": 6000,
+    "source": 900000,
+    "oracle": 6000
+  },
+  "source_seed_audit": {
+    "n_env_seeds_issued": 570,
+    "n_torch_seeds_issued": 570,
+    "duplicate_seed_events": 0,
+    "collisions": [],
+    "spawn_keys": [
+      [
+        125874161321982859772979905280660807349,
+        0
+      ],
+      [
+        125874161321982859772979905280660807349,
+        1
+      ],
+      [
+        125874161321982859772979905280660807349,
+        2
+      ],
+      [
+        125874161321982859772979905280660807349,
+        3
+      ],
+      [
+        125874161321982859772979905280660807349,
+        4
+      ],
+      [
+        125874161321982859772979905280660807349,
+        5
+      ]
+    ]
+  }
+}

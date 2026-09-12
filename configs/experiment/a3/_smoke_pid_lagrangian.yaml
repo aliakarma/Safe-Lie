@@ -1,0 +1,138 @@
+# PID-LAGRANGIAN SMOKE TEST. NOT AN A3 RESULT, NOT A BASELINE DECLARATION.
+#
+# ============================ READ THIS FIRST ============================
+# This file answers one engineering question:
+#
+#     does the PID-Lagrangian controller run end to end on the real
+#     pipeline, with all three terms computed and all three reaching the
+#     multiplier, under the same M=5 f=1 RCE path A3 uses?
+#
+# It is a plumbing check. Three rounds under an essentially untrained
+# policy cannot measure a controller's behaviour, and nothing here may be
+# reported as a baseline result.
+#
+# It writes to results/a3_smoke_pid/, so no artifact it produces can be
+# picked up by scripts/analyze_a3.py or by the A3 queue.
+# =========================================================================
+#
+# ------------------------- THE GAINS ARE NOT SPEC -------------------------
+# k_p, k_i and k_d below are SMOKE-TEST VALUES, chosen for one property
+# only: that all three terms are numerically visible in a 3-round run on
+# this environment, so the verifier can prove each one reaches the dual.
+# They are NOT a declaration of the PID baseline's operating point. No
+# pre-declaration has fixed a gain triple, and picking one is a scientific
+# decision belonging to that document, not to a smoke config. This is why
+# `DualConfig` gives the gains no defaults and requires them explicitly:
+# a gain triple must always be someone's stated choice, never a fallback.
+#
+# How these three were sized, from the measured attack-arm smoke run
+# (results/a3_smoke_rerun/smoke_m5_rce_attack, 3 rounds, 6 agents):
+#
+#   residual (J_bar - d)      min 12.8   median 18.8   max 36.9
+#   round-to-round delta      min -0.80  max +0.077
+#
+#   k_i: 0.035  == eta_lambda. The integral then behaves exactly as the
+#        Lagrangian path's multiplier does, so `i_term` can be read against
+#        a known quantity (~0.75/round here) instead of an unfamiliar one.
+#   k_p: 0.05   gives a proportional term of ~1.1 at a residual of ~21 --
+#        same order as the integral after three rounds, so neither term
+#        hides the other, and far from lambda_max = 25.
+#   k_d: 1.0    the derivative signal is genuinely small over three rounds
+#        (max +0.077), because the cost is falling in most cells. A gain
+#        large enough to make `d_term` LOOK big would be a lie about the
+#        controller. The verifier instead proves the term reaches the
+#        multiplier by exact identity, which does not require it to be
+#        large -- and the mixed-sign deltas above mean this run exercises
+#        the one-sided max(0, .) in both directions.
+#
+# ------------------------ WHAT IS HELD FIXED ------------------------
+# Everything except the `dual` block is byte-identical to
+# _smoke_m5_rce_attack.yaml, including the seed and seed_entropy. The two
+# runs therefore draw the same source values from the same streams, and
+# the ONLY difference between them is the controller. That is what makes
+# "PID changed the multiplier trajectory and nothing else" checkable.
+run_id: smoke_pid_lagrangian
+seed: 0
+
+env:
+  name: manyagent_ant
+  n_agents: 6
+  budget: 25.0
+  velocity_threshold: 0.75
+  cost_mode: per_agent_velocity
+
+topology:
+  name: ring
+  n_agents: 6
+
+sources:
+  sources:
+    - source_id: batch_1
+      source_type: trajectory_batch
+      independence_class: ic_batch1
+    - source_id: batch_2
+      source_type: trajectory_batch
+      independence_class: ic_batch2
+    - source_id: batch_3
+      source_type: trajectory_batch
+      independence_class: ic_batch3
+    - source_id: batch_4
+      source_type: trajectory_batch
+      independence_class: ic_batch4
+    - source_id: batch_5
+      source_type: trajectory_batch
+      independence_class: ic_batch5
+
+source_collection:
+  mode: parallel_trajectory_batch
+  M: 5
+  R_m: 30
+  seed_entropy: 125874161321982859772979905280660807349
+  workers: 12
+  chunks_per_worker: 4
+  validation_rounds: [1]
+  R_ref: 120
+
+attack:
+  name: primary
+  f: 1
+  budget_ratio: 0.5
+  direction: negative
+  support: persistent
+  adaptivity: static
+  consistency: consistent
+  corrupted_source_ids: [batch_1]
+
+defense:
+  name: rce
+  f: 1
+  beta: 1.5
+  sigma_min: 0.001
+  min_retained: 3
+  calibration_rounds: 2
+  calibration_alpha: 0.05
+
+ppo:
+  clip: 0.2
+  gae_lambda: 0.95
+  gamma: 0.99
+  lr: 0.0003
+  epochs: 4
+  minibatches: 4
+  hidden_dim: 64
+
+dual:
+  # THE ONLY BLOCK THAT DIFFERS from _smoke_m5_rce_attack.yaml.
+  controller: pid
+  k_p: 0.05
+  k_i: 0.035
+  k_d: 1.0
+  lambda_max: 25.0
+  # eta_lambda is NOT read on the pid path (k_i replaces it). It is left at
+  # its [SPEC] default rather than removed, because DualConfig gives it one
+  # and every other config in the repository carries it.
+  eta_lambda: 0.035
+
+total_steps: 6000
+rollout_length: 2000
+output_dir: results/a3_smoke_pid
