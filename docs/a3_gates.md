@@ -790,3 +790,87 @@ preemption would cost wall clock rather than data. The resume path has never
 been exercised under preemption, and A3 is a pre-declared campaign; a standard
 persistent VM is used so no untested failure mode is introduced for a saving
 measured in hours.
+
+---
+
+## 16. Addendum — `workers` 30 → 20, so all three seeds run concurrently
+
+**Added 2026-09-12, before any A3 production run existed on any machine.**
+Sections 1-14 are unedited, and so is section 15. This section records a
+change of *worker count and scheduling*, and nothing else. No threshold,
+band, gate, contrast, seed, or decision rule anywhere in this document is
+altered, added, relaxed, or reinterpreted by it.
+
+### 16.1 What changed
+
+| | section 15 | **production** |
+|---|---|---|
+| `source_collection.workers` | 30 | **20** |
+| scheduling | seeds 0 and 1 concurrent, seed 2 when capacity frees | **all three seeds concurrent** |
+| instance occupancy | 60/60 vCPU, then 30/60 for the whole second phase | **60/60 vCPU throughout** |
+| projected wall clock | ~33-42 h | **~24-29 h** |
+
+Platform, machine type and CPU family are unchanged from section 15: one GCP
+`t2d-standard-60`, all twelve runs, one instance. Everything section 15.1
+listed as untouched remains untouched — `M=5`, `f=1`, `beta=1.5`, `R_m=30`,
+`rollout_length=2000`, 250 rounds, the three seeds and their entropies, the
+attacked-source mapping, the attack block, the RCE block, PPO, GAE, the dual
+update, `d=25`, the ring topology, the environment, the 20-round calibration
+protocol, and the `R_ref=120` validation protocol at rounds
+{25,75,125,175,225}.
+
+### 16.2 Why this is admissible
+
+It is the same argument as §15.3, and it is admissible for exactly the same
+reason: `workers` selects the chunk partition and nothing else. Every
+`(env_seed, torch_seed)` pair is drawn in the main process before dispatch,
+and `collect_one_trajectory` reseeds the environment and the torch global
+generator at the top of every trajectory, so no reported value depends on
+which process ran which trajectory or in what order.
+
+§15.3's measured sweep covered `{1, 2, 4, 5, 6, 8, 12}` — which, it should be
+said plainly, contained **neither** the value it was used to license (30) nor
+the value adopted here (20). The sweep was therefore extended on 2026-09-12
+before this change was committed:
+
+| dimension | coverage | result |
+|---|---|---|
+| worker counts | 1, 2, 4, 5, 6, 8, 12, **20**, **30** | all identical |
+| dispatch paths | `workers=1` bypasses `mp.Pool`; `workers>=2` does not | both identical |
+| chunk partitions | 40 / 48 / 80 / 120 chunks over 150 items | all identical |
+| volume | `R_m=8` and production `R_m=30` | both identical |
+| compared | all 30 source means (5 sources x 6 owners), and every per-trajectory `G_r^i` | **max abs difference exactly 0.0** |
+
+Bitwise, not within a tolerance. The production value is now a measured
+point rather than an interpolation between measured points.
+
+### 16.3 The cost, stated
+
+20 does **not** divide the 150-trajectory round exactly. `ceil(150/20) = 8`
+waves against 7.5 ideal is roughly a 6% granularity loss, where 30 divided the
+round exactly into 5 waves. Expect **~67 s/round** against ~42 s/round at 30.
+
+That loss is accepted because the alternative wasted more. Under §15.4's
+schedule seed 2 ran alone at 30 workers, leaving 30 of 60 cores idle for an
+entire phase — seed 2 performs a third of the campaign's work but took as long
+as seeds 0 and 1 took together. Trading ~6% of one phase to recover ~30% of
+the campaign is favourable, and it removes a phase in which the instance is
+half idle while still being billed in full.
+
+This is not a change made to improve any result. It cannot improve any result:
+the numbers are bitwise identical either way, and §16.2 is the measurement
+that establishes that rather than the assertion that hopes it.
+
+### 16.4 What section 15 still governs
+
+§15.4's rule is unchanged in every respect except the count of concurrent
+seeds. Within a seed the order is still `A' -> B' -> C' -> E'`, a whole seed
+still stays in one process on one machine, the per-seed lock file and per-seed
+status file still make two processes claiming one seed an explicit failure,
+and `workers` is still **not** in `PERMITTED_WITHIN_SEED` — the four
+conditions of a seed must still agree on it.
+
+The one sentence of §15 that this section supersedes is §15.4's closing
+**"Seed 2 is not claimed to be concurrent."** At 20 workers it is, because
+3 x 20 = 60. That sentence was true of a 30-worker schedule and is left in
+place unedited, as the amendment convention requires.

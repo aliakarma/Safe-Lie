@@ -134,7 +134,7 @@
       ],
       "illegal": [],
       "R_m": 30,
-      "workers": 30,
+      "workers": 20,
       "validation_rounds": [
         25,
         75,
@@ -165,7 +165,7 @@
       ],
       "illegal": [],
       "R_m": 30,
-      "workers": 30,
+      "workers": 20,
       "validation_rounds": [
         25,
         75,
@@ -196,7 +196,7 @@
       ],
       "illegal": [],
       "R_m": 30,
-      "workers": 30,
+      "workers": 20,
       "validation_rounds": [
         25,
         75,
@@ -222,7 +222,7 @@
       ],
       "illegal": [],
       "R_m": 30,
-      "workers": 30,
+      "workers": 20,
       "validation_rounds": [
         25,
         75,
@@ -250,7 +250,7 @@
       ],
       "illegal": [],
       "R_m": 30,
-      "workers": 30,
+      "workers": 20,
       "validation_rounds": [
         25,
         75,
@@ -278,7 +278,7 @@
       ],
       "illegal": [],
       "R_m": 30,
-      "workers": 30,
+      "workers": 20,
       "validation_rounds": [
         25,
         75,
@@ -301,7 +301,7 @@
       ],
       "illegal": [],
       "R_m": 30,
-      "workers": 30,
+      "workers": 20,
       "validation_rounds": [
         25,
         75,
@@ -327,7 +327,7 @@
       ],
       "illegal": [],
       "R_m": 30,
-      "workers": 30,
+      "workers": 20,
       "validation_rounds": [
         25,
         75,
@@ -353,7 +353,7 @@
       ],
       "illegal": [],
       "R_m": 30,
-      "workers": 30,
+      "workers": 20,
       "validation_rounds": [
         25,
         75,
@@ -381,7 +381,7 @@
       ],
       "illegal": [],
       "R_m": 30,
-      "workers": 30,
+      "workers": 20,
       "validation_rounds": [
         25,
         75,
@@ -410,7 +410,7 @@
       ],
       "illegal": [],
       "R_m": 30,
-      "workers": 30,
+      "workers": 20,
       "validation_rounds": [
         25,
         75,
@@ -439,7 +439,7 @@
       ],
       "illegal": [],
       "R_m": 30,
-      "workers": 30,
+      "workers": 20,
       "validation_rounds": [
         25,
         75,

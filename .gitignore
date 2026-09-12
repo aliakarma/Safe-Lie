@@ -38,6 +38,21 @@ env/
 #   g3.../dataset/,     ~81 MB of raw trajectory dumps from finished
 #   g8_nonstationary... diagnostics whose conclusions live in docs/g3_gates.md
 #                       and docs/g8_gates.md.
+#   a3 queue bookkeeping  the per-seed status files, lock files and the atomic
+#                       write temporaries. These are LIVE SCHEDULER STATE, not
+#                       evidence: `--dry-run` rewrites them, the queue rewrites
+#                       them after every run, and `test_a3_queue_isolation.py`
+#                       deletes them by fixture. Tracking them meant the
+#                       runbook's own pre-flight (run the tests, then the dry
+#                       run, then launch) left the tree dirty at the moment of
+#                       launch, and `_git_sha` stamps `dirty: true` plus
+#                       `dirty_paths` into all twelve production
+#                       `run_metadata.json` files. The campaign's real audit
+#                       trail is each run's own artifacts -- rounds.jsonl,
+#                       run_metadata.json, the gate reports -- all still
+#                       tracked. `a3_frozen_verification.json` also stays
+#                       tracked: it is a verification RESULT, written once by
+#                       `a3_verify_frozen.py`, not scheduler state.
 #
 # Net effect: ~103 MB tracked, ~232 MB not. A new 250-round run adds ~5 MB.
 notebooks/results/
@@ -48,6 +63,9 @@ notebooks/results/
 results/runs/
 results/g3_source_diagnostic/dataset/
 results/g8_nonstationary_source_diagnostic/
+results/runs_a3/a3_queue_status*.json
+results/runs_a3/.a3_queue*.lock
+results/runs_a3/*.tmp
 
 # Notebooks
 .ipynb_checkpoints/

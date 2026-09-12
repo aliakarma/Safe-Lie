@@ -49,10 +49,12 @@ pip install -e .
 
 Each source worker is single-threaded by design (`_init_worker` calls
 `torch.set_num_threads(1)`), but that does not cover BLAS in the **parent**
-process or in libraries that read the environment at import time. With 30
-worker processes on 60 cores, an unpinned BLAS spawning its own pool per
-process is the single easiest way to lose most of the machine to context
-switching.
+process or in libraries that read the environment at import time. With three
+seeds at 20 workers each -- 60 worker processes on 60 cores, every core
+committed -- an unpinned BLAS spawning its own pool per process is the single
+easiest way to lose most of the machine to context switching. At this worker
+count there is no core headroom, so these settings are load-bearing rather
+than merely advisable.
 
 ```bash
 export OMP_NUM_THREADS=1
@@ -91,36 +93,49 @@ python -m pytest tests/property/test_aggregators.py tests/unit/test_source_batch
 python scripts/a3_run_queue.py --seed 0 --dry-run
 python scripts/a3_run_queue.py --seed 1 --dry-run
 python scripts/a3_run_queue.py --seed 2 --dry-run
+
+# 5. the tree is clean -- run this LAST, after steps 1-4
+git status --porcelain
 ```
 
-All four must pass. `a3_verify_frozen.py` must print `ALL CONFIGS PASS`.
+All four checks must pass. `a3_verify_frozen.py` must print `ALL CONFIGS
+PASS`.
+
+**Step 5 must print nothing.** `safelie.experiment._git_sha` records `dirty`
+and `dirty_paths` in every run's `run_metadata.json`, so whatever the tree
+looks like at launch is stamped into all twelve production artifacts. It is
+step 5 rather than step 1 because steps 2 and 4 are themselves writers: the
+queue's per-seed status files, its lock files and its atomic-write
+temporaries are rewritten by the dry run and cycled by the test fixture.
+Those paths are gitignored precisely so this step can come after them and
+still print nothing; if it prints something else, resolve it before
+launching rather than after.
 
 ---
 
 ## 4. Launch
 
-Two seeds concurrently, 30 workers each — that is all 60 vCPUs.
+All three seeds concurrently, 20 workers each — 3 x 20 = 60, that is all 60
+vCPUs, and no phase leaves the instance half idle.
 
 ```bash
 cd ~/safelie && . .venv/bin/activate
 export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1
+mkdir -p results/runs_a3/logs
 
 nohup python scripts/a3_run_queue.py --seed 0 > results/runs_a3/logs/queue_seed0.out 2>&1 &
 nohup python scripts/a3_run_queue.py --seed 1 > results/runs_a3/logs/queue_seed1.out 2>&1 &
+nohup python scripts/a3_run_queue.py --seed 2 > results/runs_a3/logs/queue_seed2.out 2>&1 &
 ```
 
 Each process runs its seed's four conditions in order `A' -> B' -> C' -> E'`
 and gates each run before starting the next. A stop condition halts only that
-seed.
+seed; the other two continue, and each remains a complete analysable design on
+its own.
 
-**Seed 2 starts when one of the first two finishes**, freeing 30 cores:
-
-```bash
-nohup python scripts/a3_run_queue.py --seed 2 > results/runs_a3/logs/queue_seed2.out 2>&1 &
-```
-
-Do not start seed 2 early. Three seeds at 30 workers would oversubscribe the
-instance 1.5x and slow all three.
+Start all three together. Launching a fourth queue process, or raising
+`workers` above 20 while three seeds are running, oversubscribes the instance
+and slows every seed.
 
 ### Monitoring
 
@@ -194,25 +209,37 @@ core, 157.2 s/round at M=5), clock-scaled to Milan. Treat as ±25%.
 
 | phase | cores used | trajectories | wall clock |
 |---|---|---|---|
-| P1 — seeds 0+1 concurrent, 30w each | 60 | 316,800 | **16.6-21.1 h** |
-| P2 — seed 2 alone, 30w | 30 (**30 idle**) | 158,400 | **16.6-21.1 h** |
-| **total** | | 475,200 | **~33-42 h** |
+| single phase — seeds 0+1+2 concurrent, 20w each | 60 | 475,200 | **~24-29 h** |
+| **total** | | 475,200 | **~24-29 h** |
 
-**P2 leaves half the instance idle**, and that is a real cost: seed 2 does a
-third of the campaign's work but takes as long as the first two seeds
-together. Two ways to recover it, neither configured and neither taken here
-because the worker count is a declared value and this runbook does not change
-declared values:
+This is the first of the two recovery options the earlier revision of this
+section listed and declined. It is taken now, and the reason it can be taken
+is that the declared value was changed in the pre-declaration itself
+(`a3_gates.md` §16) rather than by this runbook — a runbook still may not
+change a declared value.
 
-* run all three seeds concurrently at 20 workers each — ~24-29 h, but it
-  costs 6% to granularity (`ceil(150/20) = 8` waves against 7.5 ideal) and
-  leaves no core headroom;
-* raise seed 2's four configs to `workers: 50` once it is the only queue
-  running — ~28-37 h total. Legitimate under §15.3 (all four conditions of
-  the seed still agree), but it is a config edit mid-campaign and would need
-  recording.
+What it buys and what it costs:
+
+* **buys** the idle half of the instance. The previous plan ran seeds 0+1 at
+  30 workers and then seed 2 alone, leaving 30 of 60 cores idle for the whole
+  second phase — seed 2 did a third of the work but took as long as the first
+  two together (~33-42 h in total).
+* **costs** about 6% to granularity: 150 trajectories over 20 workers is
+  `ceil(150/20) = 8` waves against 7.5 ideal, where 30 workers divided the
+  round exactly into 5. It also leaves **no core headroom**, which is why the
+  thread settings in §2 are mandatory rather than advisory.
+
+The trade is favourable because the granularity loss is ~6% of one phase while
+the idle half of P2 was ~30% of the campaign.
+
+The second option — raising seed 2's configs to `workers: 50` once it is the
+only queue running — is now moot, since no seed runs alone.
 
 Per-round timing appears in each run's `run_metadata.json` under
-`timing.source_s_per_round`. At 30 workers expect **~42 s/round**
-(`ceil(150/30) = 5` waves); materially above that means the machine is
-underperforming the projection or the thread settings did not take.
+`timing.source_s_per_round`. At 20 workers expect **~67 s/round**
+(`ceil(150/20) = 8` waves against ~42 s at 30 workers' 5 waves); materially
+above that means the machine is underperforming the projection or the thread
+settings did not take. Check this on the **first** completed round of the
+first seed, not at the end — the Windows smoke anchor measured 0.10-0.12
+traj/s/core against the 0.159 this projection assumes, so the first real
+GCP round is the first honest data point on throughput.

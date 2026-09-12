@@ -20,15 +20,18 @@
 # contrast must live on ONE machine. All twelve runs use one instance, one
 # machine type and one CPU platform, so there is no machine factor at all.
 #
-# `workers: 30` (was 12 on the laptop/Mac). This is a COMPUTE-ONLY change.
+# `workers: 20` (was 12 on the laptop/Mac, and 30 before the scheduling
+# change in docs/a3_gates.md section 16). This is a COMPUTE-ONLY change.
 # Worker count is scientifically invariant because trajectory seeds are
 # generated in the parent process and each worker is a pure function of the
 # same (policy, env_seed, torch_seed) tuple -- measured bitwise identical at
-# M=5 across workers in {1,2,4,5,6,8,12}, both dispatch paths, at R_m=8 and
-# at production R_m=30 (tests/unit/test_a3_verify_frozen_workers.py,
-# tests/unit/test_source_batch.py). 30 divides the 150-trajectory round
-# exactly (5 waves, no straggler), and two seeds run concurrently at 30
-# workers each on the 60-vCPU instance.
+# M=5 across workers in {1,2,4,5,6,8,12,20,30}, both dispatch paths, at
+# R_m=8 and at production R_m=30 (tests/unit/test_a3_verify_frozen_workers.py,
+# tests/unit/test_source_batch.py). 20 does NOT divide the 150-trajectory
+# round exactly -- ceil(150/20) = 8 waves against 7.5 ideal, ~6% granularity
+# cost -- and that cost is accepted because 3 x 20 = 60 lets all THREE seeds
+# run concurrently on the 60-vCPU instance, instead of two seeds at 30 with
+# seed 2 waiting for capacity.
 #
 # COMMON RANDOM NUMBERS: all four conditions of seed 0 share `seed: 0` and
 # this `seed_entropy`, so at round 0 the pre-attack source draws are
@@ -79,7 +82,7 @@ source_collection:
   # docs/a3_gates.md section 5:
   # int(sha256(b'safelie/a3/source-entropy/seed=0').digest()[:16])
   seed_entropy: 25873748826208450093657097358164192435
-  workers: 30
+  workers: 20
   chunks_per_worker: 4
   validation_rounds: [25, 75, 125, 175, 225]
   R_ref: 120

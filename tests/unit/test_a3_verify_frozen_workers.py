@@ -1,10 +1,15 @@
 """`workers` is a compute-only knob; the rest of `source_collection` is frozen.
 
-docs/a3_gates.md section 15. A3's platform moved to a 60-vCPU GCP instance,
-which meant raising `workers` from 12 to 30 -- and `scripts/a3_verify_frozen.py`
-would have rejected that, halting the queue before any run started, because it
-inherited A2's rule that NOTHING in `source_collection` may move except `M` and
-`seed_entropy`.
+docs/a3_gates.md sections 15 and 16. A3's platform moved to a 60-vCPU GCP
+instance, which meant raising `workers` from 12 -- and
+`scripts/a3_verify_frozen.py` would have rejected that, halting the queue
+before any run started, because it inherited A2's rule that NOTHING in
+`source_collection` may move except `M` and `seed_entropy`.
+
+Section 16 then moved the production value from 30 to **20**, so that all
+three seeds run concurrently (3 x 20 = 60 vCPU) rather than two at 30 with
+seed 2 waiting. That is a scheduling change; the invariance argument below is
+what makes it free of scientific consequence.
 
 The justification for relaxing it, recorded here as well as in the script:
 
@@ -13,12 +18,15 @@ The justification for relaxing it, recorded here as well as in the script:
     same (policy, env_seed, torch_seed) tuple.
 
 That is a structural property of `safelie.training.source_batch`, and it was
-also MEASURED at A3's own operating point (M=5, f=1) on 2026-09-09:
+also MEASURED at A3's own operating point (M=5, f=1) on 2026-09-09, and
+re-measured on 2026-09-12 to cover the production value 20 and its neighbour
+30 -- neither of which the original sweep had reached:
 
-    workers in {1, 2, 4, 5, 6, 8, 12}; both dispatch paths (workers=1 bypasses
-    mp.Pool and runs in-process, workers>=2 does not); four distinct chunk
-    partitions; at R_m=8 and at production R_m=30 -- all 30 source means
-    (5 sources x 6 owners) bitwise identical, max abs difference exactly 0.0.
+    workers in {1, 2, 4, 5, 6, 8, 12, 20, 30}; both dispatch paths (workers=1
+    bypasses mp.Pool and runs in-process, workers>=2 does not); chunk
+    partitions from 40 to 120; at R_m=8 and at production R_m=30 -- all 30
+    source means (5 sources x 6 owners) bitwise identical, and every
+    per-trajectory value identical, max abs difference exactly 0.0.
 
 `tests/unit/test_source_batch.py` pins the invariance itself. This file pins
 the *policy*: that the verifier permits the knob to move, and still refuses
@@ -55,13 +63,14 @@ VERIFIER = _load_verifier()
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize("workers", [1, 2, 5, 12, 30])
+@pytest.mark.parametrize("workers", [1, 2, 5, 12, 20, 30])
 def test_workers_is_permitted_as_a_compute_variant(workers):
     """Every worker count A3 might plausibly run at is a legal compute variant.
 
-    1 is the pool-bypass path, 12 was the laptop/Mac value, 30 is the GCP
-    production value (two concurrent seeds x 30 on a 60-vCPU instance), and
-    2/5 are intermediate counts with different chunk partitions.
+    1 is the pool-bypass path, 12 was the laptop/Mac value, 20 is the GCP
+    production value (three concurrent seeds x 20 on a 60-vCPU instance), 30
+    was the previous two-concurrent-seeds value, and 2/5 are intermediate
+    counts with different chunk partitions.
     """
     assert VERIFIER.illegal_keys(["source_collection.workers"]) == []
     # and it stays legal alongside the other declared A3 changes
@@ -106,7 +115,7 @@ def test_workers_is_not_permitted_to_differ_within_a_seed():
 # ---------------------------------------------------------------------------
 
 
-def test_the_twelve_production_configs_are_all_at_workers_30():
+def test_the_twelve_production_configs_are_all_at_workers_20():
     sys.path.insert(0, str(ROOT / "src"))
     from safelie.utils.config import load_experiment_config
 
@@ -117,14 +126,14 @@ def test_the_twelve_production_configs_are_all_at_workers_30():
             )
             sc = cfg.source_collection
             assert sc is not None
-            assert sc.workers == 30, f"{cond}_seed{seed} is at workers={sc.workers}"
+            assert sc.workers == 20, f"{cond}_seed{seed} is at workers={sc.workers}"
             # the scientific fields are unmoved
             assert (sc.M, sc.R_m, sc.R_ref, sc.chunks_per_worker) == (5, 30, 120, 4)
             assert cfg.rollout_length == 2000
             assert cfg.total_steps == 500_000
 
 
-def test_verifier_passes_end_to_end_at_workers_30():
+def test_verifier_passes_end_to_end_at_workers_20():
     """The whole script, on the real configs, exits 0."""
     r = subprocess.run(
         [sys.executable, str(ROOT / "scripts/a3_verify_frozen.py")],

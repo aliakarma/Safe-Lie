@@ -36,9 +36,10 @@ Usage:
     python scripts/a3_run_queue.py --seed 0 --only C_seed0
     python scripts/a3_run_queue.py --seed 0 --dry-run
 
-    # GCP t2d-standard-60: two seeds concurrently, 30 workers each
+    # GCP t2d-standard-60: all three seeds concurrently, 20 workers each
     python scripts/a3_run_queue.py --seed 0 &
     python scripts/a3_run_queue.py --seed 1 &
+    python scripts/a3_run_queue.py --seed 2 &
 """
 
 from __future__ import annotations

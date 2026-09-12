@@ -74,12 +74,14 @@ PERMITTED_VS_A2 = {"run_id", "output_dir", "attack", "defense", "sources", "seed
 # which trajectory, or in what order. `workers` selects only the chunk
 # partition, which is a scheduling decision.
 #
-# Measured, not assumed (2026-09-09, at A3's own operating point M=5, f=1):
-#   workers in {1, 2, 4, 5, 6, 8, 12}, both dispatch paths (workers=1 bypasses
-#   the pool and runs in-process; workers>=2 goes through mp.Pool), four
-#   distinct chunk partitions, at R_m=8 AND at production R_m=30 -- all 30
-#   source means (5 sources x 6 owners) bitwise identical, max abs difference
-#   exactly 0.0. Pinned by tests/unit/test_a3_verify_frozen_workers.py and
+# Measured, not assumed (2026-09-09, at A3's own operating point M=5, f=1;
+# extended 2026-09-12 to the production value 20 and its neighbour 30):
+#   workers in {1, 2, 4, 5, 6, 8, 12, 20, 30}, both dispatch paths (workers=1
+#   bypasses the pool and runs in-process; workers>=2 goes through mp.Pool),
+#   chunk partitions from 40 to 120, at R_m=8 AND at production R_m=30 -- all
+#   30 source means (5 sources x 6 owners) bitwise identical, every
+#   per-trajectory value identical, max abs difference exactly 0.0. Pinned by
+#   tests/unit/test_a3_verify_frozen_workers.py and
 #   tests/unit/test_source_batch.py.
 #
 # R_m, chunks_per_worker, validation_rounds, R_ref and mode stay frozen:

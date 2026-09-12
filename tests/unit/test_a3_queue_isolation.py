@@ -63,18 +63,45 @@ def run_queue(*args: str, expect_ok: bool = True) -> subprocess.CompletedProcess
 
 @pytest.fixture
 def clean_status():
-    """Remove per-seed status/lock files before and after, leaving any real
-    campaign status file alone."""
+    """Give each test a clean slate, then put back whatever was there before.
+
+    These tests run against the REAL `results/runs_a3`, because what they check
+    is that the queue writes the files it claims to write, where it claims to
+    write them -- pointing them at a `tmp_path` would test a monkeypatched
+    constant instead. That makes this fixture responsible for the directory it
+    borrows.
+
+    It saves and restores rather than deleting. Deleting was the original
+    behaviour and it was wrong twice over: a mid-campaign run of this suite
+    would have destroyed the gate outcomes and halt reasons that
+    `a3_run_queue.write_status`'s own docstring calls the campaign's audit
+    trail, and -- because the runbook's pre-flight runs this suite immediately
+    before launch -- it left the tree dirty at exactly the moment `_git_sha`
+    stamps `dirty_paths` into every production `run_metadata.json`. The
+    per-seed files are gitignored now, so the second failure mode is gone
+    either way, but a test that eats live scheduler state is a trap regardless
+    of what git thinks of it.
+
+    `test_unfiltered_queue_still_covers_all_twelve_and_uses_the_original_file`
+    already saved and restored `a3_queue_status.json` for this reason; this is
+    that pattern, applied to the files the fixture itself touches.
+    """
     def _paths():
         return [OUT / f"a3_queue_status_seed{s}.json" for s in (0, 1, 2)] + \
                [OUT / f".a3_queue_seed{s}.lock" for s in (0, 1, 2)] + \
                [OUT / ".a3_queue.lock"] + list(OUT.glob("*.tmp"))
 
+    saved = {p: p.read_bytes() for p in _paths() if p.exists()}
     for p in _paths():
         p.unlink(missing_ok=True)
-    yield
-    for p in _paths():
-        p.unlink(missing_ok=True)
+    try:
+        yield
+    finally:
+        for p in _paths():
+            p.unlink(missing_ok=True)
+        for p, blob in saved.items():
+            p.parent.mkdir(parents=True, exist_ok=True)
+            p.write_bytes(blob)
 
 
 # ---------------------------------------------------------------------------
