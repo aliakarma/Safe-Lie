@@ -1,0 +1,242 @@
+{
+  "gate": "DR-S10",
+  "predeclaration": "docs/dose_response_gates.md",
+  "schema_note": "both sides loaded through the CURRENT ExperimentConfig, so dual.controller / dual.k_* resolve identically and cannot appear as a treatment difference (gates doc 5c)",
+  "configs": {
+    "B025_seed0": {
+      "config": "configs/experiment/dose/b025_seed0.yaml",
+      "a1_parent": "configs/experiment/a1/b_seed0.yaml",
+      "clean_reference": "configs/experiment/g9_batch_clean.yaml",
+      "differing_keys_vs_a1_parent": [
+        "attack.budget_ratio",
+        "output_dir",
+        "run_id"
+      ],
+      "illegal_differences_vs_a1_parent": [],
+      "differing_keys_vs_clean": [
+        "attack.budget_ratio",
+        "attack.corrupted_source_ids",
+        "attack.f",
+        "attack.name",
+        "output_dir",
+        "run_id"
+      ],
+      "illegal_differences_vs_clean": [],
+      "seed_equal_to_parent": true,
+      "seed_entropy_equal_to_parent": true,
+      "seed_entropy_equal_to_clean": true,
+      "budget_ratio": 0.25,
+      "expected_budget_ratio": 0.25,
+      "parent_budget_ratio": 0.5,
+      "B": 6.25,
+      "B_over_M": 2.0833333333333335,
+      "attacked_source": [
+        "batch_1"
+      ],
+      "expected_attacked_source": [
+        "batch_1"
+      ],
+      "defense_is_undefended": true,
+      "operator_unchanged": true,
+      "controller_resolves_lagrangian": true,
+      "dual_unchanged": true,
+      "pass": true
+    },
+    "B025_seed1": {
+      "config": "configs/experiment/dose/b025_seed1.yaml",
+      "a1_parent": "configs/experiment/a1/b_seed1.yaml",
+      "clean_reference": "configs/experiment/g10_batch_clean_seed1.yaml",
+      "differing_keys_vs_a1_parent": [
+        "attack.budget_ratio",
+        "output_dir",
+        "run_id"
+      ],
+      "illegal_differences_vs_a1_parent": [],
+      "differing_keys_vs_clean": [
+        "attack.budget_ratio",
+        "attack.corrupted_source_ids",
+        "attack.f",
+        "attack.name",
+        "output_dir",
+        "run_id"
+      ],
+      "illegal_differences_vs_clean": [],
+      "seed_equal_to_parent": true,
+      "seed_entropy_equal_to_parent": true,
+      "seed_entropy_equal_to_clean": true,
+      "budget_ratio": 0.25,
+      "expected_budget_ratio": 0.25,
+      "parent_budget_ratio": 0.5,
+      "B": 6.25,
+      "B_over_M": 2.0833333333333335,
+      "attacked_source": [
+        "batch_2"
+      ],
+      "expected_attacked_source": [
+        "batch_2"
+      ],
+      "defense_is_undefended": true,
+      "operator_unchanged": true,
+      "controller_resolves_lagrangian": true,
+      "dual_unchanged": true,
+      "pass": true
+    },
+    "B025_seed2": {
+      "config": "configs/experiment/dose/b025_seed2.yaml",
+      "a1_parent": "configs/experiment/a1/b_seed2.yaml",
+      "clean_reference": "configs/experiment/g10_batch_clean_seed2.yaml",
+      "differing_keys_vs_a1_parent": [
+        "attack.budget_ratio",
+        "output_dir",
+        "run_id"
+      ],
+      "illegal_differences_vs_a1_parent": [],
+      "differing_keys_vs_clean": [
+        "attack.budget_ratio",
+        "attack.corrupted_source_ids",
+        "attack.f",
+        "attack.name",
+        "output_dir",
+        "run_id"
+      ],
+      "illegal_differences_vs_clean": [],
+      "seed_equal_to_parent": true,
+      "seed_entropy_equal_to_parent": true,
+      "seed_entropy_equal_to_clean": true,
+      "budget_ratio": 0.25,
+      "expected_budget_ratio": 0.25,
+      "parent_budget_ratio": 0.5,
+      "B": 6.25,
+      "B_over_M": 2.0833333333333335,
+      "attacked_source": [
+        "batch_3"
+      ],
+      "expected_attacked_source": [
+        "batch_3"
+      ],
+      "defense_is_undefended": true,
+      "operator_unchanged": true,
+      "controller_resolves_lagrangian": true,
+      "dual_unchanged": true,
+      "pass": true
+    },
+    "B100_seed0": {
+      "config": "configs/experiment/dose/b100_seed0.yaml",
+      "a1_parent": "configs/experiment/a1/b_seed0.yaml",
+      "clean_reference": "configs/experiment/g9_batch_clean.yaml",
+      "differing_keys_vs_a1_parent": [
+        "attack.budget_ratio",
+        "output_dir",
+        "run_id"
+      ],
+      "illegal_differences_vs_a1_parent": [],
+      "differing_keys_vs_clean": [
+        "attack.budget_ratio",
+        "attack.corrupted_source_ids",
+        "attack.f",
+        "attack.name",
+        "output_dir",
+        "run_id"
+      ],
+      "illegal_differences_vs_clean": [],
+      "seed_equal_to_parent": true,
+      "seed_entropy_equal_to_parent": true,
+      "seed_entropy_equal_to_clean": true,
+      "budget_ratio": 1.0,
+      "expected_budget_ratio": 1.0,
+      "parent_budget_ratio": 0.5,
+      "B": 25.0,
+      "B_over_M": 8.333333333333334,
+      "attacked_source": [
+        "batch_1"
+      ],
+      "expected_attacked_source": [
+        "batch_1"
+      ],
+      "defense_is_undefended": true,
+      "operator_unchanged": true,
+      "controller_resolves_lagrangian": true,
+      "dual_unchanged": true,
+      "pass": true
+    },
+    "B100_seed1": {
+      "config": "configs/experiment/dose/b100_seed1.yaml",
+      "a1_parent": "configs/experiment/a1/b_seed1.yaml",
+      "clean_reference": "configs/experiment/g10_batch_clean_seed1.yaml",
+      "differing_keys_vs_a1_parent": [
+        "attack.budget_ratio",
+        "output_dir",
+        "run_id"
+      ],
+      "illegal_differences_vs_a1_parent": [],
+      "differing_keys_vs_clean": [
+        "attack.budget_ratio",
+        "attack.corrupted_source_ids",
+        "attack.f",
+        "attack.name",
+        "output_dir",
+        "run_id"
+      ],
+      "illegal_differences_vs_clean": [],
+      "seed_equal_to_parent": true,
+      "seed_entropy_equal_to_parent": true,
+      "seed_entropy_equal_to_clean": true,
+      "budget_ratio": 1.0,
+      "expected_budget_ratio": 1.0,
+      "parent_budget_ratio": 0.5,
+      "B": 25.0,
+      "B_over_M": 8.333333333333334,
+      "attacked_source": [
+        "batch_2"
+      ],
+      "expected_attacked_source": [
+        "batch_2"
+      ],
+      "defense_is_undefended": true,
+      "operator_unchanged": true,
+      "controller_resolves_lagrangian": true,
+      "dual_unchanged": true,
+      "pass": true
+    },
+    "B100_seed2": {
+      "config": "configs/experiment/dose/b100_seed2.yaml",
+      "a1_parent": "configs/experiment/a1/b_seed2.yaml",
+      "clean_reference": "configs/experiment/g10_batch_clean_seed2.yaml",
+      "differing_keys_vs_a1_parent": [
+        "attack.budget_ratio",
+        "output_dir",
+        "run_id"
+      ],
+      "illegal_differences_vs_a1_parent": [],
+      "differing_keys_vs_clean": [
+        "attack.budget_ratio",
+        "attack.corrupted_source_ids",
+        "attack.f",
+        "attack.name",
+        "output_dir",
+        "run_id"
+      ],
+      "illegal_differences_vs_clean": [],
+      "seed_equal_to_parent": true,
+      "seed_entropy_equal_to_parent": true,
+      "seed_entropy_equal_to_clean": true,
+      "budget_ratio": 1.0,
+      "expected_budget_ratio": 1.0,
+      "parent_budget_ratio": 0.5,
+      "B": 25.0,
+      "B_over_M": 8.333333333333334,
+      "attacked_source": [
+        "batch_3"
+      ],
+      "expected_attacked_source": [
+        "batch_3"
+      ],
+      "defense_is_undefended": true,
+      "operator_unchanged": true,
+      "controller_resolves_lagrangian": true,
+      "dual_unchanged": true,
+      "pass": true
+    }
+  },
+  "pass": true
+}

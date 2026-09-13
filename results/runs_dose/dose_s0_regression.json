@@ -1,0 +1,68 @@
+{
+  "gate": "DR-S0",
+  "predeclaration": "docs/dose_response_gates.md section 5(b)/7",
+  "claim": "the A1 code path is unchanged between the A1 commits and HEAD: a1/b_seed0.yaml re-run at HEAD reproduces committed B_seed0 rounds 0-1 bitwise",
+  "new_run": "results\\runs_dose\\_s0_regress",
+  "reference_run": "results\\runs_a1\\B_seed0",
+  "rounds_compared": 2,
+  "comparison": "exact equality; only wall-clock leaves excluded",
+  "excluded_leaves": [
+    "reference_wall_clock_s",
+    "wall_clock_s"
+  ],
+  "files": {
+    "rounds.jsonl": {
+      "pass": true,
+      "n_differences": 0,
+      "max_abs_numeric_difference": 0.0,
+      "first_differences": []
+    },
+    "oracle.jsonl": {
+      "pass": true,
+      "n_differences": 0,
+      "max_abs_numeric_difference": 0.0,
+      "first_differences": []
+    },
+    "source_seeds.jsonl": {
+      "pass": true,
+      "n_differences": 0,
+      "max_abs_numeric_difference": 0.0,
+      "first_differences": []
+    }
+  },
+  "new_run_provenance": {
+    "git_sha": "00861e31f933266028271451327211636e12b832",
+    "git_dirty": true,
+    "python": "3.11.9 (tags/v3.11.9:de54cf5, Apr  2 2024, 10:12:12) [MSC v.1938 64 bit (AMD64)]",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "provenance": {
+      "machine_type": null,
+      "os": "Windows-10-10.0.26200-SP0",
+      "system": "Windows",
+      "architecture": "AMD64",
+      "cpu_model": "AMD64 Family 25 Model 80 Stepping 0, AuthenticAMD",
+      "cpu_count_logical": 12,
+      "workers": 12,
+      "libraries": {
+        "torch": "2.12.1+cpu",
+        "numpy": "2.2.6",
+        "mujoco": "3.12.0",
+        "gymnasium": "1.3.0",
+        "gymnasium_robotics": "1.4.2"
+      },
+      "config_sha256": "0a20b6ee5af80fee841281b08508428038287a005e81bd4e0ff8ef93a297a70d",
+      "thread_env": {
+        "OMP_NUM_THREADS": null,
+        "MKL_NUM_THREADS": null,
+        "OPENBLAS_NUM_THREADS": null
+      }
+    }
+  },
+  "reference_run_provenance": {
+    "git_sha": "a0075bc8c9e4770503d0bcffd54108f9fe3b9905",
+    "git_dirty": false,
+    "python": "3.11.9 (tags/v3.11.9:de54cf5, Apr  2 2024, 10:12:12) [MSC v.1938 64 bit (AMD64)]",
+    "platform": "Windows-10-10.0.26200-SP0"
+  },
+  "pass": true
+}
