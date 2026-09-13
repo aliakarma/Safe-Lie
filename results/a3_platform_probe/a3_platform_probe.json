@@ -1,0 +1,52 @@
+{
+  "reference": "results/a2_mechanism_check/mech_rce_clean",
+  "candidate": "results/a3_platform_probe/probe",
+  "rounds_compared": 4,
+  "this_machine": {
+    "platform": "macOS-26.5-arm64-arm-64bit",
+    "machine": "arm64",
+    "processor": "arm",
+    "python": "3.11.15",
+    "torch": "2.12.1",
+    "numpy": "2.2.6"
+  },
+  "level0_same_experiment": {
+    "pass": true,
+    "note": "run_id and output_dir are permitted to differ; nothing else is."
+  },
+  "level1_source_seeds": {
+    "identical": true,
+    "note": "Pure integer arithmetic; a mismatch means the configs differ, not the hardware."
+  },
+  "level2_policy_checksum": {
+    "round0_identical": false,
+    "all_rounds_identical": false,
+    "reference_round0": "f371a4f1fea262d9ccb981638ade88eb2d23b916e2de25ba062ea68638868600",
+    "candidate_round0": "a0b04d72983fc0e092deca8ec027115185315a46028922e700758e30949d0f54",
+    "note": "torch.manual_seed -> network init. Round 0 is init alone."
+  },
+  "level3_source_values": {
+    "round0_max_abs_diff": 0.8855680270579285,
+    "round0_mean_abs_diff": 0.44845150740594675,
+    "round0_identical": false,
+    "all_rounds_max_abs_diff": 3.102668844832202,
+    "all_rounds_identical": false,
+    "per_round_max_abs_diff": [
+      0.8855680270579285,
+      3.102668844832202,
+      1.251873820082885,
+      1.3990073943191206
+    ],
+    "tolerance": 1e-09,
+    "note": "Round 0 is the one that matters: it is the only round where both runs are still under the same policy, so a difference there is pure numerics rather than accumulated divergence."
+  },
+  "bit_identical": false,
+  "a3_branch": "BRANCH-B",
+  "a3_design": {
+    "split": "by whole seed, 4/4",
+    "seeds": 2,
+    "runs_per_machine": 4,
+    "critical_path_days": 2.2,
+    "rationale": "Cross-machine contrasts are NOT valid, so each machine must run all four conditions of the seeds it owns. Two seeds fit the budget; a third would cost 2.2 extra days of critical path because 12 runs split 8/4."
+  }
+}

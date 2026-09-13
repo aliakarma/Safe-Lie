@@ -1,0 +1,11 @@
+{
+  "epsilon_offline": 0.001,
+  "n_rounds": 1,
+  "alpha": 0.05,
+  "disagreement_mean": 0.001,
+  "disagreement_std": 0.0,
+  "disagreement_min": 0.001,
+  "disagreement_max": 0.001,
+  "source_run_id": "calib_probe",
+  "source_config_run_id": "probe"
+}
