@@ -15,10 +15,20 @@
       "at": "2026-09-13T03:29:15+00:00"
     },
     "U_seed1": {
-      "status": "running",
-      "rounds_at_start": 0,
-      "started": "2026-09-13T03:29:15+00:00"
+      "status": "verified",
+      "rounds": 250,
+      "elapsed_s": 27611.714096546173,
+      "detail": "all gates pass",
+      "at": "2026-09-13T11:09:28+00:00"
+    },
+    "U_seed2": {
+      "status": "verified",
+      "rounds": 250,
+      "elapsed_s": 28854.875700950623,
+      "detail": "all gates pass",
+      "at": "2026-09-13T19:10:24+00:00"
     }
   },
-  "config_verification": "results/runs_unconstrained/config_verification.json"
+  "config_verification": "results/runs_unconstrained/config_verification.json",
+  "finished_at": "2026-09-13T19:10:24+00:00"
 }

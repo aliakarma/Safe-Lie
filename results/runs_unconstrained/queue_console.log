@@ -52,3 +52,11 @@
   [PASS] no tracked file under src/ modified                           
 
 ALL PASS  -> results/runs_unconstrained/config_verification.json
+[U_seed0] launching (0/250 rounds already on disk) -> C:\Users\Ali Akarma\Desktop\Current Research\ICLR\Paper 1\Safe-Lie\results\runs_unconstrained\logs\U_seed0.log
+[U_seed0] finished in 7.52 h -- all gates pass
+[U_seed1] launching (0/250 rounds already on disk) -> C:\Users\Ali Akarma\Desktop\Current Research\ICLR\Paper 1\Safe-Lie\results\runs_unconstrained\logs\U_seed1.log
+[U_seed1] finished in 7.67 h -- all gates pass
+[U_seed2] launching (0/250 rounds already on disk) -> C:\Users\Ali Akarma\Desktop\Current Research\ICLR\Paper 1\Safe-Lie\results\runs_unconstrained\logs\U_seed2.log
+[U_seed2] finished in 8.02 h -- all gates pass
+
+Queue complete. Next: python scripts/analyze_unconstrained.py

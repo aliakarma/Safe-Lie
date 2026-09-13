@@ -1,15 +1,22 @@
 {
-  "run_id": "U_seed1",
-  "seed": 1,
+  "run_id": "U_seed2",
+  "seed": 2,
   "status": "complete",
-  "written_at": "2026-09-13T11:09:21.179576+00:00",
+  "written_at": "2026-09-13T19:10:12.827617+00:00",
   "git": {
     "sha": "00861e31f933266028271451327211636e12b832",
     "dirty": true,
     "dirty_paths": [
       "esults/runs_unconstrained/U_seed1/oracle.jsonl",
       "results/runs_unconstrained/U_seed1/rounds.jsonl",
-      "results/runs_unconstrained/U_seed1/source_seeds.jsonl"
+      "results/runs_unconstrained/U_seed1/run_metadata.json",
+      "results/runs_unconstrained/U_seed1/source_seeds.jsonl",
+      "results/runs_unconstrained/U_seed1/unconstrained_run_verification.json",
+      "results/runs_unconstrained/U_seed1/validation_reference.jsonl",
+      "results/runs_unconstrained/U_seed2/",
+      "results/runs_unconstrained/logs/U_seed1.log",
+      "results/runs_unconstrained/logs/U_seed2.log",
+      "results/runs_unconstrained/queue_status.json"
     ]
   },
   "python": "3.11.9 (tags/v3.11.9:de54cf5, Apr  2 2024, 10:12:12) [MSC v.1938 64 bit (AMD64)]",
@@ -29,7 +36,7 @@
       "gymnasium": "1.3.0",
       "gymnasium_robotics": "1.4.2"
     },
-    "config_sha256": "e2e72818f66154eefd2e56cbf6c59739d84960df1590d63f8f05317cca05fe4d",
+    "config_sha256": "fede87a786d7c1efb170c13bd638de7a47e684f9cfbeb558351bb2edfa188bee",
     "thread_env": {
       "OMP_NUM_THREADS": null,
       "MKL_NUM_THREADS": null,
@@ -38,8 +45,8 @@
   },
   "num_rounds_planned": 250,
   "config_snapshot": {
-    "run_id": "U_seed1",
-    "seed": 1,
+    "run_id": "U_seed2",
+    "seed": 2,
     "env": {
       "name": "manyagent_ant",
       "n_agents": 6,
@@ -129,7 +136,7 @@
       "R_m": 30,
       "workers": 12,
       "chunks_per_worker": 4,
-      "seed_entropy": 52021175099534868945312500562751741008,
+      "seed_entropy": 335268198726974212397240672597355197200,
       "validation_rounds": [
         25,
         75,
@@ -144,12 +151,12 @@
   "checkpoint": "checkpoint.pt",
   "eval_every": 1,
   "timing": {
-    "source_s": 23411.48842573166,
-    "oracle_s": 1575.2481322288513,
-    "learner_total_s": 26014.120813846588,
-    "wall_clock_s": 27598.478554964066,
-    "s_per_round": 110.39391421985626,
-    "source_s_per_round": 93.64595370292663
+    "source_s": 24447.523938179016,
+    "oracle_s": 1643.7414200305939,
+    "learner_total_s": 27181.988250017166,
+    "wall_clock_s": 28835.787908792496,
+    "s_per_round": 115.34315163516999,
+    "source_s_per_round": 97.79009575271607
   },
   "env_steps": {
     "ppo": 500000,
@@ -163,19 +170,19 @@
     "collisions": [],
     "spawn_keys": [
       [
-        52021175099534868945312500562751741008,
+        335268198726974212397240672597355197200,
         0
       ],
       [
-        52021175099534868945312500562751741008,
+        335268198726974212397240672597355197200,
         1
       ],
       [
-        52021175099534868945312500562751741008,
+        335268198726974212397240672597355197200,
         2
       ],
       [
-        52021175099534868945312500562751741008,
+        335268198726974212397240672597355197200,
         3
       ]
     ]

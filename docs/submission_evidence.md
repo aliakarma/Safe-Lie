@@ -402,10 +402,10 @@ task return (interaction mixed, CI ±13).
 
 ## Unconstrained MAPPO — Constraint-Binding Control
 
-**STATUS: RUNNING, NOT COMPLETE.** Seed 0 launched 2026-09-12 19:57:48
-UTC; seeds 1 and 2 are gated on its structural verification. ~8.3 h per
-seed, ~25 h total. This section will be completed from
-`results/runs_unconstrained/unconstrained_report.json`.
+**STATUS: COMPLETE.** Three seeds, run sequentially 2026-09-12 19:57:48
+UTC → 2026-09-13 19:10:24 UTC (23.2 h; 7.52 / 7.67 / 8.02 h per seed).
+All three pass all seven structural gates U-S1..U-S7.
+Source: `results/runs_unconstrained/unconstrained_report.json`.
 
 **Pre-declaration.** `docs/unconstrained_control.md`, written and fixed
 **before** seed 0 started. `scripts/analyze_unconstrained.py` was written
@@ -447,35 +447,153 @@ network-average true cost, paired by seed, common random numbers.
 none was invented after the constrained side was in hand. Reported as an
 estimate with per-seed values and a paired 95 % CI.
 
-### Placeholders to fill on completion
+### Provenance note (read before citing the git sha)
 
-| | seed 0 | seed 1 | seed 2 | mean (sd) |
+The campaign artifacts were committed to git **while the campaign was
+running**, so the three runs record two different HEADs:
+
+| run | recorded sha | recorded dirty |
+|---|---|---|
+| U_seed0 | `bed26a88edc714fbbd180c3478e351877c3eb33f` | true |
+| U_seed1 | `00861e31f9337ca2b76f1b1f9dbd1a0d70cd5bb9` | true |
+| U_seed2 | `00861e31f9337ca2b76f1b1f9dbd1a0d70cd5bb9` | true |
+
+**This does not compromise comparability, and it was checked rather than
+assumed.** `git diff bed26a88 00861e31 -- src/` is **empty**: the learner,
+the dual update, the aggregator and the source collector are bit-identical
+across the two commits. The diff between the shas is purely additive —
+6,731 insertions, 0 deletions — and consists of this control's own
+configs, scripts, docs and partial results being added to tracking.
+
+Verified independently from the runs' own recorded `config_snapshot`,
+which is the authoritative record of what executed. Fields differing
+across the three control runs: **exactly `run_id`, `seed`,
+`source_collection.seed_entropy`** — nothing else, including every PPO
+field, the env, the topology, the sources, the horizon and `eta_lambda`.
+
+Against the paired clean runs, each control run's snapshot differs in
+`run_id`, `output_dir`, `dual.lambda_max` and `dual.controller`. The
+fourth is a **schema-recording artifact, not a behavioural difference**:
+`DualConfig.controller` was added after G9/G10 were run, so their
+snapshots have no such key, while the control's records the default
+`"lagrangian"`. Loading both YAMLs through the current schema resolves
+both to `controller='lagrangian'` — the identical code path. The only
+scientific difference is `dual.lambda_max: 25.0 → 0.0`.
+
+### Structural verification (all three seeds)
+
+| gate | seed 0 | seed 1 | seed 2 |
+|---|---|---|---|
+| U-S1 complete (250 rounds, both logs) | PASS | PASS | PASS |
+| U-S2 all finite | PASS | PASS | PASS |
+| U-S3 λ exactly 0.0 in all 1,500 cells | PASS | PASS | PASS |
+| U-S4 no attack, no RCE | PASS | PASS | PASS |
+| U-S5 config is the control, learner untouched (`ppo_mismatch: {}`) | PASS | PASS | PASS |
+| U-S6 status complete, no `src/` modification | PASS | PASS | PASS |
+| U-S7 22,500 env seeds, 0 shared across seeds | PASS | PASS | PASS |
+
+`treatment_integrity.U_lambda_exactly_zero_all_seeds = true`. The paired
+constrained runs carry λ mean 1.5097 / 1.6000 / 2.1777 over the same
+rounds, so the treatment is a genuine contrast and not a null edit.
+
+### Per-seed values
+
+| | U_s0 | U_s1 | U_s2 | mean (sd) |
 |---|---|---|---|---|
-| `J_C` whole / final-50 | — | — | — | — |
-| per-agent `J_C` (×6) | — | — | — | — |
-| task return first-20 / last-50 / gain | — | — | — | — |
-| violation rate whole / final-50 | — | — | — | — |
-| λ mean / max (must be 0.0) | — | — | — | — |
-| residual final-50 sum | — | — | — | — |
-| mech. reported cost | — | — | — | — |
-| mechanism gap Δ | — | — | — | — |
-| **U − A on `J_C` whole** | — | — | — | **— [CI]** |
+| `J_C` whole | 81.6027 | 81.5089 | 84.9516 | **82.6878** (1.9611) |
+| `J_C` final-50 | 96.9617 | 97.1903 | 97.1250 | **97.0923** (0.1178) |
+| mech. reported cost | 80.6941 | 81.2548 | 85.1525 | 82.3671 (2.4325) |
+| mechanism gap Δ | +0.9086 | +0.2542 | −0.2009 | +0.3206 (0.5576) |
+| task return first-20 | −171.8145 | −172.9471 | −165.9920 | −170.2512 (3.7328) |
+| task return last-50 | +21.6543 | +0.9721 | +23.8542 | +15.4935 (12.6314) |
+| learning gain | 180.2326 | 160.6427 | 175.3208 | 172.0654 (10.1979) |
+| violation rate whole | 1.0000 | 0.9993 | 1.0000 | **0.9998** (0.0004) |
+| violation rate final-50 | 1.0000 | 1.0000 | 1.0000 | **1.0000** (0.0) |
+| λ mean / max | 0.0 / 0.0 | 0.0 / 0.0 | 0.0 / 0.0 | **0.0** |
+| residual final-50 sum | 430.6813 | 432.4961 | 433.9818 | 432.3864 (1.6547) |
+| agents above d, final-50 | **6 / 6** | **6 / 6** | **6 / 6** | — |
+| wall clock (s) | 27,074 | 27,598 | 28,836 | — |
 
-### What it will establish
+**Per-agent true cost, whole-run** (the network average hides nothing here
+— every agent moves):
 
-If U − A is clearly positive: the constrained learner's J_C ≈ d is caused
-by the constraint, so A1's result is a claim about a live mechanism.
+| seed | agent 0 … 5 |
+|---|---|
+| U_s0 | 78.469, 78.516, 79.608, 81.747, 84.339, 86.938 |
+| U_s1 | 78.071, 78.145, 79.370, 81.692, 84.583, 87.193 |
+| U_s2 | 82.339, 82.340, 83.197, 85.112, 87.345, 89.376 |
 
-If U − A is near zero: the unconstrained optimum already satisfies the
-budget, the dual is not load-bearing here, and A1/A2 must be re-read in
-that light. **That outcome will be reported with equal prominence.**
+By final-50 every agent in every seed sits at 96.5–98.1, against d = 25.
 
-### What it will NOT establish, in either direction
+### PRIMARY: J_C,unconstrained − J_C,constrained (paired, n = 3)
 
-That the constraint is *sufficient* for safety (the constrained runs
-violate on ~47 % of rounds and 2–3 of 6 agents sit above d); any
-transfer to another environment, topology, budget, M or f; anything about
-aggregators other than the mean.
+| metric | per seed (0, 1, 2) | mean | 95 % CI | dz | signs |
+|---|---|---|---|---|---|
+| **`J_C` whole** | +56.3885, +56.5539, +59.9734 | **+57.6386** | **[+52.6114, +62.6658]** | +28.48 | **3/3 +** |
+| `J_C` final-50 | — | **+71.5536** | [+69.3990, +73.7082] | — | 3/3 + |
+| violation rate whole | — | **+0.5336** | [+0.5180, +0.5492] | — | 3/3 + |
+| violation rate final-50 | — | +0.4944 | [+0.3658, +0.6230] | — | 3/3 + |
+| agents above d, final-50 | — | +3.6667 | [+2.2324, +5.1009] | — | 3/3 + |
+| residual final-50 sum | — | **+432.4307** | [+427.8991, +436.9622] | — | 3/3 + |
+| task return last-50 | — | **+59.4723** | [+24.8802, +94.0645] | — | 3/3 + |
+| task return whole | — | +53.9181 | [+31.1200, +76.7163] | — | 3/3 + |
+| learning gain | — | +18.9148 | [−6.3073, +44.1362] | — | 3/3 + |
+| λ mean | — | −1.7625 | [−2.6634, −0.8616] | — | 3/3 − |
+| λ fraction positive | — | −0.9349 | [−0.9679, −0.9019] | — | 3/3 − |
+| mech. reported cost | — | +57.5270 | [+51.4003, +63.6538] | — | 3/3 + |
+| **mechanism gap Δ** | +0.4603, +0.2686, −0.3940 | **+0.1116** | [−1.0022, +1.2254] | +0.20 | **mixed** |
+
+**Per-agent increments U−A, whole-run: all 6 of 6 agents agree with the
+network sign in all three seeds.** Seed 0: +56.85, +56.95, +57.92, +57.82,
++55.84, +52.95. Seed 1: +57.18, +57.29, +58.09, +57.65, +56.10, +53.02.
+Seed 2: +61.67, +61.62, +61.71, +60.86, +58.72, +55.26.
+
+### Learning health (reported, not gated)
+
+KL median 0.0029 / 0.0030 / 0.0030 and p95 0.0069 / 0.0069 / 0.0069, all
+inside the G10 bars (0.0069 / 0.01548). Entropy declines 3.645 → 2.286,
+3.646 → 2.336, 3.645 → 2.319. The unconstrained runs learn *better* on
+task return (last-50 +15.49 vs −43.98) — they are not diverged artifacts,
+they are healthy runs of a different, easier problem.
+
+### What it establishes
+
+**The dual constraint is behaviourally active, decisively.** Removing it
+raises the true network-average cost from 25.05 to **82.69**, i.e.
+**+57.64** (95 % CI [+52.61, +62.67], dz = +28.48, 3/3 seeds, 6/6 agents
+in every seed). By the final 50 rounds the unconstrained policy sits at
+**97.09 against a budget of 25** and violates on **100 % of rounds** in
+every seed, against 46.6 % constrained.
+
+Three consequences for how the rest of the paper reads:
+
+1. **A1's +3.99 is a claim about a live mechanism.** The constrained
+   learner's J_C ≈ d is caused by the constraint, not by the environment
+   happening to be safe. The unconstrained optimum is 3.3× the budget.
+2. **It calibrates the attack.** A1's attack recovers +3.99 of the
+   +57.64 the constraint is holding back — about **6.9 %**. The attack
+   does not disable the constraint; it shifts the operating point of a
+   constraint that is still doing most of its work. State this rather
+   than letting a reader infer that corruption ≈ removal.
+3. **The mechanism gap is ≈ 0 without an attack even when cost is
+   enormous** (+0.11, mixed signs, CI straddling zero; reported cost
+   82.37 vs true 82.69). The sources report the high cost honestly —
+   there is simply nothing acting on the report. This separates
+   *corruption of the signal* from *absence of a controller*, which is
+   exactly the confound the control existed to rule out.
+
+### What it does NOT establish
+
+- **Not** that the constraint is sufficient for safety. Constrained runs
+  still violate on ~47 % of rounds with 2–3 of 6 agents above d.
+- **Not** a safety baseline. Unconstrained MAPPO is not a competitor
+  method here; it is a manipulation check on the dual.
+- **Not** transferable to another environment, topology, budget, M or f.
+- **Not** a task-return tradeoff claim. Unconstrained return is higher
+  (+59.47 last-50), which is what an unconstrained optimum should do; no
+  efficiency claim is made from it.
+- The large effect makes the *constraint* clearly active; it says nothing
+  about whether RCE's margin works (it was inert at M = 3, f = 1).
 
 ---
 

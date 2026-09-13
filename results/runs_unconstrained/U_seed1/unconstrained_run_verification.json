@@ -1,0 +1,122 @@
+{
+  "run": "results/runs_unconstrained/U_seed1",
+  "seed": 1,
+  "predeclaration": "docs/unconstrained_control.md",
+  "rounds_oracle": 250,
+  "rounds_rounds": 250,
+  "complete": true,
+  "n_env_seeds": 22500,
+  "learning_health_reported_not_gated": {
+    "task_return_first20": -172.9470839392161,
+    "task_return_last50": 0.9720630145337911,
+    "task_learning_gain": 160.64267082276106,
+    "lambda_mean": 0.0,
+    "residual_last50_sum": 432.4960594640836,
+    "kl_median": 0.0029925755799524723,
+    "kl_p95": 0.006935323987480046,
+    "kl_median_within_G10_bar": true,
+    "kl_p95_within_G10_bar": true,
+    "entropy_first10": 3.646080724149942,
+    "entropy_last10": 2.3355943153301877,
+    "entropy_declines": true
+  },
+  "timing": {
+    "source_s": 23411.48842573166,
+    "oracle_s": 1575.2481322288513,
+    "learner_total_s": 26014.120813846588,
+    "wall_clock_s": 27598.478554964066,
+    "s_per_round": 110.39391421985626,
+    "source_s_per_round": 93.64595370292663
+  },
+  "env_steps": {
+    "ppo": 500000,
+    "source": 45000000,
+    "oracle": 500000
+  },
+  "gates": [
+    {
+      "gate": "U-S1 run complete (250 rounds in both logs)",
+      "pass": true,
+      "detail": {
+        "oracle": 250,
+        "rounds": 250,
+        "expected": 250,
+        "partial_allowed": false
+      }
+    },
+    {
+      "gate": "U-S2 all logged quantities finite (no NaN, no Inf)",
+      "pass": true,
+      "detail": {
+        "lambda": 0,
+        "true_cost": 0,
+        "task_return": 0,
+        "mech_reported": 0,
+        "residual": 0,
+        "mech_gap": 0
+      }
+    },
+    {
+      "gate": "U-S3 lambda is exactly 0.0 at every round and every agent",
+      "pass": true,
+      "detail": {
+        "max_abs": 0.0,
+        "n_nonzero_cells": 0,
+        "n_cells": 1500,
+        "lambda_mean": 0.0,
+        "lambda_max": 0.0
+      }
+    },
+    {
+      "gate": "U-S4 no attack and no RCE",
+      "pass": true,
+      "detail": {
+        "attack": "none",
+        "attack_f": 0,
+        "corrupted_source_ids": [],
+        "defense": "mean",
+        "defense_f": 0
+      }
+    },
+    {
+      "gate": "U-S5 recorded config is the control: lambda_max 0, learner untouched",
+      "pass": true,
+      "detail": {
+        "lambda_max": 0.0,
+        "eta_lambda": 0.035,
+        "ppo_mismatch": {},
+        "total_steps": 500000,
+        "rollout_length": 2000,
+        "constraint_estimator": "mc_window",
+        "seed_entropy_matches": true
+      }
+    },
+    {
+      "gate": "U-S6 metadata records status complete and a committed src/",
+      "pass": true,
+      "detail": {
+        "status": "complete",
+        "git_sha": "00861e31f933266028271451327211636e12b832",
+        "git_dirty": true,
+        "git_dirty_paths": [
+          "esults/runs_unconstrained/U_seed1/oracle.jsonl",
+          "results/runs_unconstrained/U_seed1/rounds.jsonl",
+          "results/runs_unconstrained/U_seed1/source_seeds.jsonl"
+        ],
+        "note": "dirty is expected: the control's own predeclaration, configs and scripts are untracked until this campaign is committed. What matters is that no src/ file is modified -- listed above for audit."
+      }
+    },
+    {
+      "gate": "U-S7 env seeds recorded and not shared with the other control seeds",
+      "pass": true,
+      "detail": {
+        "n_env_seeds": 22500,
+        "expected": 22500,
+        "overlap_with": {
+          "U_seed0": 0
+        }
+      }
+    }
+  ],
+  "all_pass": true
+}
