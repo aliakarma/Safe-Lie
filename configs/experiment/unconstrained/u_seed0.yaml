@@ -1,0 +1,107 @@
+# Unconstrained MAPPO control -- condition U, seed 0.
+# Pre-declaration: docs/unconstrained_control.md (written before this run).
+#
+# This is configs/experiment/g9_batch_clean.yaml -- the clean constrained
+# run this seed pairs against -- with exactly FOUR fields changed:
+#
+#   run_id            g9_batch_clean -> U_seed0
+#   output_dir        .../runs_constraint_batch_g9 -> results/runs_unconstrained
+#   dual.lambda_max   25.0 -> 0.0            <- the only scientific change
+#   seed_entropy      implicit default -> the SAME value written explicitly
+#
+# NOTHING ELSE DIFFERS. manyagent_ant N=6, d=25, velocity_threshold=0.75,
+# the ring topology, M=3 trajectory-batch sources at R_m=30, attack none,
+# defense mean, eta_lambda=0.035, every PPO hyperparameter, the 2000-step
+# rollout, the 250-round horizon, validation_rounds and R_ref=120 are all
+# inherited verbatim.
+#
+# WHY lambda_max: 0.0 IS THE UNCONSTRAINED CONDITION.
+# safelie.training.dual.dual_update ends in
+#   np.clip(W @ lam + eta_lambda * residual, 0.0, lam_max)
+# and loop.py:129 initialises lam to zeros. At lam_max = 0.0 the projection
+# interval is the single point {0}, so lambda is exactly 0.0 at every round
+# for every agent -- by construction, not by convergence. ppo.py forms
+#   combined_adv = adv_r - lam * adv_c
+# which at lam == 0 is adv_r identically: plain MAPPO on task reward.
+# The dual update still executes unconditionally every round (Proposition 3
+# liveness is structural and is NOT disabled); the projection makes it
+# inert. No other field of the learner is touched.
+#
+# WHY SOURCE COLLECTION STAYS ON. docs/unconstrained_control.md section 2:
+# the control must report mechanism_reported_cost_return and
+# constraint_residual, and switching collection off would change RNG
+# consumption and break the common-random-number pairing against the clean
+# run. It costs ~82% of the wall clock for data that cannot reach the
+# policy. That cost is accepted deliberately.
+#
+# COMMON RANDOM NUMBERS. source_collection.seed_entropy is the SAME value
+# as the paired clean run (the G9 constant, which g9_batch_clean.yaml takes
+# by omission from SourceCollectionConfig's default), written explicitly
+# here so the pairing is visible in the file rather than implied. Same
+# convention as configs/experiment/a1/b_seed0.yaml.
+#
+# Cost: 45,000,000 source env steps, ~8-10 h wall clock on the 12-CPU run
+# machine (the paired clean run took 36,390 s).
+
+run_id: U_seed0
+seed: 0
+
+env:
+  name: manyagent_ant   # [SPEC] main_iclr.tex 5.1
+  n_agents: 6           # [SPEC] N=6
+  budget: 25.0          # [SPEC] d=25 per agent -- UNCHANGED
+  velocity_threshold: 0.75
+  cost_mode: per_agent_velocity
+
+topology:
+  name: ring
+  n_agents: 6
+
+sources:
+  sources:
+    - source_id: batch_1
+      source_type: trajectory_batch
+      independence_class: ic_batch1
+    - source_id: batch_2
+      source_type: trajectory_batch
+      independence_class: ic_batch2
+    - source_id: batch_3
+      source_type: trajectory_batch
+      independence_class: ic_batch3
+
+source_collection:
+  mode: parallel_trajectory_batch
+  M: 3
+  R_m: 30
+  # The G9 constant == SourceCollectionConfig.seed_entropy's default, i.e.
+  # bit-identical to the paired clean run g9_batch_clean.
+  seed_entropy: 286314957402113664887331205920951063913
+  workers: 12
+  chunks_per_worker: 4
+  validation_rounds: [25, 75, 125, 175, 225]
+  R_ref: 120
+
+attack:
+  name: none    # no attack on any arm of this control
+
+defense:
+  name: mean    # no RCE on any arm of this control
+  f: 0
+
+ppo:
+  # [SPEC] main_iclr.tex App. B -- UNCHANGED
+  clip: 0.2
+  gae_lambda: 0.95
+  gamma: 0.99
+  lr: 0.0003
+  epochs: 4
+  minibatches: 4
+  hidden_dim: 64
+
+dual:
+  eta_lambda: 0.035   # [SPEC] -- UNCHANGED
+  lambda_max: 0.0     # <-- THE TREATMENT. 25.0 in every constrained run.
+
+total_steps: 500000    # 250 rounds at rollout_length 2000 -- UNCHANGED
+rollout_length: 2000
+output_dir: results/runs_unconstrained

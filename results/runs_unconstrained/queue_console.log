@@ -1,0 +1,54 @@
+  [PASS] seed0: diff confined to the allowed fields                    
+  [PASS] seed0: dual.lambda_max == 0.0 (the treatment)                 
+  [PASS] seed0: clean side has dual.lambda_max == 25.0                 
+  [PASS] seed0: dual.eta_lambda unchanged                              
+  [PASS] seed0: dual.controller is lagrangian                          
+  [PASS] seed0: seed matches the file                                  
+  [PASS] seed0: run_id is U_seed0                                      
+  [PASS] seed0: output_dir is results/runs_unconstrained               
+  [PASS] seed0: no attack                                              
+  [PASS] seed0: no RCE (defense is the plain mean, f=0)                
+  [PASS] seed0: seed_entropy identical to the paired clean run (CRN)   
+  [PASS] seed0: learner untouched (ppo block identical)                
+  [PASS] seed0: env / topology / sources identical                     
+  [PASS] seed0: horizon and rollout unchanged                          
+  [PASS] seed0: constraint_estimator unchanged (mc_window)             
+  [PASS] seed0: source collection identical to the clean run           
+  [PASS] seed1: diff confined to the allowed fields                    
+  [PASS] seed1: dual.lambda_max == 0.0 (the treatment)                 
+  [PASS] seed1: clean side has dual.lambda_max == 25.0                 
+  [PASS] seed1: dual.eta_lambda unchanged                              
+  [PASS] seed1: dual.controller is lagrangian                          
+  [PASS] seed1: seed matches the file                                  
+  [PASS] seed1: run_id is U_seed1                                      
+  [PASS] seed1: output_dir is results/runs_unconstrained               
+  [PASS] seed1: no attack                                              
+  [PASS] seed1: no RCE (defense is the plain mean, f=0)                
+  [PASS] seed1: seed_entropy identical to the paired clean run (CRN)   
+  [PASS] seed1: learner untouched (ppo block identical)                
+  [PASS] seed1: env / topology / sources identical                     
+  [PASS] seed1: horizon and rollout unchanged                          
+  [PASS] seed1: constraint_estimator unchanged (mc_window)             
+  [PASS] seed1: source collection identical to the clean run           
+  [PASS] seed2: diff confined to the allowed fields                    
+  [PASS] seed2: dual.lambda_max == 0.0 (the treatment)                 
+  [PASS] seed2: clean side has dual.lambda_max == 25.0                 
+  [PASS] seed2: dual.eta_lambda unchanged                              
+  [PASS] seed2: dual.controller is lagrangian                          
+  [PASS] seed2: seed matches the file                                  
+  [PASS] seed2: run_id is U_seed2                                      
+  [PASS] seed2: output_dir is results/runs_unconstrained               
+  [PASS] seed2: no attack                                              
+  [PASS] seed2: no RCE (defense is the plain mean, f=0)                
+  [PASS] seed2: seed_entropy identical to the paired clean run (CRN)   
+  [PASS] seed2: learner untouched (ppo block identical)                
+  [PASS] seed2: env / topology / sources identical                     
+  [PASS] seed2: horizon and rollout unchanged                          
+  [PASS] seed2: constraint_estimator unchanged (mc_window)             
+  [PASS] seed2: source collection identical to the clean run           
+  [PASS] seed entropies are distinct across the three control seeds    
+  [PASS] output directories are distinct per seed                      
+  [PASS] no tracked file modified (the code that will run is committed)
+  [PASS] no tracked file under src/ modified                           
+
+ALL PASS  -> results/runs_unconstrained/config_verification.json

@@ -1,0 +1,24 @@
+{
+  "predeclaration": "docs/unconstrained_control.md",
+  "started_at": "2026-09-12T19:57:48+00:00",
+  "queue": [
+    "U_seed0",
+    "U_seed1",
+    "U_seed2"
+  ],
+  "runs": {
+    "U_seed0": {
+      "status": "verified",
+      "rounds": 250,
+      "elapsed_s": 27086.23868227005,
+      "detail": "all gates pass",
+      "at": "2026-09-13T03:29:15+00:00"
+    },
+    "U_seed1": {
+      "status": "running",
+      "rounds_at_start": 0,
+      "started": "2026-09-13T03:29:15+00:00"
+    }
+  },
+  "config_verification": "results/runs_unconstrained/config_verification.json"
+}
