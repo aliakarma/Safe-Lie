@@ -1,37 +1,16 @@
 {
   "campaign": "DR dose-response sweep over B/d",
   "predeclaration": "docs/dose_response_gates.md",
-  "recorded_at_utc": "2026-09-13T21:01:22+00:00",
+  "recorded_at_utc": "2026-09-13T21:24:13+00:00",
   "status": "PRE-EXECUTION: no dose run has started",
+  "authoritative_provenance": "this file records the environment, platform, seeds and resolved configs at the moment provenance was taken. The authoritative per-run record is each run's own run_metadata.json, whose git block is written at that run's launch. The sha below is necessarily the commit BEFORE the one that contains this file.",
   "git": {
-    "sha": "00861e31f933266028271451327211636e12b832",
+    "sha": "c6ebc290685efaa1846b3f12511ebde3bb1ffc37",
     "branch": "main",
-    "dirty": true,
+    "dirty": false,
     "scientific_source_dirty": false,
     "scientific_source_dirty_paths": [],
-    "working_tree": [
-      "M docs/submission_evidence.md",
-      " M results/runs_unconstrained/U_seed1/oracle.jsonl",
-      " M results/runs_unconstrained/U_seed1/rounds.jsonl",
-      " M results/runs_unconstrained/U_seed1/run_metadata.json",
-      " M results/runs_unconstrained/U_seed1/source_seeds.jsonl",
-      " M results/runs_unconstrained/U_seed1/validation_reference.jsonl",
-      " M results/runs_unconstrained/logs/U_seed1.log",
-      " M results/runs_unconstrained/queue_console.log",
-      " M results/runs_unconstrained/queue_status.json",
-      " M results/runs_unconstrained/unconstrained_report.json",
-      "?? configs/experiment/dose/",
-      "?? docs/dose_response_gates.md",
-      "?? results/runs_dose/",
-      "?? results/runs_unconstrained/U_seed1/unconstrained_run_verification.json",
-      "?? results/runs_unconstrained/U_seed2/",
-      "?? results/runs_unconstrained/logs/U_seed2.log",
-      "?? scripts/analyze_dose.py",
-      "?? scripts/dose_run_queue.py",
-      "?? scripts/dose_s0_regression.py",
-      "?? scripts/dose_verify_frozen.py",
-      "?? scripts/dose_verify_run.py"
-    ]
+    "working_tree": []
   },
   "environment": {
     "python": "3.11.9 (tags/v3.11.9:de54cf5, Apr  2 2024, 10:12:12) [MSC v.1938 64 bit (AMD64)]",
