@@ -1,0 +1,196 @@
+{
+  "note": "SMOKE TEST ONLY -- not an A3 result",
+  "arms": {
+    "attack": {
+      "dir": "results\\a3_smoke_rerun\\smoke_m5_rce_attack",
+      "rounds_completed": 3,
+      "cells": 18,
+      "all_pass": true,
+      "checks": [
+        {
+          "check": "S1 five source reports per owner",
+          "pass": true,
+          "detail": "reports/cell unique=[5], source_ids=['batch_1', 'batch_2', 'batch_3', 'batch_4', 'batch_5']"
+        },
+        {
+          "check": "S2 five independent RNG streams, no duplicate or overlapping seeds",
+          "pass": true,
+          "detail": "duplicate_seed_events=0, pairwise stream overlaps={0}, distinct spawn keys=6/6 (M+1, incl. reference), env seeds issued=570"
+        },
+        {
+          "check": "S3 all five sources under one pinned theta_k",
+          "pass": true,
+          "detail": "worker checksums matched in 3/3 rounds; theta_k stable through the dual in 3/3; trajectories/round={150} (= M x R_m = 5 x 30)"
+        },
+        {
+          "check": "S4 no source data enters PPO",
+          "pass": true,
+          "detail": "the single PPO call site consumes only (agent, finalized_rollout, lambda, cfg): True; `batch` is not among its arguments"
+        },
+        {
+          "check": "S5 no oracle/reference leakage into the learner path",
+          "pass": true,
+          "detail": "reference rows in their own file: 1; oracle.jsonl separate: True; leaked keys in rounds.jsonl: none"
+        },
+        {
+          "check": "S6 the attacked source is the predeclared source, and only it",
+          "pass": true,
+          "detail": "corrupted_source_ids=['batch_1'] (declared ['batch_1']); other sources modified: none"
+        },
+        {
+          "check": "R1 retained_n == 3 in 100% of cells",
+          "pass": true,
+          "detail": "18/18 cells; values seen=[3.0]"
+        },
+        {
+          "check": "R2 degenerate == False in 100% of cells",
+          "pass": true,
+          "detail": "degenerate cells=0/18"
+        },
+        {
+          "check": "R3 MAD is a real measurement, never the sigma floor",
+          "pass": true,
+          "detail": "cells at exactly sigma_min=0.001: 0/18; nonzero MAD: 18/18; MAD min=0.0376425 median=0.174477 max=0.61666; distinct values=18"
+        },
+        {
+          "check": "R4 beta*MAD varies across cells (not a constant)",
+          "pass": true,
+          "detail": "distinct margins=18/18; mean=0.320843 sd=0.209953 min=0.0564637 max=0.92499"
+        },
+        {
+          "check": "R7 beta*MAD is computed and reaches the dual update",
+          "pass": true,
+          "detail": "max|margin - beta*MAD|=0; max|pessimistic - (point+margin)|=0; max|dual input - pessimistic|=0; max|residual - (pessimistic - d)|=0  (all must be <= 1e-09)"
+        },
+        {
+          "check": "N no NaN/Inf anywhere in the mechanism path",
+          "pass": true,
+          "detail": "non-finite counts={'point_estimate': 0, 'spread': 0, 'retained_n': 0, 'applied_margin': 0, 'pessimistic_estimate': 0, 'mechanism_reported_cost_return': 0, 'constraint_residual': 0, 'pre_attack_reports': 0}"
+        },
+        {
+          "check": "X offline recomputation reproduces every logged field to 1e-9",
+          "pass": true,
+          "detail": "max abs error per field={'point_estimate': '0', 'spread': '0', 'retained_n': '0', 'applied_margin': '0', 'pessimistic_estimate': '0'}"
+        }
+      ],
+      "mad": {
+        "mean": 0.21389510614335253,
+        "min": 0.03764246008051231,
+        "median": 0.17447719091514458,
+        "max": 0.6166597202332227,
+        "nonzero_frac": 1.0,
+        "above_sigma_min_frac": 1.0
+      },
+      "beta_mad": {
+        "mean": 0.3208426592150288,
+        "sd": 0.20995311003408892,
+        "min": 0.05646369012076846,
+        "max": 0.924989580349834
+      },
+      "wall_clock_s_per_round": [
+        180.1,
+        185.3,
+        209.3
+      ]
+    },
+    "clean": {
+      "dir": "results\\a3_smoke_rerun\\smoke_m5_rce_clean",
+      "rounds_completed": 3,
+      "cells": 18,
+      "all_pass": true,
+      "checks": [
+        {
+          "check": "S1 five source reports per owner",
+          "pass": true,
+          "detail": "reports/cell unique=[5], source_ids=['batch_1', 'batch_2', 'batch_3', 'batch_4', 'batch_5']"
+        },
+        {
+          "check": "S2 five independent RNG streams, no duplicate or overlapping seeds",
+          "pass": true,
+          "detail": "duplicate_seed_events=0, pairwise stream overlaps={0}, distinct spawn keys=6/6 (M+1, incl. reference), env seeds issued=570"
+        },
+        {
+          "check": "S3 all five sources under one pinned theta_k",
+          "pass": true,
+          "detail": "worker checksums matched in 3/3 rounds; theta_k stable through the dual in 3/3; trajectories/round={150} (= M x R_m = 5 x 30)"
+        },
+        {
+          "check": "S4 no source data enters PPO",
+          "pass": true,
+          "detail": "the single PPO call site consumes only (agent, finalized_rollout, lambda, cfg): True; `batch` is not among its arguments"
+        },
+        {
+          "check": "S5 no oracle/reference leakage into the learner path",
+          "pass": true,
+          "detail": "reference rows in their own file: 1; oracle.jsonl separate: True; leaked keys in rounds.jsonl: none"
+        },
+        {
+          "check": "S6 clean arm carries no corrupted source",
+          "pass": true,
+          "detail": "corrupted_source_ids=[]"
+        },
+        {
+          "check": "R1 retained_n == 3 in 100% of cells",
+          "pass": true,
+          "detail": "18/18 cells; values seen=[3.0]"
+        },
+        {
+          "check": "R2 degenerate == False in 100% of cells",
+          "pass": true,
+          "detail": "degenerate cells=0/18"
+        },
+        {
+          "check": "R3 MAD is a real measurement, never the sigma floor",
+          "pass": true,
+          "detail": "cells at exactly sigma_min=0.001: 0/18; nonzero MAD: 18/18; MAD min=0.0189878 median=0.119402 max=0.61666; distinct values=18"
+        },
+        {
+          "check": "R4 beta*MAD varies across cells (not a constant)",
+          "pass": true,
+          "detail": "distinct margins=18/18; mean=0.256208 sd=0.212935 min=0.0284817 max=0.92499"
+        },
+        {
+          "check": "R7 beta*MAD is computed and reaches the dual update",
+          "pass": true,
+          "detail": "max|margin - beta*MAD|=0; max|pessimistic - (point+margin)|=0; max|dual input - pessimistic|=0; max|residual - (pessimistic - d)|=0  (all must be <= 1e-09)"
+        },
+        {
+          "check": "N no NaN/Inf anywhere in the mechanism path",
+          "pass": true,
+          "detail": "non-finite counts={'point_estimate': 0, 'spread': 0, 'retained_n': 0, 'applied_margin': 0, 'pessimistic_estimate': 0, 'mechanism_reported_cost_return': 0, 'constraint_residual': 0, 'pre_attack_reports': 0}"
+        },
+        {
+          "check": "X offline recomputation reproduces every logged field to 1e-9",
+          "pass": true,
+          "detail": "max abs error per field={'point_estimate': '0', 'spread': '0', 'retained_n': '0', 'applied_margin': '0', 'pessimistic_estimate': '0'}"
+        }
+      ],
+      "mad": {
+        "mean": 0.17080516247205246,
+        "min": 0.01898779035004594,
+        "median": 0.11940227494002542,
+        "max": 0.6166597202332227,
+        "nonzero_frac": 1.0,
+        "above_sigma_min_frac": 1.0
+      },
+      "beta_mad": {
+        "mean": 0.2562077437080787,
+        "sd": 0.21293536331181218,
+        "min": 0.02848168552506891,
+        "max": 0.924989580349834
+      },
+      "wall_clock_s_per_round": [
+        170.7,
+        164.5,
+        160.1
+      ]
+    }
+  },
+  "margin_responds_direction_only": {
+    "attack_mean_beta_mad": 0.3208426592150288,
+    "clean_mean_beta_mad": 0.2562077437080787,
+    "ratio": 1.2522754174854085,
+    "note": "DIRECTION ONLY. Three rounds under an untrained policy; this is a plumbing observation, not evidence for A3-G3-iv."
+  },
+  "all_pass": true
+}

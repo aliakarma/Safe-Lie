@@ -87,7 +87,7 @@ needed to close it).
 | MAPPO-Lagrangian | `safelie.algos.networks`, `safelie.training.ppo` | **Full** — the compact study's designated victim (decision, §R2.1) |
 | MACPO | — | **Not implemented** — Stage-3 scope (§R9 item 10) |
 | Dec-PDO | — | **Not implemented** — Stage-3 scope |
-| PID-Lagrangian | — | **Not implemented** — Stage-3 scope |
+| PID-Lagrangian | `safelie.training.dual.pid_dual_update`, `safelie.utils.config.DualConfig` | **Implemented, gains undeclared.** Selected with `dual.controller: pid`; consensus mixes the integral term, so `k_p = k_d = 0, k_i = eta_lambda` reduces to Eq. 2 bit for bit and Theorem 1's mass-conservation identity carries over to the integral path unchanged. The three gains have no defaults and are required on the `pid` path: no pre-declaration has fixed an operating point, and this repository does not invent [SPEC] numbers. Verified by `tests/unit/test_pid_dual.py` and `scripts/pid_smoke_verify.py` |
 | Unconstrained MAPPO | — | **Not implemented** — Stage-3 scope; trivially derivable by setting `lambda_max=0` or `dual.eta_lambda=0` on the existing implementation if needed sooner |
 
 ## Evaluation protocol (paper §5.1, report §8)

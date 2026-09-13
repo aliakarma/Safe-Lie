@@ -1,0 +1,60 @@
+{
+  "note": "PID SMOKE TEST ONLY -- not a baseline result; gains are not a declaration",
+  "pid_run": "results\\a3_smoke_pid\\smoke_pid_lagrangian",
+  "lagrangian_run": "results\\a3_smoke_rerun\\smoke_m5_rce_attack",
+  "gains": {
+    "k_p": 0.05,
+    "k_i": 0.035,
+    "k_d": 1.0,
+    "lambda_max": 25.0
+  },
+  "checks": [
+    {
+      "check": "P1 the run used controller='pid' with the declared gains",
+      "pass": true,
+      "detail": "controller='pid' k_p=0.05 k_i=0.035 k_d=1.0 lambda_max=25.0"
+    },
+    {
+      "check": "P2 lambda == clip(k_p*Delta + I + k_d*d), every cell",
+      "pass": true,
+      "detail": "max|reconstructed - lambda_after| = 0.000e+00  (must be <= 1e-09); p_term also checked against k_p*residual: 0.000e+00"
+    },
+    {
+      "check": "P3 I_{k+1} == clip(W @ I_k + k_i*Delta), every cell",
+      "pass": true,
+      "detail": "max|recursion error| = 0.000e+00; max|integral_mixed_before - W @ I_k| = 2.220e-16 (both must be <= 1e-09)"
+    },
+    {
+      "check": "P4 derivative is one-sided and correctly lagged",
+      "pass": true,
+      "detail": "max|d - max(0, Delta_k - Delta_(k-1))| = 0.000e+00; round-0 derivative all zero: True; any negative derivative: False"
+    },
+    {
+      "check": "P5 P and I terms are nonzero somewhere",
+      "pass": true,
+      "detail": "nonzero cells -- p_term 18/18, i_term 18/18"
+    },
+    {
+      "check": "D-path coverage (reported, not gating)",
+      "pass": true,
+      "exercised": false,
+      "detail": "0/18 cells had a rising cost"
+    },
+    {
+      "check": "P6 lambda and the integral stay inside [0, lambda_max]",
+      "pass": true,
+      "detail": "lambda in [1.1544, 4.7957], integral in [0.4754, 3.0322], bound = 25.0"
+    },
+    {
+      "check": "N  no NaN/Inf anywhere in the controller path",
+      "pass": true,
+      "detail": "non-finite counts={'integral_after': 0, 'integral_mixed_before': 0, 'p_term': 0, 'i_term': 0, 'd_term': 0, 'derivative_raw': 0, 'lambda_after': 0, 'constraint_residual': 0}"
+    },
+    {
+      "check": "L  PID changed the multiplier, from identical round-0 sources",
+      "pass": true,
+      "detail": "round-0 max|residual difference| = 0.000e+00 (must be <= 1e-09: the two runs draw the same sources from the same streams, so they are genuinely paired); round-0 max|lambda difference| = 1.843412 (must be > 1e-09: the controller is not being configured and then ignored)"
+    }
+  ],
+  "all_pass": true
+}

@@ -528,3 +528,349 @@ structural constants at `M=3, f=1`, independent of the input values. They
 had never been checked on a second architecture. They survive one. This
 sharpens rather than changes the A2 finding: at M=3 the margin is so inert
 that it is invariant even to a change of CPU architecture.
+
+---
+
+## 13. Addendum — A2's final numbers correct one figure quoted in section 2
+
+**Added 2026-09-09, after A2 completed all three seeds and passed, and before
+any A3 run existed.** Sections 1-12 are unedited.
+
+Section 2 states, as motivation for A3's sharpest prediction, that *"A2
+measured `E − A = +0.437`"*. That figure was an interim read taken when only
+**two** of A2's three seeds had finished. A2's final three-seed value is:
+
+| | interim (2 seeds, quoted in section 2) | **final (3 seeds)** |
+|---|---|---|
+| `E − A` | +0.437 | **+0.122** |
+| per-seed | [+0.466, +0.409] | [+0.466, +0.409, **−0.508**] |
+| sign-consistent | yes | **no** |
+| 95% CI | — | [−1.236, +1.480] |
+
+The third seed came in negative and roughly cancelled the first two. **At
+M=3, clean RCE's effect on true cost is not distinguishable from zero**, and
+is not sign-consistent, which is exactly what the mechanism predicts once the
+margin is known to be a constant: trimming to a single retained value costs
+some precision but adds no systematic conservatism, so the net is small and
+seed-dependent.
+
+### What this does to A3's prediction
+
+The prediction itself is unchanged and remains as pre-declared: **`E' − A' <
+0`**, sign-consistent across seeds. What changes is the *claim that can be
+made if it holds*. Section 2 calls this a "sign FLIP" between A2 and A3. That
+framing is no longer available, because A2 established no sign to flip from.
+
+The correct statement, fixed here before any A3 data exists:
+
+- **If `E' − A' < 0` in all seeds:** A3 has shown clean RCE becomes
+  *systematically* safer once the margin is live — measured against an M=3
+  baseline that is indistinguishable from zero, not against a positive one.
+  This is a weaker headline than "the sign flips" and is the one that will be
+  reported.
+- **If `E' − A' ≈ 0`:** the margin is live (A3-G3) but does not move the
+  policy. That is a real and reportable negative result about `β = 1.5`, not
+  a failed run.
+- **If `E' − A' > 0`:** the prediction is refuted and will be reported as
+  refuted.
+
+This correction makes A3's prediction *harder* to claim credit for, not
+easier. It is recorded rather than silently fixed because section 2 was
+written before the data and its error was to quote an incomplete run as if it
+were final.
+
+### A2's headline, for the record
+
+Interaction `(C−E)−(B−A) = −3.202`, negative in all three seeds, 95% CI
+[−4.725, −1.680]; RCE removes **80.3 %** of the attack's effect on true cost.
+All six A2 gates pass. **A3's precondition is met.**
+
+---
+
+## 14. Addendum — section 2's predictions reproduce from the shipped code
+
+**Added 2026-09-09, after A2 completed and before any A3 run existed on any
+machine.** Sections 1-13 are unedited. This section records a verification,
+not a change: no threshold, band or decision rule is altered by it.
+
+Section 2's table was written from a 200,000-draw Monte Carlo through
+`safelie.defenses.rce.rce_aggregate`. Before launching A3, that Monte Carlo
+was re-run against the current working tree, at the same
+`sigma_src = 1.053`, `B = 12.5`, `d = 25`, to confirm the predictions the
+A3-G3 and A3-G7 bands are drawn from are still what the code produces:
+
+| quantity | section 2 | re-run 2026-09-09 |
+|---|---|---|
+| retained set size, M=5 | 3 | **3** (only value observed) |
+| `degenerate`, M=5 | 0 % | **0.0 %** |
+| MAD, clean | 0.270 | **0.2693** |
+| MAD, under attack | 0.363 | **0.3637** |
+| margin `beta*MAD`, clean | 0.404 | **0.4040** |
+| margin `beta*MAD`, attacked | 0.544 | **0.5456** |
+| clean aggregate bias | +0.402 | **+0.4046** |
+| attack shift of the aggregate | −0.222 | **−0.2196** |
+| suppression vs mean | 11.3x | **11.38x** |
+| attacked source trimmed | 100 % | **100.00 %** |
+| M=3 control: `degenerate` | 100 % | **100.0 %** |
+| M=3 control: margin | 0.0015 constant | **0.0015 constant** |
+| M=3 control: suppression | 7.0x | **7.00x** |
+
+Every figure reproduces. The remaining differences are Monte-Carlo noise at
+the fourth decimal.
+
+### Three things the re-run establishes that section 2 did not state
+
+**1. The margin's response to corruption is indirect, and the mechanism is
+not the one the phrase "the corrupted value widens the retained set's
+dispersion" (section 2, consequence 1) describes.** The corrupted source is
+retained in **0.0000 %** of draws — it is always the minimum and always
+trimmed. It cannot widen the retained set because it is never in it. What
+actually happens: trimming the corrupted value as the minimum slides the
+retained window off the centre of the honest sample and onto its **three
+lowest of four** honest values (100.00 % of draws), and the lower tail is
+wider than the centre. The MAD rises because the *window moved*, not because
+the attacker is inside it. Section 2's numbers are right; its one-line
+explanation of them is not, and is corrected here rather than left standing.
+
+**2. The margin offsets a measurable share of the trimming-induced bias.**
+Decomposing the −0.2196 attack shift of the RCE output:
+
+| component | shift under attack |
+|---|---|
+| trimmed-mean component `Y_trim` | **−0.3614** |
+| margin component `beta*MAD` | **+0.1403** |
+| total, `Y_RCE` | **−0.2211** |
+
+So the margin cancels **38.8 %** of the downward bias that trimming itself
+introduces. This is the quantity A3 exists to measure, and it is nonzero in
+the model. Whether it survives contact with a real 250-round run is A3's
+question, not this addendum's.
+
+**3. `MAD` over three points is a minimum-gap statistic.** For a sorted
+retained triple `a <= b <= c`, the unscaled MAD is `median{b-a, 0, c-b} =
+min(b-a, c-b)` — the *smaller* of the two adjacent gaps, not a range. This
+is why the M=5 margin is modest rather than large, and it is now pinned by
+`tests/property/test_aggregators.py::
+test_rce_at_m5_f1_mad_is_the_minimum_adjacent_gap_of_the_retained_three`
+so that a change of MAD convention (e.g. adopting the 1.4826 consistency
+constant) cannot silently rescale every A3 margin.
+
+It also sets the scale of A3-G3-ii's `>= 99 %` bar honestly: in this model
+`spread > sigma_min` on **99.68 %** of clean cells and **99.77 %** of
+attacked cells. The gate is met, but by about 0.7 points, because a
+minimum-gap statistic has real density near zero. A3-G3-ii is therefore a
+genuine test rather than a formality, which is how it was intended.
+
+### Boundary regression tests added at the same time
+
+`min_retained` is a **strict** lower bound: `rce_aggregate` floors on
+`retained_n < min_retained`, so at `|T| == 3 == min_retained` the comparison
+is `3 < 3` -> False and the floor is unreachable. Changing that `<` to `<=`,
+or raising `min_retained` to 4, would turn A3 back into A2 without altering
+one field of any config. Seven tests in
+`tests/property/test_aggregators.py` now pin that boundary; both mutations
+were applied to `safelie/defenses/rce.py` and confirmed to fail them (7 and
+4 failures respectively) before the file was restored.
+
+---
+
+## 15. Addendum — the production platform is GCP, and the amendment that makes it so
+
+**Added 2026-09-09, before any A3 production run existed on any machine.**
+Sections 1-14 are unedited. This section records a change of *hardware*, and
+nothing else. No threshold, band, gate, contrast, seed, or decision rule in
+sections 1-14 is altered, added, relaxed, or reinterpreted by it.
+
+### 15.1 What changed
+
+| | original pre-declaration | **production** |
+|---|---|---|
+| platform | Mac mini (Apple M4, arm64, macOS 26.5) — section 12.4 | **GCP `t2d-standard-60`** |
+| CPU | Apple M4, 4P+6E | **AMD EPYC (Milan), x86-64** |
+| vCPU model | 10 cores | **60 vCPU, 1 vCPU = 1 physical core** |
+| `source_collection.workers` | 12 | **30** |
+| validation platform | Windows 11, AMD Ryzen 5 5600H (Zen 3) — smoke test only | unchanged, and not a production run |
+| scheduling | 12 runs sequential | **seeds 0 and 1 concurrent, seed 2 when capacity frees** |
+
+Everything else is untouched: `M=5`, `f=1`, `beta=1.5`, `R_m=30`,
+`rollout_length=2000`, 250 rounds, the three seeds and their entropies, the
+attacked-source mapping, the attack block, the RCE block, PPO, GAE, the dual
+update, `d=25`, the ring topology, the environment, the 20-round calibration
+protocol, and the `R_ref=120` validation protocol at rounds
+{25,75,125,175,225}. A3 still runs **all twelve** production runs and reuses
+nothing from A1 or A2 (section 3).
+
+### 15.2 Why this is a provenance change, not an experimental factor
+
+The rule section 12.4 exists to enforce is *"every contrast must live entirely
+on one machine"* — because the cross-platform probe showed `torch.manual_seed`
+does not produce portable weights across architectures. That rule is about
+**homogeneity**, not about which particular machine.
+
+All twelve A3 runs execute on **one instance, one machine type, one CPU
+platform**. Every contrast A3 reports — `B'−A'`, `E'−A'`, `C'−E'`, and the
+interaction — is therefore a difference between two runs on identical
+hardware, exactly as under the original assignment. There is no machine
+factor to bound, and section 12.4's removal-of-the-confound argument carries
+over verbatim.
+
+`t2d-standard-60` is Milan-only, so the CPU platform is pinned by the machine
+type itself and cannot vary between runs at GCP's scheduling discretion. That
+is a reason for choosing this family over one where `--min-cpu-platform` must
+be asserted separately.
+
+**This is not goalpost-moving.** No A3 production run exists on any machine.
+The change is driven by a measured hardware property — the same class of input
+section 4 already delegated the machine assignment to — and it moves the design
+toward more compute at the same homogeneity, not toward a weaker bar.
+
+### 15.3 `workers` 12 → 30 is compute-only
+
+> Worker count is scientifically invariant because trajectory seeds are
+> generated in the parent process and each worker is a pure function of the
+> same `(policy, env_seed, torch_seed)` tuple.
+
+Structurally: `ParallelBatchSourceCollector._draw_seeds` draws every
+`(env_seed, torch_seed)` pair in the main process from `M+1` spawned PCG64
+streams before any dispatch; `collect_one_trajectory` reseeds the environment
+and the torch global generator at the top of each trajectory. `workers`
+selects only the chunk partition.
+
+Measured at A3's own operating point (M=5, f=1) on 2026-09-09:
+
+| dimension | coverage | result |
+|---|---|---|
+| worker counts | 1, 2, 4, 5, 6, 8, 12 | all identical |
+| dispatch paths | `workers=1` bypasses `mp.Pool`; `workers>=2` does not | both identical |
+| chunk partitions | 16 / 20 / 40 / 48 chunks | all identical |
+| volume | `R_m=8` and production `R_m=30` | both identical |
+| compared | all 30 source means (5 sources x 6 owners) | **max abs difference exactly 0.0** |
+
+Bitwise, not within a tolerance. `scripts/a3_verify_frozen.py` accordingly
+moves `workers` into `PERMITTED_SOURCE_COLLECTION`; `R_m`,
+`chunks_per_worker`, `validation_rounds`, `R_ref` and `mode` remain frozen,
+because none of those is a compute knob. Pinned by
+`tests/unit/test_a3_verify_frozen_workers.py` and
+`tests/unit/test_source_batch.py`.
+
+`workers` is deliberately **not** added to `PERMITTED_WITHIN_SEED`: the four
+conditions of a seed must still agree on it, which is the same rule that keeps
+a whole seed on one machine.
+
+### 15.4 Concurrency is scheduling, not design
+
+Seeds are independent by construction — separate `seed_entropy`, separate
+spawned streams, separate runs. Within a seed the order is unchanged
+(`A' -> B' -> C' -> E'`, undefended references first, because the mechanism
+validator gates `C'` against `B'` and `E'` against `A'`), and a whole seed
+stays in one process on one machine.
+
+`scripts/a3_run_queue.py --seed N` restricts a process to one seed and gives
+it `a3_queue_status_seed<N>.json`, with a per-seed lock file so two processes
+cannot claim the same seed. Status writes are atomic (`os.replace`). Nothing
+about any run changes; only which process runs it and where its bookkeeping
+goes. `tests/unit/test_a3_queue_isolation.py` covers the isolation.
+
+**Seed 2 is not claimed to be concurrent.** Two seeds at 30 workers occupy all
+60 vCPUs. Seed 2 starts when seed 0 or seed 1 releases its capacity.
+
+### 15.5 Machine provenance is recorded per run, not asserted here
+
+`run_metadata.json` now carries a `provenance` block — machine type, OS,
+architecture, CPU model, logical CPU count, worker count, `torch` / `numpy` /
+`mujoco` / `gymnasium` versions, a SHA-256 of the fully resolved config, and
+the BLAS thread environment — alongside the existing git SHA and dirty-tree
+flag. Homogeneity is therefore a checkable property of the twelve artifacts
+rather than a claim in this document.
+
+### 15.6 Not spot instances
+
+The runs are checkpointed and the queue resumes from `rounds_done`, so
+preemption would cost wall clock rather than data. The resume path has never
+been exercised under preemption, and A3 is a pre-declared campaign; a standard
+persistent VM is used so no untested failure mode is introduced for a saving
+measured in hours.
+
+---
+
+## 16. Addendum — `workers` 30 → 20, so all three seeds run concurrently
+
+**Added 2026-09-12, before any A3 production run existed on any machine.**
+Sections 1-14 are unedited, and so is section 15. This section records a
+change of *worker count and scheduling*, and nothing else. No threshold,
+band, gate, contrast, seed, or decision rule anywhere in this document is
+altered, added, relaxed, or reinterpreted by it.
+
+### 16.1 What changed
+
+| | section 15 | **production** |
+|---|---|---|
+| `source_collection.workers` | 30 | **20** |
+| scheduling | seeds 0 and 1 concurrent, seed 2 when capacity frees | **all three seeds concurrent** |
+| instance occupancy | 60/60 vCPU, then 30/60 for the whole second phase | **60/60 vCPU throughout** |
+| projected wall clock | ~33-42 h | **~24-29 h** |
+
+Platform, machine type and CPU family are unchanged from section 15: one GCP
+`t2d-standard-60`, all twelve runs, one instance. Everything section 15.1
+listed as untouched remains untouched — `M=5`, `f=1`, `beta=1.5`, `R_m=30`,
+`rollout_length=2000`, 250 rounds, the three seeds and their entropies, the
+attacked-source mapping, the attack block, the RCE block, PPO, GAE, the dual
+update, `d=25`, the ring topology, the environment, the 20-round calibration
+protocol, and the `R_ref=120` validation protocol at rounds
+{25,75,125,175,225}.
+
+### 16.2 Why this is admissible
+
+It is the same argument as §15.3, and it is admissible for exactly the same
+reason: `workers` selects the chunk partition and nothing else. Every
+`(env_seed, torch_seed)` pair is drawn in the main process before dispatch,
+and `collect_one_trajectory` reseeds the environment and the torch global
+generator at the top of every trajectory, so no reported value depends on
+which process ran which trajectory or in what order.
+
+§15.3's measured sweep covered `{1, 2, 4, 5, 6, 8, 12}` — which, it should be
+said plainly, contained **neither** the value it was used to license (30) nor
+the value adopted here (20). The sweep was therefore extended on 2026-09-12
+before this change was committed:
+
+| dimension | coverage | result |
+|---|---|---|
+| worker counts | 1, 2, 4, 5, 6, 8, 12, **20**, **30** | all identical |
+| dispatch paths | `workers=1` bypasses `mp.Pool`; `workers>=2` does not | both identical |
+| chunk partitions | 40 / 48 / 80 / 120 chunks over 150 items | all identical |
+| volume | `R_m=8` and production `R_m=30` | both identical |
+| compared | all 30 source means (5 sources x 6 owners), and every per-trajectory `G_r^i` | **max abs difference exactly 0.0** |
+
+Bitwise, not within a tolerance. The production value is now a measured
+point rather than an interpolation between measured points.
+
+### 16.3 The cost, stated
+
+20 does **not** divide the 150-trajectory round exactly. `ceil(150/20) = 8`
+waves against 7.5 ideal is roughly a 6% granularity loss, where 30 divided the
+round exactly into 5 waves. Expect **~67 s/round** against ~42 s/round at 30.
+
+That loss is accepted because the alternative wasted more. Under §15.4's
+schedule seed 2 ran alone at 30 workers, leaving 30 of 60 cores idle for an
+entire phase — seed 2 performs a third of the campaign's work but took as long
+as seeds 0 and 1 took together. Trading ~6% of one phase to recover ~30% of
+the campaign is favourable, and it removes a phase in which the instance is
+half idle while still being billed in full.
+
+This is not a change made to improve any result. It cannot improve any result:
+the numbers are bitwise identical either way, and §16.2 is the measurement
+that establishes that rather than the assertion that hopes it.
+
+### 16.4 What section 15 still governs
+
+§15.4's rule is unchanged in every respect except the count of concurrent
+seeds. Within a seed the order is still `A' -> B' -> C' -> E'`, a whole seed
+still stays in one process on one machine, the per-seed lock file and per-seed
+status file still make two processes claiming one seed an explicit failure,
+and `workers` is still **not** in `PERMITTED_WITHIN_SEED` — the four
+conditions of a seed must still agree on it.
+
+The one sentence of §15 that this section supersedes is §15.4's closing
+**"Seed 2 is not claimed to be concurrent."** At 20 workers it is, because
+3 x 20 = 60. That sentence was true of a 30-worker schedule and is left in
+place unedited, as the amendment convention requires.

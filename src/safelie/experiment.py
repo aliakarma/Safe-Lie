@@ -22,11 +22,15 @@ block must be written by the evaluator process, never by the learner."
 
 from __future__ import annotations
 
+import hashlib
+import importlib.metadata
 import json
+import os
 import platform
 import subprocess
 import sys
 import time
+import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -63,6 +67,97 @@ def _git_sha() -> dict[str, Any]:
     }
 
 
+def _cpu_model() -> str | None:
+    """The actual CPU, not the ISA. `platform.processor()` returns a useful
+    model string on Windows/macOS but often just "x86_64" on Linux, where the
+    model lives in /proc/cpuinfo instead."""
+    try:
+        with open("/proc/cpuinfo", encoding="utf-8") as fh:
+            for line in fh:
+                if line.startswith("model name"):
+                    return line.split(":", 1)[1].strip()
+    except OSError:
+        pass
+    return platform.processor() or None
+
+
+def _gcp_machine_type() -> str | None:
+    """The GCP machine type, if this is a GCP VM.
+
+    `SAFELIE_MACHINE_TYPE` wins so the value can be pinned without a network
+    call (and set on non-GCP hosts). Otherwise the instance metadata server is
+    probed with a short timeout; off GCP the address does not resolve and this
+    returns None rather than delaying the run.
+    """
+    override = os.environ.get("SAFELIE_MACHINE_TYPE")
+    if override:
+        return override
+    try:
+        req = urllib.request.Request(
+            "http://metadata.google.internal/computeMetadata/v1/instance/machine-type",
+            headers={"Metadata-Flavor": "Google"},
+        )
+        with urllib.request.urlopen(req, timeout=1.0) as resp:      # noqa: S310
+            # e.g. "projects/123456789/machineTypes/t2d-standard-60"
+            return resp.read().decode("utf-8").strip().rsplit("/", 1)[-1]
+    except Exception:
+        return None
+
+
+def _library_versions() -> dict[str, str | None]:
+    def _v(name: str) -> str | None:
+        try:
+            return importlib.metadata.version(name)
+        except Exception:
+            return None
+
+    try:
+        import torch
+
+        torch_v: str | None = torch.__version__
+    except Exception:
+        torch_v = None
+    return {
+        "torch": torch_v,
+        "numpy": _v("numpy"),
+        "mujoco": _v("mujoco"),
+        "gymnasium": _v("gymnasium"),
+        "gymnasium_robotics": _v("gymnasium-robotics"),
+    }
+
+
+def _provenance(cfg: ExperimentConfig) -> dict[str, Any]:
+    """Enough to prove, after the fact, that a campaign ran on one homogeneous
+    platform (docs/a3_gates.md section 15).
+
+    A3's design requires every contrast to live on one machine, because torch
+    initialises different weights on a different architecture. That is a claim
+    about the hardware a run actually executed on, so it is recorded per run
+    rather than asserted once in a document: `machine_type`, `architecture`
+    and `cpu_model` are what an auditor compares across the twelve runs.
+
+    `config_sha256` hashes the fully resolved config (defaults included), so
+    two runs agreeing on it agree on every field, not merely on the YAML text.
+    """
+    return {
+        "machine_type": _gcp_machine_type(),
+        "os": platform.platform(),
+        "system": platform.system(),
+        "architecture": platform.machine(),
+        "cpu_model": _cpu_model(),
+        "cpu_count_logical": os.cpu_count(),
+        "workers": cfg.source_collection.workers if cfg.source_collection else None,
+        "libraries": _library_versions(),
+        "config_sha256": hashlib.sha256(
+            cfg.model_dump_json().encode("utf-8")
+        ).hexdigest(),
+        "thread_env": {
+            k: os.environ.get(k)
+            for k in ("OMP_NUM_THREADS", "MKL_NUM_THREADS", "OPENBLAS_NUM_THREADS")
+        },
+    }
+
+
 def _write_run_metadata(out_dir: Path, cfg: ExperimentConfig, status: str, **extra: Any) -> None:
     """Everything needed to identify and rerun this run, in one file.
 
@@ -80,6 +175,7 @@ def _write_run_metadata(out_dir: Path, cfg: ExperimentConfig, status: str, **ext
         "git": _git_sha(),
         "python": sys.version,
         "platform": platform.platform(),
+        "provenance": _provenance(cfg),
         "num_rounds_planned": max(1, cfg.total_steps // cfg.rollout_length),
         "config_snapshot": json.loads(cfg.model_dump_json()),
         **extra,

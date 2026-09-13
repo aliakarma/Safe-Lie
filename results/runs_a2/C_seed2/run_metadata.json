@@ -1,12 +1,15 @@
 {
   "run_id": "C_seed2",
   "seed": 2,
-  "status": "running",
-  "written_at": "2026-09-08T20:38:42.261038+00:00",
+  "status": "complete",
+  "written_at": "2026-09-09T04:11:32.187081+00:00",
   "git": {
-    "sha": "bd1d8d6121d9f1ddb697592343b1a5457f4cbf58",
-    "dirty": false,
-    "dirty_paths": []
+    "sha": "dcf48fae9d52f4dc726e27c9894835476c956698",
+    "dirty": true,
+    "dirty_paths": [
+      "esults/runs_a2/C_seed2/oracle.jsonl",
+      "results/runs_a2/C_seed2/rounds.jsonl"
+    ]
   },
   "python": "3.11.9 (tags/v3.11.9:de54cf5, Apr  2 2024, 10:12:12) [MSC v.1938 64 bit (AMD64)]",
   "platform": "Windows-10-10.0.26200-SP0",
@@ -112,9 +115,27 @@
       "R_ref": 120
     }
   },
-  "resumed_from_round": 0,
-  "source_collection": {
-    "mode": "parallel_trajectory_batch",
+  "rounds_completed": 250,
+  "checkpoint": "checkpoint.pt",
+  "eval_every": 1,
+  "timing": {
+    "source_s": 23092.87918114662,
+    "oracle_s": 1544.5745635032654,
+    "learner_total_s": 25615.850140094757,
+    "wall_clock_s": 27169.826765060425,
+    "s_per_round": 108.6793070602417,
+    "source_s_per_round": 92.37151672458648
+  },
+  "env_steps": {
+    "ppo": 500000,
+    "source": 45000000,
+    "oracle": 500000
+  },
+  "source_seed_audit": {
+    "n_env_seeds_issued": 23100,
+    "n_torch_seeds_issued": 23100,
+    "duplicate_seed_events": 0,
+    "collisions": [],
     "spawn_keys": [
       [
         335268198726974212397240672597355197200,

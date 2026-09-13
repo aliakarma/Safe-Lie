@@ -129,11 +129,12 @@
         "run_id",
         "source_collection.M",
         "source_collection.seed_entropy",
+        "source_collection.workers",
         "sources.sources"
       ],
       "illegal": [],
       "R_m": 30,
-      "workers": 12,
+      "workers": 20,
       "validation_rounds": [
         25,
         75,
@@ -159,11 +160,12 @@
         "seed",
         "source_collection.M",
         "source_collection.seed_entropy",
+        "source_collection.workers",
         "sources.sources"
       ],
       "illegal": [],
       "R_m": 30,
-      "workers": 12,
+      "workers": 20,
       "validation_rounds": [
         25,
         75,
@@ -189,11 +191,12 @@
         "seed",
         "source_collection.M",
         "source_collection.seed_entropy",
+        "source_collection.workers",
         "sources.sources"
       ],
       "illegal": [],
       "R_m": 30,
-      "workers": 12,
+      "workers": 20,
       "validation_rounds": [
         25,
         75,
@@ -214,11 +217,12 @@
         "run_id",
         "source_collection.M",
         "source_collection.seed_entropy",
+        "source_collection.workers",
         "sources.sources"
       ],
       "illegal": [],
       "R_m": 30,
-      "workers": 12,
+      "workers": 20,
       "validation_rounds": [
         25,
         75,
@@ -241,11 +245,12 @@
         "seed",
         "source_collection.M",
         "source_collection.seed_entropy",
+        "source_collection.workers",
         "sources.sources"
       ],
       "illegal": [],
       "R_m": 30,
-      "workers": 12,
+      "workers": 20,
       "validation_rounds": [
         25,
         75,
@@ -268,11 +273,12 @@
         "seed",
         "source_collection.M",
         "source_collection.seed_entropy",
+        "source_collection.workers",
         "sources.sources"
       ],
       "illegal": [],
       "R_m": 30,
-      "workers": 12,
+      "workers": 20,
       "validation_rounds": [
         25,
         75,
@@ -290,11 +296,12 @@
         "output_dir",
         "source_collection.M",
         "source_collection.seed_entropy",
+        "source_collection.workers",
         "sources.sources"
       ],
       "illegal": [],
       "R_m": 30,
-      "workers": 12,
+      "workers": 20,
       "validation_rounds": [
         25,
         75,
@@ -315,11 +322,12 @@
         "seed",
         "source_collection.M",
         "source_collection.seed_entropy",
+        "source_collection.workers",
         "sources.sources"
       ],
       "illegal": [],
       "R_m": 30,
-      "workers": 12,
+      "workers": 20,
       "validation_rounds": [
         25,
         75,
@@ -340,11 +348,12 @@
         "seed",
         "source_collection.M",
         "source_collection.seed_entropy",
+        "source_collection.workers",
         "sources.sources"
       ],
       "illegal": [],
       "R_m": 30,
-      "workers": 12,
+      "workers": 20,
       "validation_rounds": [
         25,
         75,
@@ -367,11 +376,12 @@
         "run_id",
         "source_collection.M",
         "source_collection.seed_entropy",
+        "source_collection.workers",
         "sources.sources"
       ],
       "illegal": [],
       "R_m": 30,
-      "workers": 12,
+      "workers": 20,
       "validation_rounds": [
         25,
         75,
@@ -395,11 +405,12 @@
         "seed",
         "source_collection.M",
         "source_collection.seed_entropy",
+        "source_collection.workers",
         "sources.sources"
       ],
       "illegal": [],
       "R_m": 30,
-      "workers": 12,
+      "workers": 20,
       "validation_rounds": [
         25,
         75,
@@ -423,11 +434,12 @@
         "seed",
         "source_collection.M",
         "source_collection.seed_entropy",
+        "source_collection.workers",
         "sources.sources"
       ],
       "illegal": [],
       "R_m": 30,
-      "workers": 12,
+      "workers": 20,
       "validation_rounds": [
         25,
         75,
