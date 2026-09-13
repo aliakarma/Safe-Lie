@@ -1,0 +1,421 @@
+{
+  "predeclaration": "docs/unconstrained_control.md",
+  "git": {
+    "sha": "bed26a88edc714fbbd180c3478e351877c3eb33f",
+    "dirty": true,
+    "tracked_modified": [],
+    "untracked_new": [
+      "configs/experiment/unconstrained/",
+      "docs/unconstrained_control.md",
+      "results/mechanism_gap_reanalysis.json",
+      "results/runs_unconstrained/",
+      "results/unconstrained_smoke/",
+      "scripts/reanalyze_mechanism_gap.py",
+      "scripts/unconstrained_run_queue.py",
+      "scripts/verify_unconstrained_config.py",
+      "scripts/verify_unconstrained_run.py"
+    ],
+    "dirty_paths": [
+      "configs/experiment/unconstrained/",
+      "docs/unconstrained_control.md",
+      "results/mechanism_gap_reanalysis.json",
+      "results/runs_unconstrained/",
+      "results/unconstrained_smoke/",
+      "scripts/reanalyze_mechanism_gap.py",
+      "scripts/unconstrained_run_queue.py",
+      "scripts/verify_unconstrained_config.py",
+      "scripts/verify_unconstrained_run.py"
+    ]
+  },
+  "per_seed": {
+    "0": {
+      "control_config": "configs/experiment/unconstrained/u_seed0.yaml",
+      "clean_config": "configs/experiment/g9_batch_clean.yaml",
+      "paired_clean_run": "results/runs_constraint_batch_g9/g9_batch_clean",
+      "control_config_hash_sha256": "0aa231c9cd2dee6f76ee65c7f22ec64340d389677cce26bc60eb33149277c6a5",
+      "clean_config_hash_sha256": "a8b9fc376e4c9181de37cd28ccf4fc9542f11da846f895499fc36fc13ee071e2",
+      "loaded_config_diff": {
+        "dual.lambda_max": {
+          "clean": 25.0,
+          "control": 0.0
+        },
+        "output_dir": {
+          "clean": "results/runs_constraint_batch_g9",
+          "control": "results/runs_unconstrained"
+        },
+        "run_id": {
+          "clean": "g9_batch_clean",
+          "control": "U_seed0"
+        }
+      },
+      "lambda_max": 0.0,
+      "seed_entropy": 286314957402113664887331205920951063913,
+      "n_loaded_fields_compared": 75
+    },
+    "1": {
+      "control_config": "configs/experiment/unconstrained/u_seed1.yaml",
+      "clean_config": "configs/experiment/g10_batch_clean_seed1.yaml",
+      "paired_clean_run": "results/runs_constraint_batch_g10/seed1",
+      "control_config_hash_sha256": "5aebd2b90f11b6e3fd8d4a044ae7facf030084fb08096f547298fd9b428c0630",
+      "clean_config_hash_sha256": "760546a88fbebfd7512088cb15f65c5f02d18a99abfd53679c97c0992313910c",
+      "loaded_config_diff": {
+        "dual.lambda_max": {
+          "clean": 25.0,
+          "control": 0.0
+        },
+        "output_dir": {
+          "clean": "results/runs_constraint_batch_g10",
+          "control": "results/runs_unconstrained"
+        },
+        "run_id": {
+          "clean": "seed1",
+          "control": "U_seed1"
+        }
+      },
+      "lambda_max": 0.0,
+      "seed_entropy": 52021175099534868945312500562751741008,
+      "n_loaded_fields_compared": 75
+    },
+    "2": {
+      "control_config": "configs/experiment/unconstrained/u_seed2.yaml",
+      "clean_config": "configs/experiment/g10_batch_clean_seed2.yaml",
+      "paired_clean_run": "results/runs_constraint_batch_g10/seed2",
+      "control_config_hash_sha256": "805c2bf35c73ffc047c0e2a449fd59eeaf4e43d280e268b06d837a0e5f0f9dd9",
+      "clean_config_hash_sha256": "5c21864366022124f750e9f556e516f4af868088c9ff4e6ea4579331cf72fe28",
+      "loaded_config_diff": {
+        "dual.lambda_max": {
+          "clean": 25.0,
+          "control": 0.0
+        },
+        "output_dir": {
+          "clean": "results/runs_constraint_batch_g10",
+          "control": "results/runs_unconstrained"
+        },
+        "run_id": {
+          "clean": "seed2",
+          "control": "U_seed2"
+        }
+      },
+      "lambda_max": 0.0,
+      "seed_entropy": 335268198726974212397240672597355197200,
+      "n_loaded_fields_compared": 75
+    }
+  },
+  "untracked_at_launch": [
+    "configs/experiment/unconstrained/",
+    "docs/unconstrained_control.md",
+    "results/mechanism_gap_reanalysis.json",
+    "results/runs_unconstrained/",
+    "results/unconstrained_smoke/",
+    "scripts/reanalyze_mechanism_gap.py",
+    "scripts/unconstrained_run_queue.py",
+    "scripts/verify_unconstrained_config.py",
+    "scripts/verify_unconstrained_run.py"
+  ],
+  "checks": [
+    {
+      "check": "seed0: diff confined to the allowed fields",
+      "pass": true,
+      "detail": []
+    },
+    {
+      "check": "seed0: dual.lambda_max == 0.0 (the treatment)",
+      "pass": true,
+      "detail": 0.0
+    },
+    {
+      "check": "seed0: clean side has dual.lambda_max == 25.0",
+      "pass": true,
+      "detail": 25.0
+    },
+    {
+      "check": "seed0: dual.eta_lambda unchanged",
+      "pass": true,
+      "detail": 0.035
+    },
+    {
+      "check": "seed0: dual.controller is lagrangian",
+      "pass": true,
+      "detail": "lagrangian"
+    },
+    {
+      "check": "seed0: seed matches the file",
+      "pass": true,
+      "detail": 0
+    },
+    {
+      "check": "seed0: run_id is U_seed0",
+      "pass": true,
+      "detail": "U_seed0"
+    },
+    {
+      "check": "seed0: output_dir is results/runs_unconstrained",
+      "pass": true,
+      "detail": "results/runs_unconstrained"
+    },
+    {
+      "check": "seed0: no attack",
+      "pass": true,
+      "detail": {
+        "name": "none",
+        "f": 0,
+        "corrupted": null
+      }
+    },
+    {
+      "check": "seed0: no RCE (defense is the plain mean, f=0)",
+      "pass": true,
+      "detail": {
+        "name": "mean",
+        "f": 0
+      }
+    },
+    {
+      "check": "seed0: seed_entropy identical to the paired clean run (CRN)",
+      "pass": true,
+      "detail": {
+        "control": 286314957402113664887331205920951063913,
+        "clean": 286314957402113664887331205920951063913
+      }
+    },
+    {
+      "check": "seed0: learner untouched (ppo block identical)",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "check": "seed0: env / topology / sources identical",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "check": "seed0: horizon and rollout unchanged",
+      "pass": true,
+      "detail": {
+        "total_steps": 500000,
+        "rollout_length": 2000
+      }
+    },
+    {
+      "check": "seed0: constraint_estimator unchanged (mc_window)",
+      "pass": true,
+      "detail": "mc_window"
+    },
+    {
+      "check": "seed0: source collection identical to the clean run",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "check": "seed1: diff confined to the allowed fields",
+      "pass": true,
+      "detail": []
+    },
+    {
+      "check": "seed1: dual.lambda_max == 0.0 (the treatment)",
+      "pass": true,
+      "detail": 0.0
+    },
+    {
+      "check": "seed1: clean side has dual.lambda_max == 25.0",
+      "pass": true,
+      "detail": 25.0
+    },
+    {
+      "check": "seed1: dual.eta_lambda unchanged",
+      "pass": true,
+      "detail": 0.035
+    },
+    {
+      "check": "seed1: dual.controller is lagrangian",
+      "pass": true,
+      "detail": "lagrangian"
+    },
+    {
+      "check": "seed1: seed matches the file",
+      "pass": true,
+      "detail": 1
+    },
+    {
+      "check": "seed1: run_id is U_seed1",
+      "pass": true,
+      "detail": "U_seed1"
+    },
+    {
+      "check": "seed1: output_dir is results/runs_unconstrained",
+      "pass": true,
+      "detail": "results/runs_unconstrained"
+    },
+    {
+      "check": "seed1: no attack",
+      "pass": true,
+      "detail": {
+        "name": "none",
+        "f": 0,
+        "corrupted": null
+      }
+    },
+    {
+      "check": "seed1: no RCE (defense is the plain mean, f=0)",
+      "pass": true,
+      "detail": {
+        "name": "mean",
+        "f": 0
+      }
+    },
+    {
+      "check": "seed1: seed_entropy identical to the paired clean run (CRN)",
+      "pass": true,
+      "detail": {
+        "control": 52021175099534868945312500562751741008,
+        "clean": 52021175099534868945312500562751741008
+      }
+    },
+    {
+      "check": "seed1: learner untouched (ppo block identical)",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "check": "seed1: env / topology / sources identical",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "check": "seed1: horizon and rollout unchanged",
+      "pass": true,
+      "detail": {
+        "total_steps": 500000,
+        "rollout_length": 2000
+      }
+    },
+    {
+      "check": "seed1: constraint_estimator unchanged (mc_window)",
+      "pass": true,
+      "detail": "mc_window"
+    },
+    {
+      "check": "seed1: source collection identical to the clean run",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "check": "seed2: diff confined to the allowed fields",
+      "pass": true,
+      "detail": []
+    },
+    {
+      "check": "seed2: dual.lambda_max == 0.0 (the treatment)",
+      "pass": true,
+      "detail": 0.0
+    },
+    {
+      "check": "seed2: clean side has dual.lambda_max == 25.0",
+      "pass": true,
+      "detail": 25.0
+    },
+    {
+      "check": "seed2: dual.eta_lambda unchanged",
+      "pass": true,
+      "detail": 0.035
+    },
+    {
+      "check": "seed2: dual.controller is lagrangian",
+      "pass": true,
+      "detail": "lagrangian"
+    },
+    {
+      "check": "seed2: seed matches the file",
+      "pass": true,
+      "detail": 2
+    },
+    {
+      "check": "seed2: run_id is U_seed2",
+      "pass": true,
+      "detail": "U_seed2"
+    },
+    {
+      "check": "seed2: output_dir is results/runs_unconstrained",
+      "pass": true,
+      "detail": "results/runs_unconstrained"
+    },
+    {
+      "check": "seed2: no attack",
+      "pass": true,
+      "detail": {
+        "name": "none",
+        "f": 0,
+        "corrupted": null
+      }
+    },
+    {
+      "check": "seed2: no RCE (defense is the plain mean, f=0)",
+      "pass": true,
+      "detail": {
+        "name": "mean",
+        "f": 0
+      }
+    },
+    {
+      "check": "seed2: seed_entropy identical to the paired clean run (CRN)",
+      "pass": true,
+      "detail": {
+        "control": 335268198726974212397240672597355197200,
+        "clean": 335268198726974212397240672597355197200
+      }
+    },
+    {
+      "check": "seed2: learner untouched (ppo block identical)",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "check": "seed2: env / topology / sources identical",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "check": "seed2: horizon and rollout unchanged",
+      "pass": true,
+      "detail": {
+        "total_steps": 500000,
+        "rollout_length": 2000
+      }
+    },
+    {
+      "check": "seed2: constraint_estimator unchanged (mc_window)",
+      "pass": true,
+      "detail": "mc_window"
+    },
+    {
+      "check": "seed2: source collection identical to the clean run",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "check": "seed entropies are distinct across the three control seeds",
+      "pass": true,
+      "detail": {
+        "0": 286314957402113664887331205920951063913,
+        "1": 52021175099534868945312500562751741008,
+        "2": 335268198726974212397240672597355197200
+      }
+    },
+    {
+      "check": "output directories are distinct per seed",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "check": "no tracked file modified (the code that will run is committed)",
+      "pass": true,
+      "detail": []
+    },
+    {
+      "check": "no tracked file under src/ modified",
+      "pass": true,
+      "detail": []
+    }
+  ],
+  "all_pass": true
+}

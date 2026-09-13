@@ -1,0 +1,856 @@
+{
+  "metric": "detection_gap_vs_aggregate = true_cost_return - mechanism_reported_cost_return",
+  "superseded_metric": "detection_gap = true_cost_return - own_critic_reported_cost_return",
+  "seeds": [
+    0,
+    1,
+    2
+  ],
+  "missing_runs": [],
+  "per_run": {
+    "A_seed0": {
+      "run_dir": "results/runs_constraint_batch_g9/g9_batch_clean",
+      "rounds": 250,
+      "mech_gap_whole": 0.44833090439083384,
+      "mech_gap_last50": 0.76751273527427,
+      "mech_gap_per_agent_whole": [
+        0.4945049451688292,
+        0.47238883695022793,
+        0.3517035234638712,
+        0.21027252892248757,
+        0.580253349059947,
+        0.5808622427796408
+      ],
+      "own_critic_gap_whole": 7.505442807798647,
+      "own_critic_gap_last50": 6.81438509773581,
+      "true_cost_net_whole": 25.21428441146795,
+      "mech_reported_whole": 24.765953507077114,
+      "recon_max_abs_error": 0.0,
+      "oracle_vs_rounds_mech_max_abs_error": 0.0,
+      "identity_check_whole": 2.4980018054066022e-15,
+      "finite": true
+    },
+    "A_seed1": {
+      "run_dir": "results/runs_constraint_batch_g10/seed1",
+      "rounds": 250,
+      "mech_gap_whole": -0.01442523764405223,
+      "mech_gap_last50": 1.3294495872888468,
+      "mech_gap_per_agent_whole": [
+        -0.016023022407496135,
+        -0.031478398118294205,
+        -0.010143725342412622,
+        0.08139531360236368,
+        -0.024393743523633746,
+        -0.08590785007484161
+      ],
+      "own_critic_gap_whole": 7.707886095855162,
+      "own_critic_gap_last50": 8.160957477320302,
+      "true_cost_net_whole": 24.955015083716596,
+      "mech_reported_whole": 24.969440321360647,
+      "recon_max_abs_error": 0.0,
+      "oracle_vs_rounds_mech_max_abs_error": 0.0,
+      "identity_check_whole": 9.939965517347105e-16,
+      "finite": true
+    },
+    "A_seed2": {
+      "run_dir": "results/runs_constraint_batch_g10/seed2",
+      "rounds": 250,
+      "mech_gap_whole": 0.19316210565986996,
+      "mech_gap_last50": -0.45850467392316946,
+      "mech_gap_per_agent_whole": [
+        -0.11903246284080402,
+        -0.04871511950559858,
+        0.2549468335491429,
+        0.40943737496193894,
+        0.3431505603723822,
+        0.31918544742215815
+      ],
+      "own_critic_gap_whole": 6.498664340853985,
+      "own_critic_gap_last50": 5.858724493514792,
+      "true_cost_net_whole": 24.978219215717893,
+      "mech_reported_whole": 24.785057110058023,
+      "recon_max_abs_error": 0.0,
+      "oracle_vs_rounds_mech_max_abs_error": 0.0,
+      "identity_check_whole": -6.106226635438361e-16,
+      "finite": true
+    },
+    "B_seed0": {
+      "run_dir": "results/runs_a1/B_seed0",
+      "rounds": 250,
+      "mech_gap_whole": 4.563841565757733,
+      "mech_gap_last50": 4.810630411969956,
+      "mech_gap_per_agent_whole": [
+        4.351894852881653,
+        4.347685424599492,
+        4.55569570175858,
+        4.6734312539920575,
+        4.724546368516051,
+        4.729795792798562
+      ],
+      "own_critic_gap_whole": 8.622683431200855,
+      "own_critic_gap_last50": 7.670346531529669,
+      "true_cost_net_whole": 29.05589643924353,
+      "mech_reported_whole": 24.4920548734858,
+      "recon_max_abs_error": 0.0,
+      "oracle_vs_rounds_mech_max_abs_error": 0.0,
+      "identity_check_whole": -2.6645352591003757e-15,
+      "finite": true
+    },
+    "B_seed1": {
+      "run_dir": "results/runs_a1/B_seed1",
+      "rounds": 250,
+      "mech_gap_whole": 4.503116351394032,
+      "mech_gap_last50": 3.8938770786118053,
+      "mech_gap_per_agent_whole": [
+        4.547073100681029,
+        4.573744208455571,
+        4.482881522452417,
+        4.545617307782759,
+        4.499258901830161,
+        4.370123067162256
+      ],
+      "own_critic_gap_whole": 8.480210355398295,
+      "own_critic_gap_last50": 7.719867426727772,
+      "true_cost_net_whole": 29.27283365305624,
+      "mech_reported_whole": 24.769717301662205,
+      "recon_max_abs_error": 0.0,
+      "oracle_vs_rounds_mech_max_abs_error": 0.0,
+      "identity_check_whole": 1.7763568394002505e-15,
+      "finite": true
+    },
+    "B_seed2": {
+      "run_dir": "results/runs_a1/B_seed2",
+      "rounds": 250,
+      "mech_gap_whole": 4.210480823299439,
+      "mech_gap_last50": 3.6224100018696443,
+      "mech_gap_per_agent_whole": [
+        4.145357337563082,
+        4.188980930692427,
+        4.258937548849631,
+        4.226769034548034,
+        4.135342270531625,
+        4.307497817611836
+      ],
+      "own_critic_gap_whole": 7.5332433130603365,
+      "own_critic_gap_last50": 7.536692291126945,
+      "true_cost_net_whole": 28.776083073605893,
+      "mech_reported_whole": 24.565602250306455,
+      "recon_max_abs_error": 0.0,
+      "oracle_vs_rounds_mech_max_abs_error": 0.0,
+      "identity_check_whole": -8.881784197001252e-16,
+      "finite": true
+    },
+    "C_seed0": {
+      "run_dir": "results/runs_a2/C_seed0",
+      "rounds": 250,
+      "mech_gap_whole": 1.8042909116241865,
+      "mech_gap_last50": 1.9357109958903265,
+      "mech_gap_per_agent_whole": [
+        1.7394514806138879,
+        1.7504084144821968,
+        1.7760005554462743,
+        1.7685338147103598,
+        1.86778386261116,
+        1.9235673418812416
+      ],
+      "own_critic_gap_whole": 8.169530406551978,
+      "own_critic_gap_last50": 6.904866704488407,
+      "true_cost_net_whole": 26.455027092848365,
+      "mech_reported_whole": 24.65073618122418,
+      "recon_max_abs_error": 0.0,
+      "oracle_vs_rounds_mech_max_abs_error": 0.0,
+      "identity_check_whole": -6.661338147750939e-16,
+      "finite": true
+    },
+    "C_seed1": {
+      "run_dir": "results/runs_a2/C_seed1",
+      "rounds": 250,
+      "mech_gap_whole": 0.8499197523152131,
+      "mech_gap_last50": 1.3478310815455414,
+      "mech_gap_per_agent_whole": [
+        0.8233900624072368,
+        0.8404501501636822,
+        0.8927006617530994,
+        0.8267598419755939,
+        0.8319130586435811,
+        0.8843047389480849
+      ],
+      "own_critic_gap_whole": 8.437645467860687,
+      "own_critic_gap_last50": 8.667243588057245,
+      "true_cost_net_whole": 25.80978502832184,
+      "mech_reported_whole": 24.959865276006624,
+      "recon_max_abs_error": 0.0,
+      "oracle_vs_rounds_mech_max_abs_error": 0.0,
+      "identity_check_whole": 3.1086244689504383e-15,
+      "finite": true
+    },
+    "C_seed2": {
+      "run_dir": "results/runs_a2/C_seed2",
+      "rounds": 250,
+      "mech_gap_whole": 0.7956041290862502,
+      "mech_gap_last50": -0.46338303986785934,
+      "mech_gap_per_agent_whole": [
+        0.8920548374414197,
+        0.8625819000594632,
+        0.6895602894789253,
+        0.608811007488098,
+        0.8549934024306337,
+        0.8656233376189629
+      ],
+      "own_critic_gap_whole": 7.492732227040349,
+      "own_critic_gap_last50": 5.867188753103733,
+      "true_cost_net_whole": 25.599689808627723,
+      "mech_reported_whole": 24.80408567954147,
+      "recon_max_abs_error": 0.0,
+      "oracle_vs_rounds_mech_max_abs_error": 0.0,
+      "identity_check_whole": 3.4416913763379853e-15,
+      "finite": true
+    },
+    "D_seed0": {
+      "run_dir": "results/runs_a1/D_seed0",
+      "rounds": 250,
+      "mech_gap_whole": 0.9220135286395282,
+      "mech_gap_last50": 0.14954278338911225,
+      "mech_gap_per_agent_whole": [
+        1.146492477751781,
+        0.548527414192297,
+        0.7074792929396235,
+        0.6711781284325659,
+        1.5675790154167468,
+        0.8908248431041567
+      ],
+      "own_critic_gap_whole": 7.956908113978409,
+      "own_critic_gap_last50": 6.340400242492359,
+      "true_cost_net_whole": 25.465364213779125,
+      "mech_reported_whole": 24.543350685139593,
+      "recon_max_abs_error": 0.0,
+      "oracle_vs_rounds_mech_max_abs_error": 0.0,
+      "identity_check_whole": 3.6637359812630166e-15,
+      "finite": true
+    },
+    "D_seed1": {
+      "run_dir": "results/runs_a1/D_seed1",
+      "rounds": 250,
+      "mech_gap_whole": -0.08443489676956518,
+      "mech_gap_last50": 1.3705012942521015,
+      "mech_gap_per_agent_whole": [
+        -0.21286660134337296,
+        0.07704750436848241,
+        -0.04541137688541982,
+        -0.07109342112737814,
+        -0.33016734447677754,
+        0.07588185884707505
+      ],
+      "own_critic_gap_whole": 7.949537458309234,
+      "own_critic_gap_last50": 9.331224172079976,
+      "true_cost_net_whole": 24.45893857028128,
+      "mech_reported_whole": 24.54337346705084,
+      "recon_max_abs_error": 0.0,
+      "oracle_vs_rounds_mech_max_abs_error": 0.0,
+      "identity_check_whole": 3.566591466608315e-15,
+      "finite": true
+    },
+    "D_seed2": {
+      "run_dir": "results/runs_a1/D_seed2",
+      "rounds": 250,
+      "mech_gap_whole": -0.257683704415155,
+      "mech_gap_last50": -1.6824878513245707,
+      "mech_gap_per_agent_whole": [
+        -0.7713913619654172,
+        -0.5489265062519599,
+        -0.2251482377057579,
+        -0.25809099928149176,
+        0.17122039626101848,
+        0.08623448245267953
+      ],
+      "own_critic_gap_whole": 6.18036553504979,
+      "own_critic_gap_last50": 4.504026178295236,
+      "true_cost_net_whole": 24.13068557892827,
+      "mech_reported_whole": 24.388369283343422,
+      "recon_max_abs_error": 0.0,
+      "oracle_vs_rounds_mech_max_abs_error": 0.0,
+      "identity_check_whole": 1.1102230246251565e-15,
+      "finite": true
+    },
+    "E_seed0": {
+      "run_dir": "results/runs_a2/E_seed0",
+      "rounds": 250,
+      "mech_gap_whole": 0.9668337668980996,
+      "mech_gap_last50": 1.0460690607251746,
+      "mech_gap_per_agent_whole": [
+        0.8906536227232332,
+        0.8601648764353264,
+        0.8804416216358465,
+        1.0404609811187688,
+        1.0755250757989825,
+        1.053756423676443
+      ],
+      "own_critic_gap_whole": 7.422743188496647,
+      "own_critic_gap_last50": 6.864406717778811,
+      "true_cost_net_whole": 25.68051497159882,
+      "mech_reported_whole": 24.713681204700727,
+      "recon_max_abs_error": 0.0,
+      "oracle_vs_rounds_mech_max_abs_error": 0.0,
+      "identity_check_whole": -4.9960036108132044e-15,
+      "finite": true
+    },
+    "E_seed1": {
+      "run_dir": "results/runs_a2/E_seed1",
+      "rounds": 250,
+      "mech_gap_whole": 0.5499695339468577,
+      "mech_gap_last50": 0.5731723527606444,
+      "mech_gap_per_agent_whole": [
+        0.7986964340722122,
+        0.821207803751136,
+        0.6869484722781255,
+        0.5425425141940556,
+        0.2797000898723117,
+        0.1707218895133039
+      ],
+      "own_critic_gap_whole": 8.249820360314853,
+      "own_critic_gap_last50": 7.829078955634626,
+      "true_cost_net_whole": 25.363553984599264,
+      "mech_reported_whole": 24.813584450652407,
+      "recon_max_abs_error": 0.0,
+      "oracle_vs_rounds_mech_max_abs_error": 0.0,
+      "identity_check_whole": -3.3306690738754696e-16,
+      "finite": true
+    },
+    "E_seed2": {
+      "run_dir": "results/runs_a2/E_seed2",
+      "rounds": 250,
+      "mech_gap_whole": -0.210771551172593,
+      "mech_gap_last50": -0.9951874049440675,
+      "mech_gap_per_agent_whole": [
+        -0.08136948055297048,
+        -0.08370621597118819,
+        -0.18769827397734004,
+        -0.2678943853370683,
+        -0.3267249394852366,
+        -0.3172360117117547
+      ],
+      "own_critic_gap_whole": 6.42767876677214,
+      "own_critic_gap_last50": 5.901360370887199,
+      "true_cost_net_whole": 24.470106280649752,
+      "mech_reported_whole": 24.680877831822343,
+      "recon_max_abs_error": 0.0,
+      "oracle_vs_rounds_mech_max_abs_error": 0.0,
+      "identity_check_whole": 1.609823385706477e-15,
+      "finite": true
+    }
+  },
+  "verification": {
+    "max_recon_error_over_runs": 0.0,
+    "max_oracle_vs_rounds_mech_error": 0.0,
+    "max_identity_check_whole": 4.9960036108132044e-15,
+    "all_finite": true
+  },
+  "contrasts": {
+    "B-A": {
+      "mech_gap_whole": {
+        "contrast": "B-A",
+        "metric": "mech_gap_whole",
+        "n": 3,
+        "per_seed": {
+          "0": 4.1155106613668995,
+          "1": 4.517541589038085,
+          "2": 4.017318717639569
+        },
+        "mean": 4.2167903226815175,
+        "sd": 0.26504510486810895,
+        "se": 0.1530238626429953,
+        "all_same_sign": true,
+        "sign": "positive",
+        "cohens_dz": 15.909708367486605,
+        "ci95": [
+          3.5583817823719865,
+          4.8751988629910485
+        ],
+        "paired_t": {
+          "t": 27.5564232260905,
+          "p": 0.0013143089181386297,
+          "label": "SENSITIVITY ONLY -- decision D6 forbids inference below 5 seeds"
+        }
+      },
+      "mech_gap_last50": {
+        "contrast": "B-A",
+        "metric": "mech_gap_last50",
+        "n": 3,
+        "per_seed": {
+          "0": 4.043117676695686,
+          "1": 2.5644274913229586,
+          "2": 4.080914675792814
+        },
+        "mean": 3.5628199479371525,
+        "sd": 0.8648397402717345,
+        "se": 0.499315456851772,
+        "all_same_sign": true,
+        "sign": "positive",
+        "cohens_dz": 4.1196302413412536,
+        "ci95": [
+          1.4144389345343997,
+          5.711200961339905
+        ],
+        "paired_t": {
+          "t": 7.135408886400287,
+          "p": 0.019080603458494334,
+          "label": "SENSITIVITY ONLY -- decision D6 forbids inference below 5 seeds"
+        }
+      },
+      "own_critic_gap_whole": {
+        "contrast": "B-A",
+        "metric": "own_critic_gap_whole",
+        "n": 3,
+        "per_seed": {
+          "0": 1.1172406234022079,
+          "1": 0.772324259543133,
+          "2": 1.0345789722063516
+        },
+        "mean": 0.9747146183838975,
+        "sd": 0.1800822871866537,
+        "se": 0.10397055698349801,
+        "all_same_sign": true,
+        "sign": "positive",
+        "cohens_dz": 5.412606834416837,
+        "ci95": [
+          0.5273654175708216,
+          1.4220638191969734
+        ],
+        "paired_t": {
+          "t": 9.374910038604508,
+          "p": 0.011187418548346009,
+          "label": "SENSITIVITY ONLY -- decision D6 forbids inference below 5 seeds"
+        }
+      }
+    },
+    "D-A": {
+      "mech_gap_whole": {
+        "contrast": "D-A",
+        "metric": "mech_gap_whole",
+        "n": 3,
+        "per_seed": {
+          "0": 0.4736826242486944,
+          "1": -0.07000965912551295,
+          "2": -0.45084581007502494
+        },
+        "mean": -0.015724281650614496,
+        "sd": 0.4646486663318438,
+        "se": 0.26826503258529066,
+        "all_same_sign": false,
+        "sign": "negative",
+        "cohens_dz": -0.03384122841619111,
+        "ci95": [
+          -1.1699755563857397,
+          1.1385269930845108
+        ],
+        "paired_t": {
+          "t": -0.05861472700738666,
+          "p": 0.9585886828661927,
+          "label": "SENSITIVITY ONLY -- decision D6 forbids inference below 5 seeds"
+        }
+      },
+      "mech_gap_last50": {
+        "contrast": "D-A",
+        "metric": "mech_gap_last50",
+        "n": 3,
+        "per_seed": {
+          "0": -0.6179699518851578,
+          "1": 0.041051706963254775,
+          "2": -1.2239831774014012
+        },
+        "mean": -0.6003004741077681,
+        "sd": 0.6327025150088854,
+        "se": 0.36529096735733324,
+        "all_same_sign": false,
+        "sign": "negative",
+        "cohens_dz": -0.9487878740285041,
+        "ci95": [
+          -2.1720206519411422,
+          0.9714197037256059
+        ],
+        "paired_t": {
+          "t": -1.6433488034226287,
+          "p": 0.2420277214564521,
+          "label": "SENSITIVITY ONLY -- decision D6 forbids inference below 5 seeds"
+        }
+      },
+      "own_critic_gap_whole": {
+        "contrast": "D-A",
+        "metric": "own_critic_gap_whole",
+        "n": 3,
+        "per_seed": {
+          "0": 0.4514653061797622,
+          "1": 0.24165136245407215,
+          "2": -0.31829880580419445
+        },
+        "mean": 0.12493928760987998,
+        "sd": 0.3979327560473498,
+        "se": 0.2297465838233071,
+        "all_same_sign": false,
+        "sign": "positive",
+        "cohens_dz": 0.3139708549024638,
+        "ci95": [
+          -0.8635804784158359,
+          1.1134590536355957
+        ],
+        "paired_t": {
+          "t": 0.5438134727869032,
+          "p": 0.6410869367155263,
+          "label": "SENSITIVITY ONLY -- decision D6 forbids inference below 5 seeds"
+        }
+      }
+    },
+    "B-D": {
+      "mech_gap_whole": {
+        "contrast": "B-D",
+        "metric": "mech_gap_whole",
+        "n": 3,
+        "per_seed": {
+          "0": 3.641828037118205,
+          "1": 4.587551248163598,
+          "2": 4.468164527714594
+        },
+        "mean": 4.232514604332132,
+        "sd": 0.5150206430524141,
+        "se": 0.2973473069045255,
+        "all_same_sign": true,
+        "sign": "positive",
+        "cohens_dz": 8.218145547034675,
+        "ci95": [
+          2.953132402611579,
+          5.511896806052685
+        ],
+        "paired_t": {
+          "t": 14.234245631459983,
+          "p": 0.00489925848603533,
+          "label": "SENSITIVITY ONLY -- decision D6 forbids inference below 5 seeds"
+        }
+      },
+      "mech_gap_last50": {
+        "contrast": "B-D",
+        "metric": "mech_gap_last50",
+        "n": 3,
+        "per_seed": {
+          "0": 4.661087628580844,
+          "1": 2.523375784359704,
+          "2": 5.304897853194215
+        },
+        "mean": 4.163120422044921,
+        "sd": 1.4560888568154924,
+        "se": 0.840673293446439,
+        "all_same_sign": true,
+        "sign": "positive",
+        "cohens_dz": 2.859111518200739,
+        "ci95": [
+          0.5459951812149542,
+          7.780245662874888
+        ],
+        "paired_t": {
+          "t": 4.9521264140290695,
+          "p": 0.03844119806246592,
+          "label": "SENSITIVITY ONLY -- decision D6 forbids inference below 5 seeds"
+        }
+      },
+      "own_critic_gap_whole": {
+        "contrast": "B-D",
+        "metric": "own_critic_gap_whole",
+        "n": 3,
+        "per_seed": {
+          "0": 0.6657753172224457,
+          "1": 0.5306728970890608,
+          "2": 1.352877778010546
+        },
+        "mean": 0.8497753307740176,
+        "sd": 0.44090500143796557,
+        "se": 0.25455662126726175,
+        "all_same_sign": true,
+        "sign": "positive",
+        "cohens_dz": 1.9273433687587216,
+        "ci95": [
+          -0.24549341058379326,
+          1.9450440721318283
+        ],
+        "paired_t": {
+          "t": 3.3382566383210643,
+          "p": 0.07921836195058594,
+          "label": "SENSITIVITY ONLY -- decision D6 forbids inference below 5 seeds"
+        }
+      }
+    },
+    "C-E": {
+      "mech_gap_whole": {
+        "contrast": "C-E",
+        "metric": "mech_gap_whole",
+        "n": 3,
+        "per_seed": {
+          "0": 0.8374571447260869,
+          "1": 0.29995021836835545,
+          "2": 1.0063756802588433
+        },
+        "mean": 0.7145943477844284,
+        "sd": 0.36889115394116273,
+        "se": 0.212979407029602,
+        "all_same_sign": true,
+        "sign": "positive",
+        "cohens_dz": 1.9371414579879151,
+        "ci95": [
+          -0.20178207924055425,
+          1.630970774809411
+        ],
+        "paired_t": {
+          "t": 3.3552274266831206,
+          "p": 0.07851067483559517,
+          "label": "SENSITIVITY ONLY -- decision D6 forbids inference below 5 seeds"
+        }
+      },
+      "mech_gap_last50": {
+        "contrast": "C-E",
+        "metric": "mech_gap_last50",
+        "n": 3,
+        "per_seed": {
+          "0": 0.8896419351651519,
+          "1": 0.774658728784897,
+          "2": 0.5318043650762082
+        },
+        "mean": 0.732035009675419,
+        "sd": 0.18268693909207817,
+        "se": 0.1054743534622401,
+        "all_same_sign": true,
+        "sign": "positive",
+        "cohens_dz": 4.007046225162585,
+        "ci95": [
+          0.2782154948381759,
+          1.1858545245126622
+        ],
+        "paired_t": {
+          "t": 6.940407650258678,
+          "p": 0.02013523899794241,
+          "label": "SENSITIVITY ONLY -- decision D6 forbids inference below 5 seeds"
+        }
+      },
+      "own_critic_gap_whole": {
+        "contrast": "C-E",
+        "metric": "own_critic_gap_whole",
+        "n": 3,
+        "per_seed": {
+          "0": 0.7467872180553305,
+          "1": 0.1878251075458337,
+          "2": 1.0650534602682091
+        },
+        "mean": 0.6665552619564578,
+        "sd": 0.44408363040039167,
+        "se": 0.2563918035543724,
+        "all_same_sign": true,
+        "sign": "positive",
+        "cohens_dz": 1.5009678725502282,
+        "ci95": [
+          -0.43660963147847964,
+          1.7697201553913953
+        ],
+        "paired_t": {
+          "t": 2.5997526157855626,
+          "p": 0.12156049314612534,
+          "label": "SENSITIVITY ONLY -- decision D6 forbids inference below 5 seeds"
+        }
+      }
+    },
+    "E-A": {
+      "mech_gap_whole": {
+        "contrast": "E-A",
+        "metric": "mech_gap_whole",
+        "n": 3,
+        "per_seed": {
+          "0": 0.5185028625072658,
+          "1": 0.5643947715909099,
+          "2": -0.40393365683246296
+        },
+        "mean": 0.22632132575523758,
+        "sd": 0.5462989329454181,
+        "se": 0.3154058359940425,
+        "all_same_sign": false,
+        "sign": "positive",
+        "cohens_dz": 0.41428110528242573,
+        "ci95": [
+          -1.1307604554466228,
+          1.5834031069570982
+        ],
+        "paired_t": {
+          "t": 0.7175559229649526,
+          "p": 0.5475229476373286,
+          "label": "SENSITIVITY ONLY -- decision D6 forbids inference below 5 seeds"
+        }
+      },
+      "mech_gap_last50": {
+        "contrast": "E-A",
+        "metric": "mech_gap_last50",
+        "n": 3,
+        "per_seed": {
+          "0": 0.2785563254509046,
+          "1": -0.7562772345282024,
+          "2": -0.5366827310208981
+        },
+        "mean": -0.33813454669939863,
+        "sd": 0.5452395439967475,
+        "se": 0.31479419749935095,
+        "all_same_sign": false,
+        "sign": "negative",
+        "cohens_dz": -0.6201577827990695,
+        "ci95": [
+          -1.6925846598624874,
+          1.0163155664636903
+        ],
+        "paired_t": {
+          "t": -1.0741447885172528,
+          "p": 0.3951514490623371,
+          "label": "SENSITIVITY ONLY -- decision D6 forbids inference below 5 seeds"
+        }
+      },
+      "own_critic_gap_whole": {
+        "contrast": "E-A",
+        "metric": "own_critic_gap_whole",
+        "n": 3,
+        "per_seed": {
+          "0": -0.08269961930199976,
+          "1": 0.541934264459691,
+          "2": -0.07098557408184458
+        },
+        "mean": 0.1294163570252822,
+        "sd": 0.35729899619142863,
+        "se": 0.2062866716323044,
+        "all_same_sign": false,
+        "sign": "positive",
+        "cohens_dz": 0.36220744643778774,
+        "ci95": [
+          -0.7581635537733841,
+          1.0169962678239486
+        ],
+        "paired_t": {
+          "t": 0.6273617001100311,
+          "p": 0.5944972694478277,
+          "label": "SENSITIVITY ONLY -- decision D6 forbids inference below 5 seeds"
+        }
+      }
+    },
+    "C-B": {
+      "mech_gap_whole": {
+        "contrast": "C-B",
+        "metric": "mech_gap_whole",
+        "n": 3,
+        "per_seed": {
+          "0": -2.7595506541335464,
+          "1": -3.6531965990788193,
+          "2": -3.4148766942131887
+        },
+        "mean": -3.2758746491418513,
+        "sd": 0.46275473539423995,
+        "se": 0.2671715710486385,
+        "all_same_sign": true,
+        "sign": "negative",
+        "cohens_dz": -7.079073207864632,
+        "ci95": [
+          -4.425421138611482,
+          -2.1263281596722203
+        ],
+        "paired_t": {
+          "t": -12.261314466521139,
+          "p": 0.006585958792393834,
+          "label": "SENSITIVITY ONLY -- decision D6 forbids inference below 5 seeds"
+        }
+      },
+      "mech_gap_last50": {
+        "contrast": "C-B",
+        "metric": "mech_gap_last50",
+        "n": 3,
+        "per_seed": {
+          "0": -2.874919416079629,
+          "1": -2.5460459970662637,
+          "2": -4.085793041737504
+        },
+        "mean": -3.168919484961132,
+        "sd": 0.8108836357765526,
+        "se": 0.46816388539705517,
+        "all_same_sign": true,
+        "sign": "negative",
+        "cohens_dz": -3.9079830263517126,
+        "ci95": [
+          -5.183266104409923,
+          -1.1545728655123408
+        ],
+        "paired_t": {
+          "t": -6.7688251567579485,
+          "p": 0.02113644159592536,
+          "label": "SENSITIVITY ONLY -- decision D6 forbids inference below 5 seeds"
+        }
+      },
+      "own_critic_gap_whole": {
+        "contrast": "C-B",
+        "metric": "own_critic_gap_whole",
+        "n": 3,
+        "per_seed": {
+          "0": -0.4531530246488771,
+          "1": -0.04256488753760834,
+          "2": -0.0405110860199871
+        },
+        "mean": -0.17874299940215752,
+        "sd": 0.2376482715950137,
+        "se": 0.13720629357783046,
+        "all_same_sign": true,
+        "sign": "negative",
+        "cohens_dz": -0.7521325453052774,
+        "ci95": [
+          -0.7690940329963,
+          0.4116080341919849
+        ],
+        "paired_t": {
+          "t": -1.302731782494841,
+          "p": 0.3224773526694773,
+          "label": "SENSITIVITY ONLY -- decision D6 forbids inference below 5 seeds"
+        }
+      }
+    }
+  },
+  "interaction": {
+    "mech_gap_whole": {
+      "definition": "(C-E) - (B-A)",
+      "n": 3,
+      "per_seed": {
+        "0": -3.2780535166408127,
+        "1": -4.217591370669729,
+        "2": -3.0109430373807253
+      },
+      "mean": -3.5021959748970892,
+      "sd": 0.6337822427712516,
+      "se": 0.3659143484715869,
+      "ci95": [
+        -5.076598345183347,
+        -1.9277936046108306
+      ],
+      "all_same_sign": true,
+      "cohens_dz": -5.525866360003277,
+      "C_minus_E_mean": 0.7145943477844284,
+      "B_minus_A_mean": 4.2167903226815175,
+      "reduction_fraction_of_BA": 0.8305359543393166
+    },
+    "mech_gap_last50": {
+      "definition": "(C-E) - (B-A)",
+      "n": 3,
+      "per_seed": {
+        "0": -3.153475741530534,
+        "1": -1.7897687625380616,
+        "2": -3.5491103107166055
+      },
+      "mean": -2.830784938261734,
+      "sd": 0.9229938714165532,
+      "se": 0.5328907601227219,
+      "ci95": [
+        -5.123628821933615,
+        -0.5379410545898531
+      ],
+      "all_same_sign": true,
+      "cohens_dz": -3.066959625546833,
+      "C_minus_E_mean": 0.732035009675419,
+      "B_minus_A_mean": 3.5628199479371525,
+      "reduction_fraction_of_BA": 0.7945349413182493
+    }
+  }
+}

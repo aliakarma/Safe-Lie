@@ -1,0 +1,107 @@
+# Unconstrained MAPPO control -- condition U, seed 1.
+# Pre-declaration: docs/unconstrained_control.md (written before this run).
+#
+# This is configs/experiment/g10_batch_clean_seed1.yaml -- the clean constrained
+# run this seed pairs against -- with exactly FOUR fields changed:
+#
+#   run_id            seed1 -> U_seed1
+#   output_dir        .../runs_constraint_batch_g10 -> results/runs_unconstrained
+#   dual.lambda_max   25.0 -> 0.0            <- the only scientific change
+#   seed_entropy      unchanged: copied verbatim from the paired clean run
+#
+# NOTHING ELSE DIFFERS. manyagent_ant N=6, d=25, velocity_threshold=0.75,
+# the ring topology, M=3 trajectory-batch sources at R_m=30, attack none,
+# defense mean, eta_lambda=0.035, every PPO hyperparameter, the 2000-step
+# rollout, the 250-round horizon, validation_rounds and R_ref=120 are all
+# inherited verbatim.
+#
+# WHY lambda_max: 0.0 IS THE UNCONSTRAINED CONDITION.
+# safelie.training.dual.dual_update ends in
+#   np.clip(W @ lam + eta_lambda * residual, 0.0, lam_max)
+# and loop.py:129 initialises lam to zeros. At lam_max = 0.0 the projection
+# interval is the single point {0}, so lambda is exactly 0.0 at every round
+# for every agent -- by construction, not by convergence. ppo.py forms
+#   combined_adv = adv_r - lam * adv_c
+# which at lam == 0 is adv_r identically: plain MAPPO on task reward.
+# The dual update still executes unconditionally every round (Proposition 3
+# liveness is structural and is NOT disabled); the projection makes it
+# inert. No other field of the learner is touched.
+#
+# WHY SOURCE COLLECTION STAYS ON. docs/unconstrained_control.md section 2:
+# the control must report mechanism_reported_cost_return and
+# constraint_residual, and switching collection off would change RNG
+# consumption and break the common-random-number pairing against the clean
+# run. It costs ~82% of the wall clock for data that cannot reach the
+# policy. That cost is accepted deliberately.
+#
+# COMMON RANDOM NUMBERS. source_collection.seed_entropy is the SAME value
+# as the paired clean run g10_batch_clean_seed1, copied verbatim. Same
+# convention as configs/experiment/a1/b_seed1.yaml. Verified pre-launch by
+# scripts/g10_derive_source_entropy.py to share ZERO env seeds with the
+# other two seeds' 23,100 draws.
+#
+# Cost: 45,000,000 source env steps, ~8-10 h wall clock on the 12-CPU run
+# machine (the paired clean run took 35058 s).
+
+run_id: U_seed1
+seed: 1
+
+env:
+  name: manyagent_ant   # [SPEC] main_iclr.tex 5.1
+  n_agents: 6           # [SPEC] N=6
+  budget: 25.0          # [SPEC] d=25 per agent -- UNCHANGED
+  velocity_threshold: 0.75
+  cost_mode: per_agent_velocity
+
+topology:
+  name: ring
+  n_agents: 6
+
+sources:
+  sources:
+    - source_id: batch_1
+      source_type: trajectory_batch
+      independence_class: ic_batch1
+    - source_id: batch_2
+      source_type: trajectory_batch
+      independence_class: ic_batch2
+    - source_id: batch_3
+      source_type: trajectory_batch
+      independence_class: ic_batch3
+
+source_collection:
+  mode: parallel_trajectory_batch
+  M: 3
+  R_m: 30
+  # docs/g10_gates.md section 2: int(sha256(b'safelie/g10/source-entropy/seed=1')[:16]).
+  # Bit-identical to the paired clean run results/runs_constraint_batch_g10/seed1.
+  seed_entropy: 52021175099534868945312500562751741008
+  workers: 12
+  chunks_per_worker: 4
+  validation_rounds: [25, 75, 125, 175, 225]
+  R_ref: 120
+
+attack:
+  name: none    # no attack on any arm of this control
+
+defense:
+  name: mean    # no RCE on any arm of this control
+  f: 0
+
+ppo:
+  # [SPEC] main_iclr.tex App. B -- UNCHANGED
+  clip: 0.2
+  gae_lambda: 0.95
+  gamma: 0.99
+  lr: 0.0003
+  epochs: 4
+  minibatches: 4
+  hidden_dim: 64
+
+dual:
+  eta_lambda: 0.035   # [SPEC] -- UNCHANGED
+  lambda_max: 0.0     # <-- THE TREATMENT. 25.0 in every constrained run.
+
+total_steps: 500000    # 250 rounds at rollout_length 2000 -- UNCHANGED
+rollout_length: 2000
+output_dir: results/runs_unconstrained
