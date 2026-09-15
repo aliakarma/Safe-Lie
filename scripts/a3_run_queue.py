@@ -47,9 +47,11 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import platform
 import subprocess
 import sys
 import time
+from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -183,6 +185,43 @@ def rounds_done(run_dir: Path) -> int:
         return sum(1 for ln in fh if ln.strip())
 
 
+def seed_repeats(seed_log: Path) -> dict:
+    """Repeat counts over every trajectory seed pair a run issued -- the M
+    replica streams and the withheld reference stream -- read from the run's
+    own `source_seeds.jsonl`. A repeat is an occurrence beyond the first.
+    """
+    pairs: Counter = Counter()
+    envs: Counter = Counter()
+    torches: Counter = Counter()
+    with seed_log.open(encoding="utf-8") as fh:
+        for ln in fh:
+            if not ln.strip():
+                continue
+            row = json.loads(ln)
+            issued = [p for ps in (row.get("seeds") or {}).values() for p in ps]
+            issued += list(row.get("reference_seeds") or [])
+            for env_seed, torch_seed in issued:
+                pairs[(int(env_seed), int(torch_seed))] += 1
+                envs[int(env_seed)] += 1
+                torches[int(torch_seed)] += 1
+
+    def repeats(c: Counter) -> int:
+        return sum(n - 1 for n in c.values() if n > 1)
+
+    return {"n_pairs": sum(pairs.values()), "pair_repeats": repeats(pairs),
+            "env_repeats": repeats(envs), "torch_repeats": repeats(torches)}
+
+
+def machine_label() -> str:
+    """The host actually running this queue, for the status file.
+
+    `SAFELIE_MACHINE_TYPE` is the same override `safelie.experiment` records in
+    every run's provenance; otherwise the node name. The platform string is
+    always appended. Bookkeeping only (docs/a3_gates.md section 17.4).
+    """
+    return f"{os.environ.get('SAFELIE_MACHINE_TYPE') or platform.node()} | {platform.platform()}"
+
+
 def run_gates(cond: str, seed: int, run_dir: Path, log: Path) -> tuple[bool, str]:
     """Section 7 stop conditions for one finished run."""
     k = rounds_done(run_dir)
@@ -209,9 +248,23 @@ def run_gates(cond: str, seed: int, run_dir: Path, log: Path) -> tuple[bool, str
         return False, (f"A3-G1-iv: derived source env steps {src_steps} != "
                        f"{EXPECTED_SOURCE_STEPS}")
 
+    # A3-G1-iii (docs/a3_gates.md section 17): no source TRAJECTORY issued
+    # twice. A trajectory is fixed by its full (env_seed, torch_seed) pair, so
+    # that pair is the uniqueness key. A scalar env or torch seed recurring with
+    # a different partner is not a repeated trajectory: it is counted and
+    # reported, never gated. The collector's `duplicate_seed_events` counts
+    # exactly those scalar repeats, which is why it is reported, not gated.
     audit = meta.get("source_seed_audit", {})
-    if audit.get("duplicate_seed_events", -1) != 0:
-        return False, f"A3-G1-iii: {audit.get('duplicate_seed_events')} duplicate source seeds"
+    seed_log = run_dir / "source_seeds.jsonl"
+    if not seed_log.exists():
+        return False, "A3-G1-iii: source_seeds.jsonl missing; cannot audit trajectory seeds"
+    rep = seed_repeats(seed_log)
+    seed_note = (f"seed audit over {rep['n_pairs']} trajectory seed pairs: "
+                 f"repeated pairs={rep['pair_repeats']}, repeated env seeds={rep['env_repeats']}, "
+                 f"repeated torch seeds={rep['torch_repeats']} "
+                 f"(collector duplicate_seed_events={audit.get('duplicate_seed_events')})")
+    if rep["pair_repeats"] != 0:
+        return False, f"A3-G1-iii: duplicate trajectory seed pair(s); {seed_note}"
 
     if int(cfg_snap.get("source_collection", {}).get("M", 0)) != 5:
         return False, f"A3: M is not 5 ({cfg_snap.get('source_collection', {}).get('M')})"
@@ -264,7 +317,7 @@ def run_gates(cond: str, seed: int, run_dir: Path, log: Path) -> tuple[bool, str
         if rc != 0:
             return False, f"M=5 mechanism validation failed (rc={rc}); see {report}"
 
-    return True, "ok"
+    return True, f"ok; {seed_note}"
 
 
 def main() -> int:
@@ -295,7 +348,7 @@ def main() -> int:
 
 def _run_queue(args, queue, status: Path, log_dir: Path) -> int:
     state = {"started": now(),
-             "machine": "gcp t2d-standard-60 (AMD Milan, x86-64) -- gates doc section 15",
+             "machine": machine_label(),
              "seed_scope": args.seed,
              "queue": [f"{LABEL[c]}_seed{s}" for c, s in queue],
              "runs": {}, "halted": None}
@@ -306,6 +359,7 @@ def _run_queue(args, queue, status: Path, log_dir: Path) -> int:
             state["restarted"] = now()
         except Exception:
             pass
+    state["machine"] = machine_label()      # a reloaded status file must not keep a stale host
     write_status(state, status)
 
     scope = "all 12" if args.seed is None else f"seed {args.seed} ({len(queue)} runs)"

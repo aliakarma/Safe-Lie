@@ -558,8 +558,8 @@ def main() -> int:
         got = contrasts["B-A"]["true_cost_net_whole"]["mean"]
         report["sign_convention_check"] = {
             "B-A_true_cost_net_whole": got,
-            "a1_established_value": A1_B_MINUS_A,
-            "agrees_to_1e-3": bool(abs(got - A1_B_MINUS_A) < 1e-3),
+            "a1_established_value": A2_B_MINUS_A_FOR_REFERENCE,
+            "agrees_to_1e-3": bool(abs(got - A2_B_MINUS_A_FOR_REFERENCE) < 1e-3),
             "note": "positive means the attack RAISED true cost; higher cost is worse",
         }
 

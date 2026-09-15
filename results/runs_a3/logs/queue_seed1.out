@@ -1,0 +1,184 @@
+CHECK 1 -- within a seed, the four conditions differ only in run_id / attack / defense
+  [PASS] seed 0: B' vs A'  differs in ['attack.budget_ratio', 'attack.corrupted_source_ids', 'attack.f', 'attack.name', 'run_id']
+  [PASS] seed 0: C' vs A'  differs in ['attack.budget_ratio', 'attack.corrupted_source_ids', 'attack.f', 'attack.name', 'defense.f', 'defense.name', 'run_id']
+  [PASS] seed 0: E' vs A'  differs in ['defense.f', 'defense.name', 'run_id']
+  [PASS] seed 1: B' vs A'  differs in ['attack.budget_ratio', 'attack.corrupted_source_ids', 'attack.f', 'attack.name', 'run_id']
+  [PASS] seed 1: C' vs A'  differs in ['attack.budget_ratio', 'attack.corrupted_source_ids', 'attack.f', 'attack.name', 'defense.f', 'defense.name', 'run_id']
+  [PASS] seed 1: E' vs A'  differs in ['defense.f', 'defense.name', 'run_id']
+  [PASS] seed 2: B' vs A'  differs in ['attack.budget_ratio', 'attack.corrupted_source_ids', 'attack.f', 'attack.name', 'run_id']
+  [PASS] seed 2: C' vs A'  differs in ['attack.budget_ratio', 'attack.corrupted_source_ids', 'attack.f', 'attack.name', 'defense.f', 'defense.name', 'run_id']
+  [PASS] seed 2: E' vs A'  differs in ['defense.f', 'defense.name', 'run_id']
+
+CHECK 2 -- against the frozen A2 architecture, only the declared A3 changes
+  [PASS] A'_seed0
+  [PASS] A'_seed1
+  [PASS] A'_seed2
+  [PASS] B'_seed0
+  [PASS] B'_seed1
+  [PASS] B'_seed2
+  [PASS] C'_seed0
+  [PASS] C'_seed1
+  [PASS] C'_seed2
+  [PASS] E'_seed0
+  [PASS] E'_seed1
+  [PASS] E'_seed2
+
+CHECK 3 -- operating point, attacked-source mapping, entropies
+  [PASS] A'_seed0: M=5 f=0  undefended reference
+  [PASS] A'_seed1: M=5 f=0  undefended reference
+  [PASS] A'_seed2: M=5 f=0  undefended reference
+  [PASS] B'_seed0: M=5 f=0  undefended reference
+  [PASS] B'_seed1: M=5 f=0  undefended reference
+  [PASS] B'_seed2: M=5 f=0  undefended reference
+  [PASS] C'_seed0: M=5 f=1  |T|=3 >= min_retained=3 -> margin LIVE
+  [PASS] C'_seed1: M=5 f=1  |T|=3 >= min_retained=3 -> margin LIVE
+  [PASS] C'_seed2: M=5 f=1  |T|=3 >= min_retained=3 -> margin LIVE
+  [PASS] E'_seed0: M=5 f=1  |T|=3 >= min_retained=3 -> margin LIVE
+  [PASS] E'_seed1: M=5 f=1  |T|=3 >= min_retained=3 -> margin LIVE
+  [PASS] E'_seed2: M=5 f=1  |T|=3 >= min_retained=3 -> margin LIVE
+  [PASS] the three seed entropies are pairwise distinct
+
+ALL CONFIGS PASS -> results/runs_a3/a3_frozen_verification.json
+[2026-09-14T00:28:34+00:00] A3 queue scope: seed 1 (4 runs) -> a3_queue_status_seed1.json
+[2026-09-14T00:28:34+00:00] A3-G1-i: verifying the twelve configs change exactly what A3 declares
+[2026-09-14T00:28:35+00:00] A_seed1: launching  cfg=a_seed1.yaml  (clean)
+[2026-09-14T03:50:26+00:00] A_seed1: gates PASS  (3.36 h)
+[2026-09-14T03:50:26+00:00] A3 queue complete. Analyse with: python scripts/analyze_a3.py
+CHECK 1 -- within a seed, the four conditions differ only in run_id / attack / defense
+  [PASS] seed 0: B' vs A'  differs in ['attack.budget_ratio', 'attack.corrupted_source_ids', 'attack.f', 'attack.name', 'run_id']
+  [PASS] seed 0: C' vs A'  differs in ['attack.budget_ratio', 'attack.corrupted_source_ids', 'attack.f', 'attack.name', 'defense.f', 'defense.name', 'run_id']
+  [PASS] seed 0: E' vs A'  differs in ['defense.f', 'defense.name', 'run_id']
+  [PASS] seed 1: B' vs A'  differs in ['attack.budget_ratio', 'attack.corrupted_source_ids', 'attack.f', 'attack.name', 'run_id']
+  [PASS] seed 1: C' vs A'  differs in ['attack.budget_ratio', 'attack.corrupted_source_ids', 'attack.f', 'attack.name', 'defense.f', 'defense.name', 'run_id']
+  [PASS] seed 1: E' vs A'  differs in ['defense.f', 'defense.name', 'run_id']
+  [PASS] seed 2: B' vs A'  differs in ['attack.budget_ratio', 'attack.corrupted_source_ids', 'attack.f', 'attack.name', 'run_id']
+  [PASS] seed 2: C' vs A'  differs in ['attack.budget_ratio', 'attack.corrupted_source_ids', 'attack.f', 'attack.name', 'defense.f', 'defense.name', 'run_id']
+  [PASS] seed 2: E' vs A'  differs in ['defense.f', 'defense.name', 'run_id']
+
+CHECK 2 -- against the frozen A2 architecture, only the declared A3 changes
+  [PASS] A'_seed0
+  [PASS] A'_seed1
+  [PASS] A'_seed2
+  [PASS] B'_seed0
+  [PASS] B'_seed1
+  [PASS] B'_seed2
+  [PASS] C'_seed0
+  [PASS] C'_seed1
+  [PASS] C'_seed2
+  [PASS] E'_seed0
+  [PASS] E'_seed1
+  [PASS] E'_seed2
+
+CHECK 3 -- operating point, attacked-source mapping, entropies
+  [PASS] A'_seed0: M=5 f=0  undefended reference
+  [PASS] A'_seed1: M=5 f=0  undefended reference
+  [PASS] A'_seed2: M=5 f=0  undefended reference
+  [PASS] B'_seed0: M=5 f=0  undefended reference
+  [PASS] B'_seed1: M=5 f=0  undefended reference
+  [PASS] B'_seed2: M=5 f=0  undefended reference
+  [PASS] C'_seed0: M=5 f=1  |T|=3 >= min_retained=3 -> margin LIVE
+  [PASS] C'_seed1: M=5 f=1  |T|=3 >= min_retained=3 -> margin LIVE
+  [PASS] C'_seed2: M=5 f=1  |T|=3 >= min_retained=3 -> margin LIVE
+  [PASS] E'_seed0: M=5 f=1  |T|=3 >= min_retained=3 -> margin LIVE
+  [PASS] E'_seed1: M=5 f=1  |T|=3 >= min_retained=3 -> margin LIVE
+  [PASS] E'_seed2: M=5 f=1  |T|=3 >= min_retained=3 -> margin LIVE
+  [PASS] the three seed entropies are pairwise distinct
+
+ALL CONFIGS PASS -> results/runs_a3/a3_frozen_verification.json
+[2026-09-14T03:50:27+00:00] A3 queue scope: seed 1 (4 runs) -> a3_queue_status_seed1.json
+[2026-09-14T03:50:27+00:00] A3-G1-i: verifying the twelve configs change exactly what A3 declares
+[2026-09-14T03:50:27+00:00] B_seed1: launching  cfg=b_seed1.yaml  attacked=batch_3
+[2026-09-14T07:11:35+00:00] B_seed1: gates PASS  (3.35 h)
+[2026-09-14T07:11:35+00:00] A3 queue complete. Analyse with: python scripts/analyze_a3.py
+CHECK 1 -- within a seed, the four conditions differ only in run_id / attack / defense
+  [PASS] seed 0: B' vs A'  differs in ['attack.budget_ratio', 'attack.corrupted_source_ids', 'attack.f', 'attack.name', 'run_id']
+  [PASS] seed 0: C' vs A'  differs in ['attack.budget_ratio', 'attack.corrupted_source_ids', 'attack.f', 'attack.name', 'defense.f', 'defense.name', 'run_id']
+  [PASS] seed 0: E' vs A'  differs in ['defense.f', 'defense.name', 'run_id']
+  [PASS] seed 1: B' vs A'  differs in ['attack.budget_ratio', 'attack.corrupted_source_ids', 'attack.f', 'attack.name', 'run_id']
+  [PASS] seed 1: C' vs A'  differs in ['attack.budget_ratio', 'attack.corrupted_source_ids', 'attack.f', 'attack.name', 'defense.f', 'defense.name', 'run_id']
+  [PASS] seed 1: E' vs A'  differs in ['defense.f', 'defense.name', 'run_id']
+  [PASS] seed 2: B' vs A'  differs in ['attack.budget_ratio', 'attack.corrupted_source_ids', 'attack.f', 'attack.name', 'run_id']
+  [PASS] seed 2: C' vs A'  differs in ['attack.budget_ratio', 'attack.corrupted_source_ids', 'attack.f', 'attack.name', 'defense.f', 'defense.name', 'run_id']
+  [PASS] seed 2: E' vs A'  differs in ['defense.f', 'defense.name', 'run_id']
+
+CHECK 2 -- against the frozen A2 architecture, only the declared A3 changes
+  [PASS] A'_seed0
+  [PASS] A'_seed1
+  [PASS] A'_seed2
+  [PASS] B'_seed0
+  [PASS] B'_seed1
+  [PASS] B'_seed2
+  [PASS] C'_seed0
+  [PASS] C'_seed1
+  [PASS] C'_seed2
+  [PASS] E'_seed0
+  [PASS] E'_seed1
+  [PASS] E'_seed2
+
+CHECK 3 -- operating point, attacked-source mapping, entropies
+  [PASS] A'_seed0: M=5 f=0  undefended reference
+  [PASS] A'_seed1: M=5 f=0  undefended reference
+  [PASS] A'_seed2: M=5 f=0  undefended reference
+  [PASS] B'_seed0: M=5 f=0  undefended reference
+  [PASS] B'_seed1: M=5 f=0  undefended reference
+  [PASS] B'_seed2: M=5 f=0  undefended reference
+  [PASS] C'_seed0: M=5 f=1  |T|=3 >= min_retained=3 -> margin LIVE
+  [PASS] C'_seed1: M=5 f=1  |T|=3 >= min_retained=3 -> margin LIVE
+  [PASS] C'_seed2: M=5 f=1  |T|=3 >= min_retained=3 -> margin LIVE
+  [PASS] E'_seed0: M=5 f=1  |T|=3 >= min_retained=3 -> margin LIVE
+  [PASS] E'_seed1: M=5 f=1  |T|=3 >= min_retained=3 -> margin LIVE
+  [PASS] E'_seed2: M=5 f=1  |T|=3 >= min_retained=3 -> margin LIVE
+  [PASS] the three seed entropies are pairwise distinct
+
+ALL CONFIGS PASS -> results/runs_a3/a3_frozen_verification.json
+[2026-09-14T07:11:37+00:00] A3 queue scope: seed 1 (4 runs) -> a3_queue_status_seed1.json
+[2026-09-14T07:11:37+00:00] A3-G1-i: verifying the twelve configs change exactly what A3 declares
+[2026-09-14T07:11:37+00:00] C_seed1: launching  cfg=c_seed1.yaml  attacked=batch_3
+[2026-09-14T10:47:42+00:00] C_seed1: gates PASS  (3.60 h)
+[2026-09-14T10:47:42+00:00] A3 queue complete. Analyse with: python scripts/analyze_a3.py
+CHECK 1 -- within a seed, the four conditions differ only in run_id / attack / defense
+  [PASS] seed 0: B' vs A'  differs in ['attack.budget_ratio', 'attack.corrupted_source_ids', 'attack.f', 'attack.name', 'run_id']
+  [PASS] seed 0: C' vs A'  differs in ['attack.budget_ratio', 'attack.corrupted_source_ids', 'attack.f', 'attack.name', 'defense.f', 'defense.name', 'run_id']
+  [PASS] seed 0: E' vs A'  differs in ['defense.f', 'defense.name', 'run_id']
+  [PASS] seed 1: B' vs A'  differs in ['attack.budget_ratio', 'attack.corrupted_source_ids', 'attack.f', 'attack.name', 'run_id']
+  [PASS] seed 1: C' vs A'  differs in ['attack.budget_ratio', 'attack.corrupted_source_ids', 'attack.f', 'attack.name', 'defense.f', 'defense.name', 'run_id']
+  [PASS] seed 1: E' vs A'  differs in ['defense.f', 'defense.name', 'run_id']
+  [PASS] seed 2: B' vs A'  differs in ['attack.budget_ratio', 'attack.corrupted_source_ids', 'attack.f', 'attack.name', 'run_id']
+  [PASS] seed 2: C' vs A'  differs in ['attack.budget_ratio', 'attack.corrupted_source_ids', 'attack.f', 'attack.name', 'defense.f', 'defense.name', 'run_id']
+  [PASS] seed 2: E' vs A'  differs in ['defense.f', 'defense.name', 'run_id']
+
+CHECK 2 -- against the frozen A2 architecture, only the declared A3 changes
+  [PASS] A'_seed0
+  [PASS] A'_seed1
+  [PASS] A'_seed2
+  [PASS] B'_seed0
+  [PASS] B'_seed1
+  [PASS] B'_seed2
+  [PASS] C'_seed0
+  [PASS] C'_seed1
+  [PASS] C'_seed2
+  [PASS] E'_seed0
+  [PASS] E'_seed1
+  [PASS] E'_seed2
+
+CHECK 3 -- operating point, attacked-source mapping, entropies
+  [PASS] A'_seed0: M=5 f=0  undefended reference
+  [PASS] A'_seed1: M=5 f=0  undefended reference
+  [PASS] A'_seed2: M=5 f=0  undefended reference
+  [PASS] B'_seed0: M=5 f=0  undefended reference
+  [PASS] B'_seed1: M=5 f=0  undefended reference
+  [PASS] B'_seed2: M=5 f=0  undefended reference
+  [PASS] C'_seed0: M=5 f=1  |T|=3 >= min_retained=3 -> margin LIVE
+  [PASS] C'_seed1: M=5 f=1  |T|=3 >= min_retained=3 -> margin LIVE
+  [PASS] C'_seed2: M=5 f=1  |T|=3 >= min_retained=3 -> margin LIVE
+  [PASS] E'_seed0: M=5 f=1  |T|=3 >= min_retained=3 -> margin LIVE
+  [PASS] E'_seed1: M=5 f=1  |T|=3 >= min_retained=3 -> margin LIVE
+  [PASS] E'_seed2: M=5 f=1  |T|=3 >= min_retained=3 -> margin LIVE
+  [PASS] the three seed entropies are pairwise distinct
+
+ALL CONFIGS PASS -> results/runs_a3/a3_frozen_verification.json
+[2026-09-14T10:47:43+00:00] A3 queue scope: seed 1 (4 runs) -> a3_queue_status_seed1.json
+[2026-09-14T10:47:43+00:00] A3-G1-i: verifying the twelve configs change exactly what A3 declares
+[2026-09-14T10:47:43+00:00] E_seed1: launching  cfg=e_seed1.yaml  (clean)
+[2026-09-14T14:25:15+00:00] E_seed1: gates PASS  (3.63 h)
+[2026-09-14T14:25:15+00:00] A3 queue complete. Analyse with: python scripts/analyze_a3.py

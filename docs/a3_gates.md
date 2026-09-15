@@ -874,3 +874,104 @@ The one sentence of §15 that this section supersedes is §15.4's closing
 **"Seed 2 is not claimed to be concurrent."** At 20 workers it is, because
 3 x 20 = 60. That sentence was true of a 30-worker schedule and is left in
 place unedited, as the amendment convention requires.
+
+---
+
+## 17. Addendum — the duplicate-seed gate was keyed on the wrong object
+
+**Added 2026-09-13, during the A3 production campaign, after the first
+production run (`A_seed0`) had finished training and before any A3 outcome
+— true cost, task return, margin, contrast or gate value — was examined.**
+Sections 1-16 are unedited. This section corrects how the queue *implements*
+A3-G1-iii. No threshold, band, contrast, seed, `seed_entropy`, run order,
+configuration value or decision rule is altered, added or relaxed.
+
+### 17.1 What was wrong
+
+`scripts/a3_run_queue.py::run_gates` halted a seed whenever the source
+collector's `duplicate_seed_events` was non-zero. That counter increments
+whenever a **scalar** env seed, or a **scalar** torch seed, equals any
+earlier-issued scalar of the same kind. A source trajectory, however, is
+fixed by its full `(env_seed, torch_seed)` pair —
+`collect_one_trajectory` resets the environment with the first and the torch
+generator with the second. A torch seed that recurs with a different env
+seed is not a repeated trajectory.
+
+**The old queue implementation therefore treated scalar torch-seed repetition
+as trajectory duplication.** It is also not a rare event at M=5: each scalar
+is drawn from `[0, 2^31 - 1)`, a run issues `5 x 30 x 250 + 5 x 120 = 38,100`
+of each kind, and the birthday bound puts the chance of at least one scalar
+repeat of either kind at about 49 % per seed — so the old gate would have
+halted roughly half of all seeds with no defect present.
+
+### 17.2 The criterion
+
+What G1-iii and section 7 exist to prevent is a source trajectory being issued
+twice. **The scientific criterion is uniqueness of the full trajectory seed
+tuple `(env_seed, torch_seed)`**, taken over every trajectory a run issues:
+the M replica streams and the withheld reference stream. The gate fails on a
+repeated pair and on nothing else in the seed audit. This supersedes the
+literal "env seeds issued with 0 duplicates" wording of G1-iii in the same
+way: a scalar env seed recurring with a different torch seed is not a repeated
+trajectory either.
+
+Every quantity remains reported in the gate note of every run: repeated full
+pairs, repeated scalar env seeds, repeated scalar torch seeds, and the
+collector's `duplicate_seed_events`.
+
+### 17.3 How it was found — seed replay, not outcomes
+
+The collision was found from the **pre-declared** RNG alone. The source seeds
+are pure integer arithmetic on section 5's entropies (`SeedSequence` -> spawned
+PCG64 streams -> `integers`), so they were replayed offline in the collector's
+exact call pattern. The replay reproduced exactly every logged replica seed,
+reference seed and seed audit of all 16 previously completed runs (A1, A2,
+G9, G10 and the unconstrained `U_seed0`) and of every round `A_seed0` had
+logged. It predicts, identically for all four conditions of a seed:
+
+| seed | repeated scalar env seeds | repeated scalar torch seeds | repeated `(env, torch)` pairs |
+|---|---|---|---|
+| 0 | 0 | **1** | **0** |
+| 1 | 0 | 0 | 0 |
+| 2 | 0 | 0 | 0 |
+
+Seed 0's repeat is torch seed `1495645152`: round 52, `batch_1`, trajectory 5
+(env seed `1738743935`), and round 209, `batch_3`, trajectory 10 (env seed
+`1515124702`) — different stream, different env seed, different policy, 157
+rounds apart. No quantity the replay used is produced by training, and no run
+output informed it. `tests/unit/test_a3_trajectory_seed_gate.py` pins the
+table through the real collector.
+
+### 17.4 What changed, and what did not
+
+Changed (queue infrastructure only):
+
+* `run_gates` counts repeats from the run's own `source_seeds.jsonl` and
+  fails A3-G1-iii only on a repeated `(env_seed, torch_seed)` pair, reporting
+  all four counts in the gate note.
+* The status file's `machine` field was a hard-coded
+  `"gcp t2d-standard-60"`. It now records the host actually running the queue.
+  Bookkeeping only; each run's `run_metadata.json` provenance was already
+  correct and is not touched.
+
+Not changed: anything under `src/` (source generation, RNG, RCE, attack, PPO,
+environment, dual update), any configuration, any seed or entropy, any other
+gate or band, the run order, or `workers`. **No training data or scientific
+result was changed.** `scripts/a3_smoke_verify.py` still counts scalar repeats
+in its smoke-only S2 check; it is not a production gate.
+
+**Seed 0 is NOT rerun.** `A_seed0` was trained at commit `00861e3`, and that
+commit's queue recorded it as gate-failed on the scalar criterion. It is
+re-gated from its existing artifacts through the queue's gating-only path
+(`already at 250 rounds -- gating only`), without retraining. The campaign
+then continues in the declared order.
+
+### 17.5 Platform, for the record
+
+Sections 15-16 name a GCP instance. A3 production is executing on **one Mac
+mini** instead — `Mac16,10`, Apple M4 (4 performance + 6 efficiency cores),
+16 GB, macOS 26.5, arm64 — with `workers: 20` unchanged and the seeds run one
+after another rather than concurrently, because a 10-core, 16 GB machine
+cannot hold three 20-worker seeds at once. This is the homogeneity rule of
+section 15.2 applied to a different single machine: all twelve runs on the
+same host, and every run's `run_metadata.json` records it.
