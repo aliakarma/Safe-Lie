@@ -73,8 +73,28 @@
       "B": 25.0,
       "corrupted_source": "batch_3",
       "resumed_from_round": 0,
-      "status": "running"
+      "status": "complete",
+      "finished": "2026-09-15T12:12:20+00:00",
+      "wall_clock_s": 28478.3,
+      "returncode": 0,
+      "gates_pass": true,
+      "gate_note": "ok"
+    },
+    "B025_seed2": {
+      "started": "2026-09-15T12:12:21+00:00",
+      "config": "configs\\experiment\\dose\\b025_seed2.yaml",
+      "budget_ratio": 0.25,
+      "B": 6.25,
+      "corrupted_source": "batch_3",
+      "resumed_from_round": 0,
+      "status": "complete",
+      "finished": "2026-09-15T20:06:05+00:00",
+      "wall_clock_s": 28423.9,
+      "returncode": 0,
+      "gates_pass": true,
+      "gate_note": "ok"
     }
   },
-  "halted": null
+  "halted": null,
+  "finished": "2026-09-15T20:06:07+00:00"
 }

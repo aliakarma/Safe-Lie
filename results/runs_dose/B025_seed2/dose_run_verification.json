@@ -1,0 +1,213 @@
+{
+  "run": "results\\runs_dose\\B025_seed2",
+  "dose_tag": "025",
+  "budget_ratio": 0.25,
+  "B": 6.25,
+  "B_over_M": 2.0833333333333335,
+  "seed": 2,
+  "attacked_source": "batch_3",
+  "rounds": 250,
+  "partial": false,
+  "predeclaration": "docs/dose_response_gates.md",
+  "checks": [
+    {
+      "gate": "DR-S12 declared dose and unchanged operator",
+      "pass": true,
+      "config_budget_ratio": 0.25,
+      "expected_budget_ratio": 0.25,
+      "config_d": 25.0,
+      "derived_B": 6.25,
+      "derived_B_over_M": 2.0833333333333335,
+      "operator": {
+        "name": "primary",
+        "f": 1,
+        "direction": "negative",
+        "support": "persistent",
+        "adaptivity": "static",
+        "consistency": "consistent"
+      },
+      "operator_unchanged_from_a1": true
+    },
+    {
+      "gate": "DR-S11 no RCE on this line",
+      "pass": true,
+      "defense_name": "mean",
+      "defense_f": 0,
+      "calibration_artifacts": []
+    },
+    {
+      "gate": "DR-S2/S3 mechanism identity on 100% of cells",
+      "pass": true,
+      "n_cells": 1500,
+      "max_abs_error": 4.884981308350689e-15,
+      "expected_pre_minus_post": 2.0833333333333335,
+      "tolerance": 1e-09
+    },
+    {
+      "gate": "DR-S3 named source shifted by -B",
+      "pass": true,
+      "source": "batch_3",
+      "B": 6.25,
+      "n_cells": 1500,
+      "max_abs_error": 1.4210854715202004e-14
+    },
+    {
+      "gate": "balanced attacked-source mapping",
+      "pass": true,
+      "logged": [
+        "batch_3"
+      ],
+      "expected": [
+        "batch_3"
+      ]
+    },
+    {
+      "gate": "DR-S9 (7.2) cross-dose round-0 identity",
+      "pass": true,
+      "vs_clean": {
+        "pass": true,
+        "reference": "results\\runs_constraint_batch_g10\\seed2",
+        "n_owners": 6,
+        "pre_attack_source_values_identical": true,
+        "pre_attack_max_abs_delta": 0.0,
+        "expected_mechanism_delta": -2.0833333333333335,
+        "observed_mechanism_delta_mean": -2.0833333333333357,
+        "mechanism_max_abs_error": 2.220446049250313e-15
+      },
+      "vs_a1_B": {
+        "pass": true,
+        "reference": "results\\runs_a1\\B_seed2",
+        "n_owners": 6,
+        "pre_attack_source_values_identical": true,
+        "pre_attack_max_abs_delta": 0.0,
+        "expected_mechanism_delta": 2.0833333333333335,
+        "observed_mechanism_delta_mean": 2.083333333333332,
+        "mechanism_max_abs_error": 4.884981308350689e-15
+      }
+    },
+    {
+      "gate": "DR-S6 policy pinning",
+      "pass": true,
+      "worker_checksums_all_match": true,
+      "n_chunks_all_48": true,
+      "n_trajectories_all_90": true
+    },
+    {
+      "gate": "DR-S6 distinct theta per round",
+      "pass": true,
+      "distinct_checksums": 250,
+      "rounds": 250
+    },
+    {
+      "gate": "DR-S9 CRN: source seeds identical to clean and A1 pairs",
+      "pass": true,
+      "clean": {
+        "pass": true,
+        "rounds_compared": 250,
+        "seed_pairs_compared": 22500,
+        "reference": "results\\runs_constraint_batch_g10\\seed2",
+        "mismatches": []
+      },
+      "a1_B": {
+        "pass": true,
+        "rounds_compared": 250,
+        "seed_pairs_compared": 22500,
+        "reference": "results\\runs_a1\\B_seed2",
+        "mismatches": []
+      }
+    },
+    {
+      "gate": "DR-S5 source streams disjoint within run",
+      "pass": true,
+      "duplicate_events": 0,
+      "unique_env_seeds": 22500,
+      "replica_pairwise_overlap": {
+        "batch_1|batch_2": 0,
+        "batch_1|batch_3": 0,
+        "batch_2|batch_3": 0
+      },
+      "replica_vs_reference_overlap": {
+        "batch_1": 0,
+        "batch_2": 0,
+        "batch_3": 0
+      }
+    },
+    {
+      "gate": "DR-S8 reference never saw the corruption",
+      "pass": true,
+      "rounds": [
+        25,
+        75,
+        125,
+        175,
+        225
+      ],
+      "n_cells": 90,
+      "max_abs_error": 0.0
+    },
+    {
+      "gate": "DR-S4 PPO steps independent of source",
+      "pass": true,
+      "derived_ppo_steps": 500000,
+      "derived_source_steps": 45000000,
+      "expected_ppo_steps": 500000,
+      "expected_source_steps": 45000000,
+      "metadata_env_steps": {
+        "ppo": 500000,
+        "source": 45000000,
+        "oracle": 500000
+      },
+      "note": "derived from rounds.jsonl; metadata env_steps is reported only for comparison and is unreliable after a resume (gates doc 12)"
+    },
+    {
+      "gate": "DR-S5 seed audit (metadata)",
+      "pass": true,
+      "n_env_seeds_issued": 23100,
+      "duplicate_seed_events": 0
+    },
+    {
+      "gate": "timing (reported)",
+      "pass": null,
+      "wall_clock_h": 7.89,
+      "s_per_round": 113.6,
+      "source_s_per_round": 96.8
+    },
+    {
+      "gate": "provenance (reported)",
+      "pass": null,
+      "cpu_model": "AMD64 Family 25 Model 80 Stepping 0, AuthenticAMD",
+      "architecture": "AMD64",
+      "os": "Windows-10-10.0.26200-SP0",
+      "cpu_count_logical": 12,
+      "workers": 12,
+      "libraries": {
+        "torch": "2.12.1+cpu",
+        "numpy": "2.2.6",
+        "mujoco": "3.12.0",
+        "gymnasium": "1.3.0",
+        "gymnasium_robotics": "1.4.2"
+      },
+      "config_sha256": "9988eb65be4ebd969181d76080c5f311fb993d9eed362f5e125665dee316b5ad"
+    },
+    {
+      "gate": "DR-G6 learning health",
+      "pass": true,
+      "finite": true,
+      "lambda_frac_saturated": 0.0,
+      "lambda_max": 10.479990491623422,
+      "lambda_mean": 1.6860661960890873,
+      "lambda_frac_positive": 0.9226666666666666,
+      "kl_median": 0.002243478152436751,
+      "kl_p95": 0.005213472971013287,
+      "entropy_first10": 3.651874613761902,
+      "entropy_last10": 1.6495656366149585
+    },
+    {
+      "gate": "rounds complete",
+      "pass": true,
+      "rounds": 250,
+      "expected": 250
+    }
+  ],
+  "pass": true
+}

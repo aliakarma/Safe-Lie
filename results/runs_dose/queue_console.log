@@ -28,3 +28,7 @@ ALL CONFIGS PASS -> results\runs_dose\dose_frozen_verification.json
 [2026-09-14T20:56:44+00:00] B025_seed1: launching  cfg=b025_seed1.yaml  B/d=0.25  B=6.25  corrupted=batch_2
 [2026-09-15T04:17:41+00:00] B025_seed1: gates PASS  (7.35 h)
 [2026-09-15T04:17:41+00:00] B100_seed2: launching  cfg=b100_seed2.yaml  B/d=1.0  B=25.0  corrupted=batch_3
+[2026-09-15T12:12:21+00:00] B100_seed2: gates PASS  (7.91 h)
+[2026-09-15T12:12:21+00:00] B025_seed2: launching  cfg=b025_seed2.yaml  B/d=0.25  B=6.25  corrupted=batch_3
+[2026-09-15T20:06:07+00:00] B025_seed2: gates PASS  (7.90 h)
+[2026-09-15T20:06:07+00:00] DR queue complete. Analyse with: python scripts/analyze_dose.py
