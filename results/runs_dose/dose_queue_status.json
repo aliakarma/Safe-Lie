@@ -1,0 +1,80 @@
+{
+  "predeclaration": "docs/dose_response_gates.md",
+  "started": "2026-09-13T21:24:45+00:00",
+  "queue": [
+    "B100_seed0",
+    "B025_seed0",
+    "B100_seed1",
+    "B025_seed1",
+    "B100_seed2",
+    "B025_seed2"
+  ],
+  "runs": {
+    "B100_seed0": {
+      "started": "2026-09-13T21:24:45+00:00",
+      "config": "configs\\experiment\\dose\\b100_seed0.yaml",
+      "budget_ratio": 1.0,
+      "B": 25.0,
+      "corrupted_source": "batch_1",
+      "resumed_from_round": 0,
+      "status": "complete",
+      "finished": "2026-09-14T04:42:31+00:00",
+      "wall_clock_s": 26266.1,
+      "returncode": 0,
+      "gates_pass": true,
+      "gate_note": "ok"
+    },
+    "B025_seed0": {
+      "started": "2026-09-14T04:42:32+00:00",
+      "config": "configs\\experiment\\dose\\b025_seed0.yaml",
+      "budget_ratio": 0.25,
+      "B": 6.25,
+      "corrupted_source": "batch_1",
+      "resumed_from_round": 0,
+      "status": "complete",
+      "finished": "2026-09-14T12:42:23+00:00",
+      "wall_clock_s": 28791.1,
+      "returncode": 0,
+      "gates_pass": true,
+      "gate_note": "ok"
+    },
+    "B100_seed1": {
+      "started": "2026-09-14T12:42:25+00:00",
+      "config": "configs\\experiment\\dose\\b100_seed1.yaml",
+      "budget_ratio": 1.0,
+      "B": 25.0,
+      "corrupted_source": "batch_2",
+      "resumed_from_round": 0,
+      "status": "complete",
+      "finished": "2026-09-14T20:56:43+00:00",
+      "wall_clock_s": 29657.6,
+      "returncode": 0,
+      "gates_pass": true,
+      "gate_note": "ok"
+    },
+    "B025_seed1": {
+      "started": "2026-09-14T20:56:44+00:00",
+      "config": "configs\\experiment\\dose\\b025_seed1.yaml",
+      "budget_ratio": 0.25,
+      "B": 6.25,
+      "corrupted_source": "batch_2",
+      "resumed_from_round": 0,
+      "status": "complete",
+      "finished": "2026-09-15T04:17:40+00:00",
+      "wall_clock_s": 26456.1,
+      "returncode": 0,
+      "gates_pass": true,
+      "gate_note": "ok"
+    },
+    "B100_seed2": {
+      "started": "2026-09-15T04:17:41+00:00",
+      "config": "configs\\experiment\\dose\\b100_seed2.yaml",
+      "budget_ratio": 1.0,
+      "B": 25.0,
+      "corrupted_source": "batch_3",
+      "resumed_from_round": 0,
+      "status": "running"
+    }
+  },
+  "halted": null
+}

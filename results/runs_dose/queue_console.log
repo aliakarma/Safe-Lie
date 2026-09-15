@@ -1,0 +1,30 @@
+[2026-09-13T21:24:45+00:00] DR-S10: verifying the dose configs differ from A1 condition B only in budget_ratio
+[PASS] B025_seed0  B/d=0.25  B=6.25  B/M=2.08333
+        vs b_seed0.yaml: differs only in ['attack.budget_ratio', 'output_dir', 'run_id']
+        vs g9_batch_clean.yaml: differs only in ['attack.budget_ratio', 'attack.corrupted_source_ids', 'attack.f', 'attack.name', 'output_dir', 'run_id']
+[PASS] B025_seed1  B/d=0.25  B=6.25  B/M=2.08333
+        vs b_seed1.yaml: differs only in ['attack.budget_ratio', 'output_dir', 'run_id']
+        vs g10_batch_clean_seed1.yaml: differs only in ['attack.budget_ratio', 'attack.corrupted_source_ids', 'attack.f', 'attack.name', 'output_dir', 'run_id']
+[PASS] B025_seed2  B/d=0.25  B=6.25  B/M=2.08333
+        vs b_seed2.yaml: differs only in ['attack.budget_ratio', 'output_dir', 'run_id']
+        vs g10_batch_clean_seed2.yaml: differs only in ['attack.budget_ratio', 'attack.corrupted_source_ids', 'attack.f', 'attack.name', 'output_dir', 'run_id']
+[PASS] B100_seed0  B/d=1.0  B=25.0  B/M=8.33333
+        vs b_seed0.yaml: differs only in ['attack.budget_ratio', 'output_dir', 'run_id']
+        vs g9_batch_clean.yaml: differs only in ['attack.budget_ratio', 'attack.corrupted_source_ids', 'attack.f', 'attack.name', 'output_dir', 'run_id']
+[PASS] B100_seed1  B/d=1.0  B=25.0  B/M=8.33333
+        vs b_seed1.yaml: differs only in ['attack.budget_ratio', 'output_dir', 'run_id']
+        vs g10_batch_clean_seed1.yaml: differs only in ['attack.budget_ratio', 'attack.corrupted_source_ids', 'attack.f', 'attack.name', 'output_dir', 'run_id']
+[PASS] B100_seed2  B/d=1.0  B=25.0  B/M=8.33333
+        vs b_seed2.yaml: differs only in ['attack.budget_ratio', 'output_dir', 'run_id']
+        vs g10_batch_clean_seed2.yaml: differs only in ['attack.budget_ratio', 'attack.corrupted_source_ids', 'attack.f', 'attack.name', 'output_dir', 'run_id']
+
+ALL CONFIGS PASS -> results\runs_dose\dose_frozen_verification.json
+[2026-09-13T21:24:45+00:00] B100_seed0: launching  cfg=b100_seed0.yaml  B/d=1.0  B=25.0  corrupted=batch_1
+[2026-09-14T04:42:32+00:00] B100_seed0: gates PASS  (7.30 h)
+[2026-09-14T04:42:32+00:00] B025_seed0: launching  cfg=b025_seed0.yaml  B/d=0.25  B=6.25  corrupted=batch_1
+[2026-09-14T12:42:25+00:00] B025_seed0: gates PASS  (8.00 h)
+[2026-09-14T12:42:25+00:00] B100_seed1: launching  cfg=b100_seed1.yaml  B/d=1.0  B=25.0  corrupted=batch_2
+[2026-09-14T20:56:44+00:00] B100_seed1: gates PASS  (8.24 h)
+[2026-09-14T20:56:44+00:00] B025_seed1: launching  cfg=b025_seed1.yaml  B/d=0.25  B=6.25  corrupted=batch_2
+[2026-09-15T04:17:41+00:00] B025_seed1: gates PASS  (7.35 h)
+[2026-09-15T04:17:41+00:00] B100_seed2: launching  cfg=b100_seed2.yaml  B/d=1.0  B=25.0  corrupted=batch_3

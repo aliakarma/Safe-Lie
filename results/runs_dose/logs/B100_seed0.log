@@ -1,0 +1,117 @@
+
+=== B100_seed0 start 2026-09-13T21:24:45+00:00 ===
+AdroitHandRelocateDense-v1, AdroitHandHammerDense-v1, AdroitHandDoorDense-v1 environment's reward functions were updated in v1.2.1 without an environment version update. Therefore, use gymnasium-robotics==1.2.0 for v1 reproducibility or use v2 in gymnasium-robotics>=1.4.3. See https://github.com/Farama-Foundation/Gymnasium-Robotics/pull/220 for more details
+AdroitHandRelocateDense-v1, AdroitHandHammerDense-v1, AdroitHandDoorDense-v1 environment's reward functions were updated in v1.2.1 without an environment version update. Therefore, use gymnasium-robotics==1.2.0 for v1 reproducibility or use v2 in gymnasium-robotics>=1.4.3. See https://github.com/Farama-Foundation/Gymnasium-Robotics/pull/220 for more details
+AdroitHandRelocateDense-v1, AdroitHandHammerDense-v1, AdroitHandDoorDense-v1 environment's reward functions were updated in v1.2.1 without an environment version update. Therefore, use gymnasium-robotics==1.2.0 for v1 reproducibility or use v2 in gymnasium-robotics>=1.4.3. See https://github.com/Farama-Foundation/Gymnasium-Robotics/pull/220 for more details
+AdroitHandRelocateDense-v1, AdroitHandHammerDense-v1, AdroitHandDoorDense-v1 environment's reward functions were updated in v1.2.1 without an environment version update. Therefore, use gymnasium-robotics==1.2.0 for v1 reproducibility or use v2 in gymnasium-robotics>=1.4.3. See https://github.com/Farama-Foundation/Gymnasium-Robotics/pull/220 for more details
+AdroitHandRelocateDense-v1, AdroitHandHammerDense-v1, AdroitHandDoorDense-v1 environment's reward functions were updated in v1.2.1 without an environment version update. Therefore, use gymnasium-robotics==1.2.0 for v1 reproducibility or use v2 in gymnasium-robotics>=1.4.3. See https://github.com/Farama-Foundation/Gymnasium-Robotics/pull/220 for more details
+AdroitHandRelocateDense-v1, AdroitHandHammerDense-v1, AdroitHandDoorDense-v1 environment's reward functions were updated in v1.2.1 without an environment version update. Therefore, use gymnasium-robotics==1.2.0 for v1 reproducibility or use v2 in gymnasium-robotics>=1.4.3. See https://github.com/Farama-Foundation/Gymnasium-Robotics/pull/220 for more details
+AdroitHandRelocateDense-v1, AdroitHandHammerDense-v1, AdroitHandDoorDense-v1 environment's reward functions were updated in v1.2.1 without an environment version update. Therefore, use gymnasium-robotics==1.2.0 for v1 reproducibility or use v2 in gymnasium-robotics>=1.4.3. See https://github.com/Farama-Foundation/Gymnasium-Robotics/pull/220 for more details
+AdroitHandRelocateDense-v1, AdroitHandHammerDense-v1, AdroitHandDoorDense-v1 environment's reward functions were updated in v1.2.1 without an environment version update. Therefore, use gymnasium-robotics==1.2.0 for v1 reproducibility or use v2 in gymnasium-robotics>=1.4.3. See https://github.com/Farama-Foundation/Gymnasium-Robotics/pull/220 for more details
+AdroitHandRelocateDense-v1, AdroitHandHammerDense-v1, AdroitHandDoorDense-v1 environment's reward functions were updated in v1.2.1 without an environment version update. Therefore, use gymnasium-robotics==1.2.0 for v1 reproducibility or use v2 in gymnasium-robotics>=1.4.3. See https://github.com/Farama-Foundation/Gymnasium-Robotics/pull/220 for more details
+AdroitHandRelocateDense-v1, AdroitHandHammerDense-v1, AdroitHandDoorDense-v1 environment's reward functions were updated in v1.2.1 without an environment version update. Therefore, use gymnasium-robotics==1.2.0 for v1 reproducibility or use v2 in gymnasium-robotics>=1.4.3. See https://github.com/Farama-Foundation/Gymnasium-Robotics/pull/220 for more details
+AdroitHandRelocateDense-v1, AdroitHandHammerDense-v1, AdroitHandDoorDense-v1 environment's reward functions were updated in v1.2.1 without an environment version update. Therefore, use gymnasium-robotics==1.2.0 for v1 reproducibility or use v2 in gymnasium-robotics>=1.4.3. See https://github.com/Farama-Foundation/Gymnasium-Robotics/pull/220 for more details
+AdroitHandRelocateDense-v1, AdroitHandHammerDense-v1, AdroitHandDoorDense-v1 environment's reward functions were updated in v1.2.1 without an environment version update. Therefore, use gymnasium-robotics==1.2.0 for v1 reproducibility or use v2 in gymnasium-robotics>=1.4.3. See https://github.com/Farama-Foundation/Gymnasium-Robotics/pull/220 for more details
+AdroitHandRelocateDense-v1, AdroitHandHammerDense-v1, AdroitHandDoorDense-v1 environment's reward functions were updated in v1.2.1 without an environment version update. Therefore, use gymnasium-robotics==1.2.0 for v1 reproducibility or use v2 in gymnasium-robotics>=1.4.3. See https://github.com/Farama-Foundation/Gymnasium-Robotics/pull/220 for more details
+Output directory: results\runs_dose\B100_seed0
+Loaded and validated config: run_id=B100_seed0, seed=0, env=manyagent_ant, attack=primary, defense=mean, sources M=3 (effective_M=3)
+NOTE: env.name='manyagent_ant' runs on the Safe MAMuJoCo adapter (backend=mamujoco). Read safelie/envs/mamujoco.py's docstring before interpreting these numbers, and confirm the cost constraint binds with scripts/calibrate_cost.py.
+Run complete in 26262.1s. Artifacts written to: results\runs_dose\B100_seed0
+
+=== gates B100_seed0 2026-09-14T04:42:31+00:00 ===
+=== results\runs_dose\B100_seed0  B/d=1.0  B=25.0  B/M=8.33333  rounds=250 ===
+  [PASS] DR-S12 declared dose and unchanged operator
+          config_budget_ratio: 1.0
+          expected_budget_ratio: 1.0
+          config_d: 25.0
+          derived_B: 25.0
+          derived_B_over_M: 8.333333333333334
+          operator: {'name': 'primary', 'f': 1, 'direction': 'negative', 'support': 'persistent', 'adaptivity': 'static', 'consistency': 'consistent'}
+          operator_unchanged_from_a1: True
+  [PASS] DR-S11 no RCE on this line
+          defense_name: mean
+          defense_f: 0
+          calibration_artifacts: []
+  [PASS] DR-S2/S3 mechanism identity on 100% of cells
+          n_cells: 1500
+          max_abs_error: 1.2434497875801753e-14
+          expected_pre_minus_post: 8.333333333333334
+          tolerance: 1e-09
+  [PASS] DR-S3 named source shifted by -B
+          source: batch_1
+          B: 25.0
+          n_cells: 1500
+          max_abs_error: 2.842170943040401e-14
+  [PASS] balanced attacked-source mapping
+          logged: ['batch_1']
+          expected: ['batch_1']
+  [PASS] DR-S9 (7.2) cross-dose round-0 identity
+          vs_clean: {'pass': True, 'reference': 'results\\runs_constraint_batch_g9\\g9_batch_clean', 'n_owners': 6, 'pre_attack_source_values_identical': True, 'pre_attack_max_abs_delta': 0.0, 'expected_mechanism_delta': -8.333333333333334, 'observed_mechanism_delta_mean': -8.333333333333334, 'mechanism_max_abs_error': 1.7763568394002505e-15}
+          vs_a1_B: {'pass': True, 'reference': 'results\\runs_a1\\B_seed0', 'n_owners': 6, 'pre_attack_source_values_identical': True, 'pre_attack_max_abs_delta': 0.0, 'expected_mechanism_delta': -4.166666666666667, 'observed_mechanism_delta_mean': -4.166666666666669, 'mechanism_max_abs_error': 4.440892098500626e-15}
+  [PASS] DR-S6 policy pinning
+          worker_checksums_all_match: True
+          n_chunks_all_48: True
+          n_trajectories_all_90: True
+  [PASS] DR-S6 distinct theta per round
+          distinct_checksums: 250
+          rounds: 250
+  [PASS] DR-S9 CRN: source seeds identical to clean and A1 pairs
+          clean: {'pass': True, 'rounds_compared': 250, 'seed_pairs_compared': 22500, 'reference': 'results\\runs_constraint_batch_g9\\g9_batch_clean', 'mismatches': []}
+          a1_B: {'pass': True, 'rounds_compared': 250, 'seed_pairs_compared': 22500, 'reference': 'results\\runs_a1\\B_seed0', 'mismatches': []}
+  [PASS] DR-S5 source streams disjoint within run
+          duplicate_events: 0
+          unique_env_seeds: 22500
+          replica_pairwise_overlap: {'batch_1|batch_2': 0, 'batch_1|batch_3': 0, 'batch_2|batch_3': 0}
+          replica_vs_reference_overlap: {'batch_1': 0, 'batch_2': 0, 'batch_3': 0}
+  [PASS] DR-S8 reference never saw the corruption
+          rounds: [25, 75, 125, 175, 225]
+          n_cells: 90
+          max_abs_error: 0.0
+  [PASS] DR-S4 PPO steps independent of source
+          derived_ppo_steps: 500000
+          derived_source_steps: 45000000
+          expected_ppo_steps: 500000
+          expected_source_steps: 45000000
+          metadata_env_steps: {'ppo': 500000, 'source': 45000000, 'oracle': 500000}
+          note: derived from rounds.jsonl; metadata env_steps is reported only for comparison and is unreliable after a resume (gates doc 12)
+  [PASS] DR-S5 seed audit (metadata)
+          n_env_seeds_issued: 23100
+          duplicate_seed_events: 0
+  [ n/a] timing (reported)
+          wall_clock_h: 7.29
+          s_per_round: 105.0
+          source_s_per_round: 89.2
+  [ n/a] provenance (reported)
+          cpu_model: AMD64 Family 25 Model 80 Stepping 0, AuthenticAMD
+          architecture: AMD64
+          os: Windows-10-10.0.26200-SP0
+          cpu_count_logical: 12
+          workers: 12
+          libraries: {'torch': '2.12.1+cpu', 'numpy': '2.2.6', 'mujoco': '3.12.0', 'gymnasium': '1.3.0', 'gymnasium_robotics': '1.4.2'}
+          config_sha256: add26633ecaf53ba186751fa5408b4291bd67997724a55333736638011db04f8
+  [PASS] DR-G6 learning health
+          finite: True
+          lambda_frac_saturated: 0.0
+          lambda_max: 4.911187044749926
+          lambda_mean: 0.8267122490629852
+          lambda_frac_positive: 0.89
+          kl_median: 0.002290702587828264
+          kl_p95: 0.005316667127567598
+          entropy_first10: 3.6433254326383273
+          entropy_last10: 1.575038890664776
+  [PASS] rounds complete
+          rounds: 250
+          expected: 250
+
+ALL GATES PASS
+-> C:\Users\Ali Akarma\Desktop\Current Research\ICLR\Paper 1\Safe-Lie\results\runs_dose\B100_seed0\dose_run_verification.json
+
+=== a1_mechanism_validation B100_seed0 at B=25.0 ===
+
+A1 mechanism validation  (B=25.0, M=3, B/M=8.33333)
+  [PASS] clean_in_run_identity
+  [PASS] attack_in_run_identity
+  [PASS] attack_vs_clean_round0
+  [PASS] attack_reference_unshifted
+
+MECHANISM VALIDATION PASSES -> C:\Users\Ali Akarma\Desktop\Current Research\ICLR\Paper 1\Safe-Lie\results\runs_dose\B100_seed0\dose_mechanism_report.json

@@ -1,0 +1,127 @@
+{
+  "B": 25.0,
+  "M": 3,
+  "B_over_M": 8.333333333333334,
+  "attacked_source": "batch_1",
+  "tolerance": 1e-09,
+  "clean_in_run_identity": {
+    "n_cells": 1500,
+    "expected_pre_minus_post": 0.0,
+    "max_abs_error": 0.0,
+    "frac_cells_within_tol": 1.0,
+    "corrupted_source_ids_logged": [],
+    "pass": true
+  },
+  "attack_in_run_identity": {
+    "n_cells": 1500,
+    "expected_pre_minus_post": 8.333333333333334,
+    "max_abs_error": 1.2434497875801753e-14,
+    "frac_cells_within_tol": 1.0,
+    "corrupted_source_ids_logged": [
+      "batch_1"
+    ],
+    "pass": true,
+    "named_source_shift": {
+      "source": "batch_1",
+      "expected_post_minus_pre": -25.0,
+      "max_abs_error": 2.842170943040401e-14,
+      "frac_within_tol": 1.0,
+      "pass": true
+    }
+  },
+  "attack_vs_clean_round0": {
+    "per_source_logged_value_shift": {
+      "batch_1": {
+        "mean": 0.0,
+        "max_abs": 0.0
+      },
+      "batch_2": {
+        "mean": 0.0,
+        "max_abs": 0.0
+      },
+      "batch_3": {
+        "mean": 0.0,
+        "max_abs": 0.0
+      }
+    },
+    "underlying_draws_identical": true,
+    "aggregate_shift": {
+      "per_owner": [
+        -8.333333333,
+        -8.333333333,
+        -8.333333333,
+        -8.333333333,
+        -8.333333333,
+        -8.333333333
+      ],
+      "mean": -8.333333333333334,
+      "expected": -8.333333333333334,
+      "max_abs_error": 1.7763568394002505e-15,
+      "pass": true
+    },
+    "attacked_source": "batch_1",
+    "pass": true
+  },
+  "attack_reference_unshifted": {
+    "rounds_checked": [
+      25,
+      75,
+      125,
+      175,
+      225
+    ],
+    "in_run_source_means_match_reports": {
+      "n_cells": 90,
+      "max_abs_error": 0.0,
+      "pass": true
+    },
+    "pass": true,
+    "cross_run_reference": {
+      "rows": [
+        {
+          "round_k": 25,
+          "mean_difference": 5.310717002447857,
+          "max_abs_difference": 7.564761093134813,
+          "identity_required": false,
+          "identity_holds": false,
+          "far_from_corruption_magnitude": false
+        },
+        {
+          "round_k": 75,
+          "mean_difference": 6.3361263122744775,
+          "max_abs_difference": 6.849892790566859,
+          "identity_required": false,
+          "identity_holds": false,
+          "far_from_corruption_magnitude": false
+        },
+        {
+          "round_k": 125,
+          "mean_difference": 6.5233773349741435,
+          "max_abs_difference": 7.434151605070529,
+          "identity_required": false,
+          "identity_holds": false,
+          "far_from_corruption_magnitude": false
+        },
+        {
+          "round_k": 175,
+          "mean_difference": 7.315913499005606,
+          "max_abs_difference": 7.635035136733904,
+          "identity_required": false,
+          "identity_holds": false,
+          "far_from_corruption_magnitude": false
+        },
+        {
+          "round_k": 225,
+          "mean_difference": 9.155092146046103,
+          "max_abs_difference": 9.390260197776474,
+          "identity_required": false,
+          "identity_holds": false,
+          "far_from_corruption_magnitude": false
+        }
+      ],
+      "note": "identity is required only at round 0; beyond it, a nonzero difference is policy divergence -- the attack working",
+      "warning": "round 225: reference difference 9.390 is within B/4 of the corruption magnitude B=25.0; inspect before trusting it"
+    }
+  },
+  "pass": true
+}
