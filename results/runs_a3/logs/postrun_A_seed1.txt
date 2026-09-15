@@ -1,0 +1,41 @@
+=== post-run integrity check: A_seed1 ===
+  [PASS] status complete
+         complete
+  [PASS] 250 rounds / oracle rows / seed rows, contiguous
+         250/250/250 rounds_completed=250
+  [PASS] validation reference collected exactly at rounds {25,75,125,175,225} with R_ref=120
+         rounds=[25, 75, 125, 175, 225]
+  [PASS] src/ and configs/experiment/a3/ at the run's commit are byte-identical to bed26a8
+         sha=a31b65378e2029098c14d21f8955ebc5550f6caf
+  [PASS] dirty paths confined to results/runs_a3/ (no uncommitted code)
+         ['results/runs_a3/A_seed0/', 'results/runs_a3/A_seed1/', 'results/runs_a3/B_seed0/', 'results/runs_a3/C_seed0/', 'results/runs_a3/E_seed0/', 'results/runs_a3/calib_C_seed0/', 'results/runs_a3/calib_E_seed0/', 'results/runs_a3/logs/']
+  [PASS] config_snapshot == frozen YAML, fully resolved
+  [PASS] config_sha256 == frozen YAML
+  [PASS] platform signature identical to A_seed0
+         Mac16,10 (Mac mini, Apple M4 4P+6E, 16 GB) | macOS-26.5-arm64-arm-64bit
+  [PASS] source env steps == 75,000,000 (summed from rounds.jsonl)
+         75000000
+  [PASS] PPO env steps == 500,000
+         {'ppo': 500000, 'source': 75000000, 'oracle': 500000}
+  [PASS] every round: M=5, R_m=30, 150 trajectories, one pinned theta_k, reference only on validation rounds
+         bad rounds: []
+  [PASS] source count: 6 agents x 5 sources (batch_1..batch_5) on every round
+  [PASS] clean: no corrupted source on any cell
+         {()}
+  [PASS] undefended mean identity on 100% of cells (with -12.5 on the mapped source for B')
+         max|agg-mean(post)|=0.00e+00 max|dual input-agg|=0.00e+00 max|residual-(agg-d)|=0.00e+00 retained_n={5.0} margin={0.0}
+  [PASS] no oracle/reference leakage keys in rounds.jsonl
+         []
+  [PASS] no NaN/Inf in the mechanism, dual and oracle arrays
+         {}
+  [PASS] seed log: 5 streams x 30 per round, consistent with the metadata audit
+         draws=38100 events=0 audit={'duplicate_seed_events': 0, 'n_env_seeds_issued': 38100, 'n_torch_seeds_issued': 38100}
+  [PASS] G1-iii as written: 0 duplicate env seeds (hence 0 pairwise env-seed overlap)
+         {}
+  [INFO] torch-seed repeats (the queue gate counts these as well)
+         none
+  [PASS] final checkpoint loads
+         2511282 bytes
+  [INFO] timing
+         wall=3.36 h  s/round=48.4  source s/round=44.0  oracle_s=435
+RESULT: ALL PASS

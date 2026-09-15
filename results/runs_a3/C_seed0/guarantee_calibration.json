@@ -1,0 +1,11 @@
+{
+  "epsilon_offline": 0.8626305085291288,
+  "n_rounds": 20,
+  "alpha": 0.05,
+  "disagreement_mean": 0.3031639622672898,
+  "disagreement_std": 0.2669588634885427,
+  "disagreement_min": 0.006046077601801869,
+  "disagreement_max": 1.1635435867088617,
+  "source_run_id": "calib_C_seed0",
+  "source_config_run_id": "C_seed0"
+}

@@ -1,0 +1,56 @@
+[2026-09-13T05:48:15Z] driver: pid=9759 ppid=9758 git=00861e31f933266028271451327211636e12b832 porcelain_lines=1 host=aivnv-mmini.local
+[2026-09-13T05:48:15Z] driver: OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 TMPDIR=/var/folders/bp/n8g61qcd3cgg3vb7ff4wbx700000gq/T/
+[2026-09-13T05:48:15Z] driver: SAFELIE_MACHINE_TYPE=Mac16,10 (Mac mini, Apple M4 4P+6E, 16 GB)
+[2026-09-13T05:48:15Z] driver: schedule = seed 0 (A' B' C' E') -> seed 1 -> seed 2, one seed at a time; halt on any non-zero exit
+[2026-09-13T05:48:15Z] driver: starting .venv/bin/python scripts/a3_run_queue.py --seed 0  > results/runs_a3/logs/queue_seed0.out 2>&1
+[2026-09-13T09:57:50Z] driver: queue --seed 0 exited rc=1
+[2026-09-13T09:57:50Z] driver: HALT -- seed 0 did not finish cleanly; later seeds are NOT started
+[2026-09-13T13:11:20Z] driver (resume): pid=99432 git=a31b65378e2029098c14d21f8955ebc5550f6caf branch=a3-mac-production porcelain_tracked_changes=0
+[2026-09-13T13:11:20Z] driver (resume): OMP=1 MKL=1 OPENBLAS=1 SAFELIE_MACHINE_TYPE=Mac16,10 (Mac mini, Apple M4 4P+6E, 16 GB)
+[2026-09-13T13:11:20Z] driver (resume): order B_seed0 C_seed0 E_seed0 A_seed1 B_seed1 C_seed1 E_seed1 A_seed2 B_seed2 C_seed2 E_seed2; one run at a time; queue gate then post-run check before the next run
+[2026-09-13T13:11:20Z] driver: resources: pressure_level=1 vm.swapusage: total = 5120.00M used = 3794.94M free = 1325.06M (encrypted) disk_free=21Gi
+[2026-09-13T13:11:20Z] driver: B_seed0 -> scripts/a3_run_queue.py --seed 0 --only B_seed0
+[2026-09-13T16:34:16Z] driver: B_seed0 queue exited rc=0
+[2026-09-13T16:34:17Z] driver: B_seed0 post-run integrity check rc=0 (RESULT: ALL PASS)
+[2026-09-13T16:34:17Z] driver: resources: pressure_level=1 vm.swapusage: total = 5120.00M used = 3570.88M free = 1549.12M (encrypted) disk_free=20Gi
+[2026-09-13T16:34:17Z] driver: C_seed0 -> scripts/a3_run_queue.py --seed 0 --only C_seed0
+[2026-09-13T20:37:10Z] driver: C_seed0 queue exited rc=0
+[2026-09-13T20:37:11Z] driver: C_seed0 post-run integrity check rc=0 (RESULT: ALL PASS)
+[2026-09-13T20:37:11Z] driver: resources: pressure_level=1 vm.swapusage: total = 4096.00M used = 2527.69M free = 1568.31M (encrypted) disk_free=21Gi
+[2026-09-13T20:37:11Z] driver: E_seed0 -> scripts/a3_run_queue.py --seed 0 --only E_seed0
+[2026-09-14T00:28:33Z] driver: E_seed0 queue exited rc=0
+[2026-09-14T00:28:34Z] driver: E_seed0 post-run integrity check rc=0 (RESULT: ALL PASS)
+[2026-09-14T00:28:34Z] driver: resources: pressure_level=1 vm.swapusage: total = 4096.00M used = 2479.69M free = 1616.31M (encrypted) disk_free=21Gi
+[2026-09-14T00:28:34Z] driver: A_seed1 -> scripts/a3_run_queue.py --seed 1 --only A_seed1
+[2026-09-14T03:50:26Z] driver: A_seed1 queue exited rc=0
+[2026-09-14T03:50:27Z] driver: A_seed1 post-run integrity check rc=0 (RESULT: ALL PASS)
+[2026-09-14T03:50:27Z] driver: resources: pressure_level=1 vm.swapusage: total = 4096.00M used = 2471.69M free = 1624.31M (encrypted) disk_free=21Gi
+[2026-09-14T03:50:27Z] driver: B_seed1 -> scripts/a3_run_queue.py --seed 1 --only B_seed1
+[2026-09-14T07:11:35Z] driver: B_seed1 queue exited rc=0
+[2026-09-14T07:11:36Z] driver: B_seed1 post-run integrity check rc=0 (RESULT: ALL PASS)
+[2026-09-14T07:11:36Z] driver: resources: pressure_level=1 vm.swapusage: total = 4096.00M used = 2455.69M free = 1640.31M (encrypted) disk_free=21Gi
+[2026-09-14T07:11:36Z] driver: C_seed1 -> scripts/a3_run_queue.py --seed 1 --only C_seed1
+[2026-09-14T10:47:42Z] driver: C_seed1 queue exited rc=0
+[2026-09-14T10:47:43Z] driver: C_seed1 post-run integrity check rc=0 (RESULT: ALL PASS)
+[2026-09-14T10:47:43Z] driver: resources: pressure_level=1 vm.swapusage: total = 4096.00M used = 2431.69M free = 1664.31M (encrypted) disk_free=21Gi
+[2026-09-14T10:47:43Z] driver: E_seed1 -> scripts/a3_run_queue.py --seed 1 --only E_seed1
+[2026-09-14T14:25:15Z] driver: E_seed1 queue exited rc=0
+[2026-09-14T14:25:16Z] driver: E_seed1 post-run integrity check rc=0 (RESULT: ALL PASS)
+[2026-09-14T14:25:16Z] driver: resources: pressure_level=1 vm.swapusage: total = 4096.00M used = 2415.69M free = 1680.31M (encrypted) disk_free=20Gi
+[2026-09-14T14:25:16Z] driver: A_seed2 -> scripts/a3_run_queue.py --seed 2 --only A_seed2
+[2026-09-14T17:45:57Z] driver: A_seed2 queue exited rc=0
+[2026-09-14T17:45:58Z] driver: A_seed2 post-run integrity check rc=0 (RESULT: ALL PASS)
+[2026-09-14T17:45:58Z] driver: resources: pressure_level=1 vm.swapusage: total = 4096.00M used = 2391.69M free = 1704.31M (encrypted) disk_free=20Gi
+[2026-09-14T17:45:58Z] driver: B_seed2 -> scripts/a3_run_queue.py --seed 2 --only B_seed2
+[2026-09-14T21:07:29Z] driver: B_seed2 queue exited rc=0
+[2026-09-14T21:07:30Z] driver: B_seed2 post-run integrity check rc=0 (RESULT: ALL PASS)
+[2026-09-14T21:07:30Z] driver: resources: pressure_level=2 vm.swapusage: total = 4096.00M used = 2391.69M free = 1704.31M (encrypted) disk_free=20Gi
+[2026-09-14T21:07:30Z] driver: C_seed2 -> scripts/a3_run_queue.py --seed 2 --only C_seed2
+[2026-09-15T00:46:14Z] driver: C_seed2 queue exited rc=0
+[2026-09-15T00:46:15Z] driver: C_seed2 post-run integrity check rc=0 (RESULT: ALL PASS)
+[2026-09-15T00:46:15Z] driver: resources: pressure_level=2 vm.swapusage: total = 4096.00M used = 2391.69M free = 1704.31M (encrypted) disk_free=20Gi
+[2026-09-15T00:46:15Z] driver: E_seed2 -> scripts/a3_run_queue.py --seed 2 --only E_seed2
+[2026-09-15T04:24:03Z] driver: E_seed2 queue exited rc=0
+[2026-09-15T04:24:04Z] driver: E_seed2 post-run integrity check rc=0 (RESULT: ALL PASS)
+[2026-09-15T04:24:04Z] driver: resources: pressure_level=2 vm.swapusage: total = 4096.00M used = 2838.19M free = 1257.81M (encrypted) disk_free=20Gi
+[2026-09-15T04:24:04Z] driver: all eleven remaining runs complete and checked

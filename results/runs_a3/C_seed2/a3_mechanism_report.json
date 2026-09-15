@@ -1,0 +1,126 @@
+{
+  "run": "/Users/aliakarma/Desktop/Safe Lie Project/Safe-Lie/results/runs_a3/C_seed2",
+  "condition": "C",
+  "paired_reference": "/Users/aliakarma/Desktop/Safe Lie Project/Safe-Lie/results/runs_a3/B_seed2",
+  "rounds": 250,
+  "M": 5,
+  "f": 1,
+  "retained_set_size": 3,
+  "source_ids": [
+    "batch_1",
+    "batch_2",
+    "batch_3",
+    "batch_4",
+    "batch_5"
+  ],
+  "attacked_source": "batch_5",
+  "corrupted_source_ids_in_log": [
+    "batch_5"
+  ],
+  "G2_map_identity": {
+    "n_cells": 1500,
+    "max_abs_error": {
+      "point_estimate": 0.0,
+      "spread": 0.0,
+      "retained_n": 0.0,
+      "applied_margin": 0.0,
+      "pessimistic_estimate": 0.0,
+      "mechanism_reported_cost_return": 0.0,
+      "constraint_residual": 0.0
+    },
+    "shift_applied": -12.5,
+    "pass": true
+  },
+  "G3_i_retained_structure": {
+    "frac_retained_n_eq_3": 1.0,
+    "frac_degenerate_true": 0.0,
+    "retained_n_unique": [
+      3
+    ],
+    "pass": true
+  },
+  "G3_ii_mad_is_a_measurement": {
+    "frac_spread_above_sigma_min": 0.996,
+    "spread_min": 0.0004936389954455223,
+    "spread_max": 2.0199385072902842,
+    "spread_mean": 0.4088065317909797,
+    "spread_median": 0.317632904998316,
+    "frac_spread_at_floor": 0.0,
+    "bar": 0.99,
+    "pass": true
+  },
+  "G3_iii_margin_magnitude": {
+    "mean_applied_margin": 0.6132097976864695,
+    "median_applied_margin": 0.47644935749747397,
+    "sd_applied_margin": 0.5083411550275574,
+    "predicted": 0.544,
+    "band": [
+      0.35,
+      0.8
+    ],
+    "a2_constant_for_comparison": 0.0015,
+    "ratio_vs_a2_constant": 408.8065317909797,
+    "pass": true
+  },
+  "G1_v_calibration_not_vacuous": {
+    "epsilon_offline_unique": [
+      0.782653724123
+    ],
+    "sigma_min": 0.001,
+    "strictly_above_sigma_min": true,
+    "guarantee_in_force_frac_true": 0.3,
+    "note": "At M=5 the MAD is live, so epsilon_offline is a real quantile of a real dispersion distribution rather than A2's constant sigma_min. guarantee_in_force is still NOT a verification of Theorem 2's precondition -- see safelie.eval.margin.",
+    "pass": true
+  },
+  "G7_i_source_set": {
+    "frac_attacked_source_trimmed": 1.0,
+    "frac_attacked_source_retained": 0.0,
+    "frac_retained_equals_three_lowest_honest": 1.0,
+    "bar": 0.99,
+    "interpretation": "With B = 12.5 the corrupted report is far below the honest ones, so trimming discards it and retains the three lowest of the four honest sources.",
+    "pass": true
+  },
+  "G7_ii_within_run_counterfactual": {
+    "mean_rce_shift": -0.2918461094295176,
+    "median_rce_shift": -0.15931071204119718,
+    "sd_rce_shift": 0.6144998945593634,
+    "predicted": -0.222,
+    "band": [
+      -0.7,
+      -0.02
+    ],
+    "mean_aggregator_shift_for_comparison": -2.5,
+    "suppression_factor_vs_mean": 8.56615839384271,
+    "a2_measured_shift_at_M3": -0.695,
+    "pass": true
+  },
+  "G7_iii_margin_under_attack": {
+    "mean_applied_margin": 0.6132097976864695,
+    "note": "compared against the same seed's E' by scripts/analyze_a3.py (G3-iv)"
+  },
+  "G1_ii_crn_round0": {
+    "paired_run": "/Users/aliakarma/Desktop/Safe Lie Project/Safe-Lie/results/runs_a3/B_seed2",
+    "max_abs_pre_attack_difference": 0.0,
+    "per_source_max_abs": {
+      "batch_1": 0.0,
+      "batch_2": 0.0,
+      "batch_3": 0.0,
+      "batch_4": 0.0,
+      "batch_5": 0.0
+    },
+    "pass": true,
+    "note": "Both runs are produced on the SAME machine (BRANCH-B', gates doc section 12.4), so this is a within-machine check as declared."
+  },
+  "finite": true,
+  "gates": {
+    "G2_map_identity": true,
+    "G3_i_retained_structure": true,
+    "G3_ii_mad_is_a_measurement": true,
+    "G3_iii_margin_magnitude": true,
+    "G1_v_calibration_not_vacuous": true,
+    "G7_i_source_set": true,
+    "G7_ii_within_run_counterfactual": true,
+    "G1_ii_crn_round0": true
+  },
+  "all_pass": true
+}
