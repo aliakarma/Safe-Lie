@@ -1,0 +1,146 @@
+# P1 condition I -- CONCENTRATED ATTACK + W = I (no communication)
+# docs/p1_concentrated_attack_gates.md. Training seed 2.
+#
+# THIS FILE IS configs/experiment/a1/b_seed2.yaml WITH EXACTLY THESE
+# FIELDS CHANGED, AND NO OTHERS:
+#
+#   run_id                     -> I_seed2
+#   output_dir                 -> results/runs_p1
+#   topology.name              -> identity
+#   attack.corrupted_owner_ids -> [agent_5]   (the new P1 field)
+#
+# Everything else is inherited verbatim from the frozen G10/A1
+# architecture: M=3, R_m=30, pinned-policy parallel trajectory-batch
+# collection, constraint_estimator=mc_window, PPO, GAE, the dual update,
+# d=25, eta_lambda=0.035, lambda_max=25, manyagent_ant N=6 at
+# velocity_threshold=0.75, cost_mode=per_agent_velocity, mean aggregation
+# with f=0 on the DEFENSE side (P1, like A1, is the attack-WITHOUT-defense
+# experiment), 250 rounds at rollout_length 2000, the R_ref=120 withheld
+# reference at rounds {25,75,125,175,225}, and the seed's entropy.
+#
+# WHY THIS CAMPAIGN EXISTS. Under the G9+ trajectory-batch architecture one
+# replica reports a value to ALL SIX owners, so A1's `corrupted_source_ids:
+# [batch_3]` corrupts all six dual coordinates by the same amount. Measured
+# on the committed A1 logs, delta_k = -(B/M) * 1 = -4.1666... * 1 on every
+# round, to 9.8e-15. That is a UNIFORM perturbation. Proposition `cor:spread`
+# (main_iclr.tex) is stated for a CONCENTRATED delta_k = delta * e_j, so
+# A1/A2/A3 never instantiated its premise -- they instantiated the uniform
+# limit the proposition says consensus converges to. P1 injects the
+# concentrated perturbation the proposition is actually about.
+#
+# ATTACKED OWNER: agent_5, the same in all three seeds. Pre-declared rule
+# (gates doc section 4): the owner whose CLEAN-run mean multiplier is
+# largest, i.e. furthest from the projection floor at lambda=0. A negative
+# (under-reporting) perturbation can only move a multiplier that is not
+# already pinned at zero; measured on the three committed clean runs the
+# per-agent mean lambda is (1.40,1.08,1.11,1.45,1.92,2.09) for seed 0 and
+# orders identically for seeds 1 and 2, so agent_5 is the choice under this
+# rule in every seed. The rule is computed from ALREADY-COMMITTED clean runs
+# and fixed before P1's first round; it is not selected on a P1 outcome.
+# The owner is NOT varied across seeds, so nothing in this campaign speaks
+# to the identity of the attacked owner.
+#
+# ATTACKED SOURCE: batch_3 -- A1's balanced (seed -> source) mapping,
+# UNCHANGED, so this file differs from A1 condition B in the topology and
+# the owner scope only.
+#
+# COMMON RANDOM NUMBERS. `seed_entropy` is the seed's A1/clean value, so at
+# round 0 the pre-attack source draws are bit-identical across this run,
+# its W=I/ring counterpart, A1 condition B, and the seed's clean run.
+run_id: I_seed2
+seed: 2
+
+env:
+  name: manyagent_ant   # [SPEC] main_iclr.tex 5.1
+  n_agents: 6           # [SPEC] N=6
+  budget: 25.0          # [SPEC] d=25 per agent
+  velocity_threshold: 0.75
+  cost_mode: per_agent_velocity
+
+topology:
+  # THE ONLY TOPOLOGY FIELD THAT VARIES IN THIS CAMPAIGN.
+  #   ring      -- the existing connected, doubly stochastic W; sigma_2 < 1.
+  #   identity  -- W = I, the non-communicating control; sigma_2 = 1, so the
+  #                residual bound of Proposition `cor:spread` is vacuous and
+  #                the coordinates never mix.
+  name: identity
+  n_agents: 6
+
+sources:
+  sources:
+    - source_id: batch_1
+      source_type: trajectory_batch
+      independence_class: ic_batch1
+    - source_id: batch_2
+      source_type: trajectory_batch
+      independence_class: ic_batch2
+    - source_id: batch_3
+      source_type: trajectory_batch
+      independence_class: ic_batch3
+
+source_collection:
+  mode: parallel_trajectory_batch
+  M: 3
+  R_m: 30
+  seed_entropy: 335268198726974212397240672597355197200
+  # Compute knobs only, measured on this 12-logical-CPU laptop; identical
+  # to A1's. Trajectory seeds are drawn in the parent process, so neither
+  # can change a reported number.
+  workers: 12
+  chunks_per_worker: 4
+  validation_rounds: [25, 75, 125, 175, 225]
+  R_ref: 120
+
+attack:
+  # PERSISTENT DIRECTIONAL UNDER-REPORTING, identical in every taxonomy
+  # axis and in magnitude to A1/A2/A3's primary attack:
+  #
+  #   J_hat_{C,m}^attack = J_hat_{C,m} - B,   B = 0.5 * d = 12.5
+  #
+  # applied to source `batch_3` on every round 0..249 with a constant sign.
+  # f = 1, static, consistent, persistent, negative -- unchanged.
+  #
+  # THE ONE CHANGE: `corrupted_owner_ids` restricts the compromised
+  # reporting channel to owner agent_5. The adversary holds one CHANNEL
+  # (batch_3 -> agent_5) rather than the source outright, which is a
+  # weaker adversary in the same threat model, not a new one, and is
+  # injected at the same single hook in `safelie.training.loop`.
+  #
+  # Predicted per-owner shift under the mean aggregator:
+  #   owner agent_5     : -B/M = -12.5/3 = -4.1666...
+  #   every other owner : exactly 0.0
+  # i.e. delta_k = -4.1666... * e_5, verified per round by
+  # scripts/p1_verify_run.py (gate P1-a).
+  name: primary
+  f: 1
+  budget_ratio: 0.5
+  direction: negative
+  support: persistent
+  adaptivity: static
+  consistency: consistent
+  corrupted_source_ids: [batch_3]
+  corrupted_owner_ids: [agent_5]
+
+defense:
+  # UNDEFENDED, exactly as A1's condition B: plain mean aggregation, f=0.
+  # P1 is a mechanism experiment about the dual, not about RCE.
+  name: mean
+  f: 0
+
+ppo:
+  # [SPEC] main_iclr.tex App. B -- identical to A1
+  clip: 0.2
+  gae_lambda: 0.95
+  gamma: 0.99
+  lr: 0.0003
+  epochs: 4
+  minibatches: 4
+  hidden_dim: 64
+
+dual:
+  eta_lambda: 0.035   # [SPEC] -- UNCHANGED
+  lambda_max: 25.0    # [SPEC] -- UNCHANGED
+
+total_steps: 500000    # 250 rounds at rollout_length 2000 -- UNCHANGED
+rollout_length: 2000
+output_dir: results/runs_p1

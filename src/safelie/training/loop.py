@@ -154,6 +154,14 @@ class ExperimentRun:
         self.corrupted_ids = select_corrupted_sources(
             cfg.sources.sources, cfg.attack.f, cfg.attack.corrupted_source_ids
         )
+        # P1. `None` means "every owner", which is what every config written
+        # before P1 selects by omission. Stored as a frozenset so the
+        # per-owner membership test below cannot mutate it mid-run.
+        self.corrupted_owners: frozenset[str] | None = (
+            frozenset(cfg.attack.corrupted_owner_ids)
+            if cfg.attack.corrupted_owner_ids is not None
+            else None
+        )
         self.ledger = AttackLedger()
 
         self.env_rng = self.seed_bundle.rng("env")
@@ -524,7 +532,26 @@ class ExperimentRun:
             )
             residuals = {r.source_id: r.value - cfg.env.budget for r in reports}
 
-            corrupted_here = self.corrupted_ids & set(residuals)
+            # P1 (docs/p1_concentrated_attack_gates.md). `corrupted_owner_ids`
+            # scopes the compromised reporting channel to named owners. When
+            # it is None -- every pre-P1 config -- `self.corrupted_owners` is
+            # None and this reduces to the historical line, character for
+            # character in effect: the corrupted source is corrupted in every
+            # owner's bundle, giving the uniform delta_k ~ 1 that A1/A2/A3
+            # actually ran. When it names one owner j, only owner j's bundle
+            # is corrupted, giving the concentrated delta_k = delta * e_j that
+            # Proposition `cor:spread` is stated for.
+            #
+            # This is a scope restriction evaluated on the OWNER, never on the
+            # magnitude of any residual, so it is not a Proposition 3 gate:
+            # `apply_attack` is still called unconditionally for every owner
+            # every round, and the dual update below it is untouched.
+            owner_is_targeted = (
+                self.corrupted_owners is None or aid in self.corrupted_owners
+            )
+            corrupted_here = (
+                (self.corrupted_ids & set(residuals)) if owner_is_targeted else set()
+            )
             attacked = apply_attack(
                 cfg.attack, residuals, corrupted_here, self.round_index, cfg.env.budget,
                 rng=self.attack_rng, ledger=self.ledger,
@@ -536,6 +563,34 @@ class ExperimentRun:
 
             point_estimate = agg.pessimistic_estimate if hasattr(agg, "pessimistic_estimate") else agg.point_estimate
             residual_i = point_estimate - cfg.env.budget
+
+            # P1 gate P1-a (docs/p1_concentrated_attack_gates.md). The entry
+            # of delta_k this owner's dual coordinate actually received:
+            # the SAME aggregator applied to the uncorrupted reports,
+            # differenced against the corrupted one. Measured, not asserted
+            # from the attack's configuration, and aggregator-agnostic --
+            # under the mean it is exactly -B/M, under RCE it is whatever
+            # the trimming left, which is the number the localization claim
+            # has to be about. Pure arithmetic over M floats: no RNG is
+            # drawn, no network is evaluated, and nothing here reaches the
+            # dual update, so adding it cannot perturb a run.
+            # Path-matched to `values_arr` above: the corrupted array is
+            # built as `residual + budget`, so the counterfactual must be
+            # too. Reading `r.value` directly instead differs from it in the
+            # last ULP (`(v - d) + d != v` in binary floating point), which
+            # would leave a ~1e-16 residue on every UNCORRUPTED owner and
+            # quietly pollute the concentration statistic, whose whole job is
+            # to distinguish exactly-zero coordinates from nonzero ones.
+            clean_values_arr = np.array([residuals[r.source_id] + cfg.env.budget for r in reports])
+            agg_clean = aggregate(cfg.defense.name, clean_values_arr, cfg.defense.f,
+                                  beta=cfg.defense.beta, sigma_min=cfg.defense.sigma_min,
+                                  min_retained=cfg.defense.min_retained)                 if cfg.defense.name == "rce" else aggregate(cfg.defense.name, clean_values_arr, cfg.defense.f)
+            clean_point_estimate = (
+                agg_clean.pessimistic_estimate
+                if hasattr(agg_clean, "pessimistic_estimate")
+                else agg_clean.point_estimate
+            )
+            injected_delta = float(point_estimate - clean_point_estimate)
 
             if cfg.attack.name == "none":
                 # Retained as a diagnostic (this run's own observed
@@ -577,6 +632,16 @@ class ExperimentRun:
             round_record["constraints"][aid] = {
                 "reports": [{"source_id": r.source_id, "value": r.value} for r in reports],
                 "corrupted_source_ids": sorted(corrupted_here),
+                # P1: the owner-level entry of delta_k. Zero on every
+                # untargeted owner, -(B/M) on the targeted one under the
+                # mean aggregator. The vector over owners IS delta_k.
+                "injected_delta": injected_delta,
+                "owner_targeted": bool(owner_is_targeted and corrupted_here),
+                # The counterfactual the above is differenced against: this
+                # owner's aggregate had the channel not been compromised.
+                # Logged so the localization analysis never has to
+                # re-derive it from the report list.
+                "clean_point_estimate": float(clean_point_estimate),
                 "aggregate": {
                     "point_estimate": agg.point_estimate,
                     "spread": agg.spread,
