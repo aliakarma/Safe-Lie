@@ -387,3 +387,61 @@ audit. The frozen commit SHA for this protocol is recorded in Section 16.
   `configs/experiment/p1/*.yaml`, `src/safelie/utils/config.py`,
   `src/safelie/training/loop.py`, `src/safelie/eval/monitor.py`,
   `scripts/p1_*.py`, `tests/unit/test_p1_concentrated_attack.py`.
+
+---
+
+## 17. Amendment, 2026-09-16 — saturation makes the concentration ratio
+## non-monotone, and the analysis must show it
+
+**Appended during R_seed0, at round 50 of 250. No pre-declared criterion,
+condition, seed, metric definition or success bar is changed by this
+amendment. It adds a diagnostic stratification and nothing else.**
+
+**What was observed.** In the Condition-R run in flight, the observed
+displacement's concentration ratio falls from 1.000 toward `1/N` as
+predicted while the multipliers are interior, and then *rises* again once
+the projection engages:
+
+```
+k    coords at floor (att/clean)   observed conc    linear conc
+35            0 / 0                   0.3690          0.2072
+40            0 / 0                   0.5456          0.2022
+45            4 / 4                   0.6777          0.1984
+```
+
+**Why.** When a coordinate is pinned at `lambda = 0` in BOTH the attacked
+and the reference run, its displacement is identically zero. The
+concentration ratio `max_i|v_i| / sum_i|v_i|` then divides a smaller
+support into the same numerator and rises **mechanically**. The rise is an
+artifact of the projection, not a re-concentration of the perturbation: the
+unprojected linear trace over the identical injected `delta_k` keeps
+descending smoothly toward `1/N` throughout.
+
+This is the same projection pathology Section 6 identified before launch
+for `W = I`. Section 6 established it for the identity topology by
+simulation; it is now observed in the **ring** arm as well, on live data.
+
+**Consequence for reading the results.** A concentration number computed
+over a window in which coordinates are pinned is not a measurement of
+localization. In particular the last-50-rounds window, where the campaign's
+summary statistics are taken, is expected to be the MOST saturated part of
+the run (from the committed clean runs, `lambda` collapses toward 0-2 around
+round 50 and 7-13 % of all cells sit at the floor).
+
+**What is added.** `scripts/p1_analyze.py` now reports, alongside every
+existing quantity and replacing none of them:
+
+* `n_coords_at_floor` per round, for the attacked and reference runs;
+* `interior_rounds`: the rounds in which NO coordinate is pinned in either
+  run — the subset on which the concentration ratio is interpretable;
+* concentration summarized **twice**, over all rounds and over
+  `interior_rounds` only, each labelled;
+* `saturation_fraction` next to every concentration figure, so a
+  concentration number can never be quoted without the context that
+  determines whether it means anything.
+
+**What is NOT changed.** Diagnostic D2 still reads as frozen. No claim is
+promoted or demoted. If the interior-window and all-rounds numbers disagree,
+**both are reported**, and the disagreement is itself reported as the
+projection's effect rather than resolved in favour of the more convenient
+one.

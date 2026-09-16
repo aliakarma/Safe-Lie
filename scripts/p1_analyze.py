@@ -201,6 +201,16 @@ def main() -> int:
             C = run_arrays(CLEAN_RING[seed])
             k = min(A["K"], C["K"])
             e_obs = A["lam"][:k] - C["lam"][:k]
+            # Gates doc Section 17. A coordinate pinned at lambda=0 in BOTH
+            # runs has identically zero displacement, which shrinks the
+            # support and makes the concentration ratio rise MECHANICALLY.
+            # So concentration is reported twice -- over all rounds, and over
+            # the interior rounds where it is interpretable -- and never
+            # without the saturation fraction beside it.
+            floor_a = (A["lam"][:k] <= 1e-12).sum(axis=1)
+            floor_c = (C["lam"][:k] <= 1e-12).sum(axis=1)
+            interior = (floor_a == 0) & (floor_c == 0)
+            conc_obs = concentration_ratio(e_obs)
             R["observed_displacement"] = {
                 "reference": str(CLEAN_RING[seed].relative_to(ROOT)),
                 "caveat": "cross-run: the two runs trained different policies; "
@@ -209,6 +219,23 @@ def main() -> int:
                 "summary_last50": {kk: tail(v) for kk, v in summarize(e_obs).items()
                                    if kk in ("concentration", "l1")},
                 "per_agent_mean_last50": e_obs[-50:].mean(axis=0).tolist(),
+                "n_coords_at_floor_attacked": floor_a.tolist(),
+                "n_coords_at_floor_reference": floor_c.tolist(),
+                "n_interior_rounds": int(interior.sum()),
+                "interior_round_indices": np.flatnonzero(interior).tolist(),
+                "saturation_fraction_all_rounds": float(1.0 - interior.mean()),
+                "saturation_fraction_last50": float(1.0 - interior[-50:].mean()),
+                "concentration_all_rounds_mean": float(np.nanmean(conc_obs)),
+                "concentration_last50_mean": tail(conc_obs),
+                "concentration_interior_only_mean": (
+                    float(np.nanmean(conc_obs[interior])) if interior.any() else None),
+                "concentration_interior_only_final": (
+                    float(conc_obs[interior][-1]) if interior.any() else None),
+                "concentration_note": (
+                    "concentration_last50_mean is computed over the MOST saturated "
+                    "window and is not a localization measurement wherever "
+                    "saturation_fraction_last50 > 0; compare against "
+                    "concentration_interior_only_mean (gates doc Section 17)"),
             }
         else:
             R["observed_displacement_unavailable_reason"] = (
