@@ -237,6 +237,32 @@ def main() -> int:
                     "saturation_fraction_last50 > 0; compare against "
                     "concentration_interior_only_mean (gates doc Section 17)"),
             }
+            # Gates doc Section 18. A concentration ratio is scale-free, so it
+            # will happily describe the shape of a vector that is entirely
+            # policy-divergence noise. Carry the magnitude next to it always.
+            l1_obs = float(np.abs(e_obs[-1]).sum())
+            l1_lin = float(np.abs(e_lin[-1]).sum())
+            ratio = (l1_obs / l1_lin) if l1_lin > 1e-12 else None
+            lam_level = float(A["lam"][-50:].mean())
+            warn = None
+            if ratio is not None and ratio < 0.10:
+                warn = (
+                    f"realized displacement is {100 * ratio:.1f}% of the unprojected linear "
+                    "prediction over the identical injected delta_k; the "
+                    "concentration figures beside this describe a vector within "
+                    "policy-divergence noise and are NOT evidence of spreading "
+                    "or localization (gates doc Section 18)")
+            R["observed_displacement"].update({
+                "l1_norm_final": l1_obs,
+                "l1_norm_linear_final": l1_lin,
+                "l1_ratio_to_linear": ratio,
+                "mean_abs_displacement_last50": float(np.abs(e_obs[-50:]).mean()),
+                "mean_lambda_level_last50": lam_level,
+                "displacement_vs_lambda_level": (
+                    float(np.abs(e_obs[-50:]).mean() / lam_level) if lam_level > 1e-12 else None),
+                "signs_mixed": bool((e_obs[-1] > 0).any() and (e_obs[-1] < 0).any()),
+                "magnitude_warning": warn,
+            })
         else:
             R["observed_displacement_unavailable_reason"] = (
                 "no clean run exists under W=I (gates doc Section 6); an "
@@ -285,6 +311,22 @@ def main() -> int:
                 "attacked_detection_frequency": detection_frequency(tr, tau),
                 "clean_fleet_statistic_mean": float(ctr.fleet_statistic.mean()),
             }
+            # Gates doc Section 18: the attacked sweep alone is uninterpretable.
+            # A detection frequency of 0.99 at tau=0.05 says only that the
+            # threshold sits below the fleet's ordinary dispersion -- which the
+            # clean column is what reveals.
+            mon["sweep_detection_frequency_clean"] = {
+                str(t_): detection_frequency(ctr, t_) for t_ in TAU_GRID
+            }
+            # Report the MARGIN, not a boolean. A bare "exceeds at some tau"
+            # fires on a 0.4-point gap (one round in 250) where both columns
+            # sit at ~0.99, and reads like detection when it is noise.
+            excess = {str(t_): detection_frequency(tr, t_) - detection_frequency(ctr, t_)
+                      for t_ in TAU_GRID}
+            mon["detection_excess_over_clean"] = excess
+            mon["max_detection_excess_over_clean"] = float(max(excess.values()))
+            mon["attacked_materially_exceeds_clean"] = bool(
+                max(excess.values()) > 0.05)  # > 5 points, i.e. > ~12 rounds of 250
         else:
             mon["clean_calibrated"] = None
             mon["clean_calibration_unavailable"] = (

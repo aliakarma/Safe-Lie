@@ -445,3 +445,85 @@ promoted or demoted. If the interior-window and all-rounds numbers disagree,
 **both are reported**, and the disagreement is itself reported as the
 projection's effect rather than resolved in favour of the more convenient
 one.
+
+---
+
+## 18. Amendment, 2026-09-16 - the realized dual displacement is ~2 % of the linear prediction, so its concentration is a statistic on noise
+
+**Appended after R_seed0 completed (250/250, all gates pass). No
+pre-declared criterion, condition, seed, metric definition or success bar
+is changed. This adds magnitude reporting and a guard, and records a
+finding.**
+
+**What was observed (R_seed0, ring, seed 0, vs its CRN-paired clean run).**
+The unprojected linear prediction driven by the measured `delta_k` behaves
+exactly as Proposition `cor:spread` states:
+
+```
+lin e_K = [-6.107, -5.997, -5.961, -5.997, -6.107, -6.289]
+concentration 0.1725  (1/N = 0.1667)
+1^T e_K = -36.458 = eta * sum_k 1^T delta_k   (Theorem thm:mass, exact)
+```
+
+The **realized** multipliers show almost none of it:
+
+```
+k      ||obs e_k||_1    ||lin e_k||_1    ratio
+ 49        0.128           7.292         0.018
+ 99        2.664          14.583         0.183
+149        0.711          21.875         0.033
+199        0.812          29.167         0.028
+249        0.871          36.458         0.024
+
+obs e_K = [+0.090, +0.171, +0.220, +0.217, +0.138, -0.035]   signs MIXED
+```
+
+The realized displacement is **2.4 % of the predicted magnitude**, its signs
+are mixed, and the attacked owner's own entry (`-0.035`) is the SMALLEST in
+absolute value rather than the largest.
+
+**Interpretation, stated carefully.** The dual is a feedback controller, not
+an open-loop integrator. Proposition `cor:spread` holds the primal sequence
+fixed; a live run does not. The closed loop absorbs the perturbation in the
+PRIMAL - the policy shifts until the reported residual returns toward zero -
+instead of accumulating it in the multiplier. This is the same mechanism A1
+reported from the other side (true cost rises while the cost the mechanism
+consumes falls). It is a finding about where the effect lives, not a failure
+of the run.
+
+**Consequence for the concentration statistic.** A concentration ratio is
+scale-free: it is equally happy to describe a displacement of magnitude 36
+and one of magnitude 0.87. At `||obs e_K||_1 = 0.871` spread over six agents
+(~0.15 each) against a mean multiplier level of 0.741, the observed
+displacement is **the same order as run-to-run policy-divergence noise**.
+Quoting "concentration 0.25, close to 1/N, consistent with spreading" off
+such a vector would be describing the shape of noise. Sections 12 and 17
+already forbid over-reading the statistic; this amendment makes the
+magnitude impossible to omit.
+
+**What is added to `scripts/p1_analyze.py`, replacing nothing:**
+
+* `l1_norm_final` of the observed displacement beside every concentration;
+* `l1_ratio_to_linear` - the realized magnitude as a fraction of the
+  unprojected prediction over the identical injected `delta_k`;
+* `displacement_vs_lambda_level` - `mean|e| / mean(lambda)`;
+* `magnitude_warning`, set whenever `l1_ratio_to_linear < 0.10`, carrying
+  the text that the concentration figure beside it describes a vector within
+  policy-divergence noise and must not be read as evidence of spreading or
+  of localization;
+* the monitor `tau` sweep is now reported for the CLEAN reference at the
+  same grid as the attacked run. Reporting the attacked sweep alone was a
+  defect: a detection frequency of 0.99 at `tau = 0.05` means only that the
+  threshold is below the fleet's ordinary dispersion, which the clean column
+  shows at 0.996.
+
+**Monitor result recorded for R_seed0** (a result, not a criterion change):
+at the clean-calibrated `tau = 1.076` (5.2 % FPR on clean by construction)
+the attacked run fires on **0.0 %** of rounds. Across the whole declared grid
+the attacked run never exceeds clean, and its mean fleet statistic is LOWER
+(0.539 vs 0.669). Under the ring this attack is not merely undetected by the
+median-deviation monitor; the attacked fleet is *less* dispersed than clean.
+
+**Still pending and unchanged:** this is one seed of one condition. The
+R-vs-I contrast is the campaign's actual question and `W = I` has not run.
+Nothing here licenses a conclusion about localization versus spreading.
