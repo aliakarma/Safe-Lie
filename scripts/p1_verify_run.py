@@ -184,13 +184,31 @@ def main() -> int:
         print("P1-h PASS: theta_k checksum stable through the dual update on all rounds")
 
     # ---- P1-f: seed uniqueness -------------------------------------------
-    audit = meta.get("source_seed_audit", {})
-    dupes = audit.get("duplicate_seed_events", None)
-    if dupes not in (0, None):
-        failures.append(f"P1-f: {dupes} duplicate source-seed events")
+    # `source_seed_audit` is written by the orchestrator when a run FINISHES,
+    # so it is legitimately absent while a run is still in flight. On a run
+    # that claims the full round count it must be present: treating a missing
+    # audit as "no duplicates found" would let this gate pass vacuously on
+    # exactly the artifact it exists to check.
+    audit = meta.get("source_seed_audit")
+    complete = len(rounds) >= args.expected_rounds
+    if audit is None:
+        if complete:
+            failures.append(
+                "P1-f: source_seed_audit is missing from run_metadata.json on a "
+                "run with the full round count; the gate must not pass vacuously")
+        else:
+            notes.append("P1-f skipped: run still in flight, seed audit not yet written")
+            print("P1-f SKIP: run in flight, source_seed_audit not written yet")
     else:
-        print(f"P1-f PASS: {audit.get('n_env_seeds_issued')} env seeds issued, "
-              f"{dupes} duplicates, collisions={audit.get('collisions')}")
+        dupes = audit.get("duplicate_seed_events")
+        collisions = audit.get("collisions")
+        if dupes != 0:
+            failures.append(f"P1-f: duplicate_seed_events={dupes!r} (expected exactly 0)")
+        elif collisions:
+            failures.append(f"P1-f: seed collisions reported: {collisions}")
+        else:
+            print(f"P1-f PASS: {audit.get('n_env_seeds_issued')} env seeds issued, "
+                  f"0 duplicates, no collisions")
 
     # ---- P1-g: oracle isolation ------------------------------------------
     oracle_p = run_dir / "oracle.jsonl"
